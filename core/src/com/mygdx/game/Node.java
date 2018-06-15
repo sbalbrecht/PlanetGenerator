@@ -10,6 +10,4 @@ public class Node{
 	public Node(Vector3 point){
 		this.point = point;
 	}
-	
-	
 }
