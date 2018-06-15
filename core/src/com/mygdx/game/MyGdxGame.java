@@ -20,6 +20,7 @@ public class MyGdxGame extends ApplicationAdapter {
     public ModelInstance instance;
     public ModelBatch modelBatch;
     public Model model;
+    public FrameRate fr;
 
     @Override
 	public void create () {
@@ -83,19 +84,31 @@ public class MyGdxGame extends ApplicationAdapter {
         };
 
 	    // Subdivided icosahedron test
+        Planet planet = new Planet();
+        planet.generateIcosphere(0);
 
         Random r = new Random();                // for colors
         modelBuilder = new ModelBuilder();      // Declare the ModelBuilder
         modelBuilder.begin();                   // LET THE GAMES BEGIN
 
         // Every face is added to the model as a meshPart
-        for(int i = 0; i < indices.length; i += 3) {
-            modelBuilder.part("face"+(i/3), GL20.GL_TRIANGLES, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal,
+//        for(int i = 0; i < indices.length; i += 3) {
+//            modelBuilder.part("face"+(i/3), GL20.GL_TRIANGLES, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal,
+//                    new Material(ColorAttribute.createDiffuse(r.nextFloat(), r.nextFloat(), r.nextFloat(), 1)))
+//                    .triangle(
+//                            new Vector3(verts[indices[i  ]*3], verts[indices[i  ]*3+1], verts[indices[i  ]*3+2]),
+//                            new Vector3(verts[indices[i+1]*3], verts[indices[i+1]*3+1], verts[indices[i+1]*3+2]),
+//                            new Vector3(verts[indices[i+2]*3], verts[indices[i+2]*3+1], verts[indices[i+2]*3+2]));
+//        }
+
+        for(int i = 0; i < planet.faces.size; i++) {
+            modelBuilder.part("face"+i, GL20.GL_TRIANGLES, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal,
                     new Material(ColorAttribute.createDiffuse(r.nextFloat(), r.nextFloat(), r.nextFloat(), 1)))
+                    //new Material(ColorAttribute.createDiffuse(Color.GREEN)))
                     .triangle(
-                            new Vector3(verts[indices[i  ]*3], verts[indices[i  ]*3+1], verts[indices[i  ]*3+2]),
-                            new Vector3(verts[indices[i+1]*3], verts[indices[i+1]*3+1], verts[indices[i+1]*3+2]),
-                            new Vector3(verts[indices[i+2]*3], verts[indices[i+2]*3+1], verts[indices[i+2]*3+2]));
+                            new Vector3(planet.faces.get(i).pts[0]),
+                            new Vector3(planet.faces.get(i).pts[1]),
+                            new Vector3(planet.faces.get(i).pts[2]));
         }
 
         model = modelBuilder.end();         // The model is then assigned
@@ -111,17 +124,21 @@ public class MyGdxGame extends ApplicationAdapter {
 	@Override
 	public void render () {
         camController.update();
+        fr = new FrameRate();
 
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
         modelBatch.begin(cam);
         modelBatch.render(instance, environment);
+        fr.update();
+        fr.render();
         modelBatch.end();
 	}
 
 	@Override
 	public void dispose () {
+        fr.dispose();
         modelBatch.dispose();
         model.dispose();
 	}

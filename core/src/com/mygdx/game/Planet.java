@@ -5,9 +5,12 @@ import com.badlogic.gdx.utils.Array;
 
 public class Planet{
     public Array<Face> faces = new Array<Face>();
-    // create Planet constructor 
+    // create Planet constructor
+    Planet() {
 
-	void generateIcosphere(){
+    }
+
+	void generateIcosphere(int subdivisions){
 		//hardcoded ico shit
 
 		float phi = 1.0f + (float)Math.sqrt(5.0f)/2.0f;
@@ -56,7 +59,7 @@ public class Planet{
 		faces.add(new Face(points[7], points[10], points[11]));
 
 		// subdivide here
-        subdivide(2);
+        subdivide(subdivisions);
 
 
 
@@ -114,9 +117,9 @@ public class Planet{
                 Vector3 p1 = face.pts[1];
                 Vector3 p2 = face.pts[2];
 
-                Vector3 q0 = getMiddlePoint(p0, p1);
-                Vector3 q1 = getMiddlePoint(p1, p2);
-                Vector3 q2 = getMiddlePoint(p2, p0);
+                Vector3 q0 = utils.getMiddlePoint(p0, p1);
+                Vector3 q1 = utils.getMiddlePoint(p1, p2);
+                Vector3 q2 = utils.getMiddlePoint(p2, p0);
 
                 newFaces.add(new Face(q0, q2, p0));
                 newFaces.add(new Face(q1, q0, p1));
@@ -129,23 +132,5 @@ public class Planet{
             faces.ensureCapacity(newFaces.size);
             faces.addAll(newFaces);
         }
-    }
-
-    /* gets the middle point b/w two vectors, then shifts it to the unit sphere */
-    private Vector3 getMiddlePoint(Vector3 u, Vector3 v) {
-        // need to check if point already exists --> need storage for midpoints?
-        // only need to store midpoints if it would be faster to search for them
-        //  than to calculate them again
-
-        Vector3 w = u.cpy().add(v).scl(0.5f);
-        w = convertToUnitSphere(w);
-
-        // store w for later
-        return w;
-    }
-
-    private Vector3 convertToUnitSphere(Vector3 v) {
-        float length = (float)Math.sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
-        return new Vector3(v.x/length, v.y/length, v.z/length);
     }
 }

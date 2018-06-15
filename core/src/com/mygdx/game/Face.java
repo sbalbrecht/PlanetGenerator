@@ -5,12 +5,17 @@ import com.badlogic.gdx.utils.Array;
 
 public class Face{
     public Vector3[] pts = new Vector3[3];
+    public Vector3 center;
     public Array<Face> nbrs = new Array<Face>();
 
     Face(Vector3 p0, Vector3 p1, Vector3 p2) {
         this.pts[0] = p0;
         this.pts[1] = p1;
         this.pts[2] = p2;
+        this.center = utils.convertToUnitSphere(new Vector3(
+                (p0.x + p1.x + p2.x)/3,
+                (p0.y + p1.y + p2.y)/3,
+                (p0.z + p1.z + p2.z)/3));
     }
 
     boolean testNeighbor(Face b) {
