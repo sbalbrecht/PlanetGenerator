@@ -40,66 +40,13 @@ public class MyGdxGame extends ApplicationAdapter {
 	    cam.far = 30f;
 	    cam.update();
 
-	    // Icosahedron test
-        float phi = 1.0f + (float)Math.sqrt(5.0f)/2.0f;
-        float u = 1.0f/(float)Math.sqrt(phi*phi + 1.0f);
-        float v = phi*u;
-
-        float[] verts = new float[] {
-                0.0f,   +u,   +v,
-                0.0f,   -u,   +v,
-                0.0f,   +u,   -v,
-                0.0f,   -u,   -v,
-                +u,     +v, 0.0f,
-                -u,     +v, 0.0f,
-                +u,     -v, 0.0f,
-                -u,     -v, 0.0f,
-                +v,   0.0f,   +u,
-                +v,   0.0f,   -u,
-                -v,   0.0f,   +u,
-                -v,   0.0f,   -u
-        };
-
-	    short[] indices = new short[] {
-                0,  1,  8,
-                0,  4,  5,
-                0,  5, 10,
-                0,  8,  4,
-                0, 10,  1,
-                1,  6,  8,
-                1,  7,  6,
-                1, 10,  7,
-                2,  3, 11,
-                2,  4,  9,
-                2,  5,  4,
-                2,  9,  3,
-                2, 11,  5,
-                3,  6,  7,
-                3,  7, 11,
-                3,  9,  6,
-                4,  8,  9,
-                5, 11, 10,
-                6,  9,  8,
-                7, 10, 11
-        };
-
 	    // Subdivided icosahedron test
         Planet planet = new Planet();
-        planet.generateIcosphere(0);
+        planet.generateIcosphere(1);
 
         Random r = new Random();                // for colors
         modelBuilder = new ModelBuilder();      // Declare the ModelBuilder
         modelBuilder.begin();                   // LET THE GAMES BEGIN
-
-        // Every face is added to the model as a meshPart
-//        for(int i = 0; i < indices.length; i += 3) {
-//            modelBuilder.part("face"+(i/3), GL20.GL_TRIANGLES, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal,
-//                    new Material(ColorAttribute.createDiffuse(r.nextFloat(), r.nextFloat(), r.nextFloat(), 1)))
-//                    .triangle(
-//                            new Vector3(verts[indices[i  ]*3], verts[indices[i  ]*3+1], verts[indices[i  ]*3+2]),
-//                            new Vector3(verts[indices[i+1]*3], verts[indices[i+1]*3+1], verts[indices[i+1]*3+2]),
-//                            new Vector3(verts[indices[i+2]*3], verts[indices[i+2]*3+1], verts[indices[i+2]*3+2]));
-//        }
 
         for(int i = 0; i < planet.faces.size; i++) {
             modelBuilder.part("face"+i, GL20.GL_TRIANGLES, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal,
