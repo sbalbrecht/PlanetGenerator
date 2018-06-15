@@ -82,6 +82,8 @@ public class MyGdxGame extends ApplicationAdapter {
                 7, 10, 11
         };
 
+	    // Subdivided icosahedron test
+
         Random r = new Random();                // for colors
         modelBuilder = new ModelBuilder();      // Declare the ModelBuilder
         modelBuilder.begin();                   // LET THE GAMES BEGIN
