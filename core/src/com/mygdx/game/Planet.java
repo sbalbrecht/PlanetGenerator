@@ -21,18 +21,18 @@ public class Planet{
 		
 		Vector3[] points =
 			{
-				new Vector3(0.0f,   +u,   +v),
-				new Vector3(0.0f,   -u,   +v),
-				new Vector3(0.0f,   +u,   -v),
-				new Vector3(0.0f,   -u,   -v),
-				new Vector3(+u,     +v, 0.0f),
-				new Vector3(-u,     +v, 0.0f),
-				new Vector3(+u,     -v, 0.0f),
-				new Vector3(-u,     -v, 0.0f),
-				new Vector3(+v,   0.0f,   +u),
-				new Vector3(+v,   0.0f,   -u),
-				new Vector3(-v,   0.0f,   +u),
-				new Vector3(-v,   0.0f,   -u)
+				new Vector3(0.0f,   +u,   +v).scl(10),
+				new Vector3(0.0f,   -u,   +v).scl(10),
+				new Vector3(0.0f,   +u,   -v).scl(10),
+				new Vector3(0.0f,   -u,   -v).scl(10),
+				new Vector3(+u,     +v, 0.0f).scl(10),
+				new Vector3(-u,     +v, 0.0f).scl(10),
+				new Vector3(+u,     -v, 0.0f).scl(10),
+				new Vector3(-u,     -v, 0.0f).scl(10),
+				new Vector3(+v,   0.0f,   +u).scl(10),
+				new Vector3(+v,   0.0f,   -u).scl(10),
+				new Vector3(-v,   0.0f,   +u).scl(10),
+				new Vector3(-v,   0.0f,   -u).scl(10)
 			};
 		for (Vector3 p : points) nodes.add(new Node(p));
 

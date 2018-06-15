@@ -20,6 +20,6 @@ public final class utils {
     /* Converts the given vector to one that lies on the unit sphere */
     public static Vector3 convertToUnitSphere(Vector3 v) {
         float length = (float)Math.sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
-        return new Vector3(v.x/length, v.y/length, v.z/length);
+        return new Vector3(v.x/length, v.y/length, v.z/length).scl(10);
     }
 }

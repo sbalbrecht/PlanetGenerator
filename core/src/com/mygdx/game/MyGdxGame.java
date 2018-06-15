@@ -34,7 +34,7 @@ public class MyGdxGame extends ApplicationAdapter {
 
         // Camera
 	    cam = new PerspectiveCamera(50, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-	    cam.position.set(2f,2f,2f);
+	    cam.position.set(20f,20f,20f);
 	    cam.lookAt(0f,0f,0f);
 	    cam.near = 1f;
 	    cam.far = 30f;
@@ -42,7 +42,8 @@ public class MyGdxGame extends ApplicationAdapter {
 
 	    // Subdivided icosahedron test
         Planet planet = new Planet();
-        planet.generateIcosphere(1);
+        planet.generateIcosphere(5);
+        System.out.println(planet.faces.size + " faces");
 
         Random r = new Random();                // for colors
         modelBuilder = new ModelBuilder();      // Declare the ModelBuilder
