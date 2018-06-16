@@ -29,6 +29,7 @@ public class MyGdxGame extends ApplicationAdapter {
 
         // Lighting
         environment = new Environment();
+       // environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 1f, 1f, 1f, 1f));
         environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.8f, 0.8f, 0.8f, 1f));
         environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
 
@@ -37,12 +38,12 @@ public class MyGdxGame extends ApplicationAdapter {
 	    cam.position.set(20f,20f,20f);
 	    cam.lookAt(0f,0f,0f);
 	    cam.near = 1f;
-	    cam.far = 30f;
+	    cam.far = 50f;
 	    cam.update();
 
 	    // Subdivided icosahedron test
         Planet planet = new Planet();
-        planet.generateIcosphere(5);
+        planet.generateIcosphere(4);
         System.out.println(planet.faces.size + " faces");
 
         Random r = new Random();                // for colors
@@ -97,6 +98,11 @@ public class MyGdxGame extends ApplicationAdapter {
 
     @Override
     public void resize (int width, int height) {
+//        float aspectRatio = (float) width / (float) height;
+//        cam = new PerspectiveCamera(67, 2f * aspectRatio, 2f);
+//        cam.far = 30f;
+//        cam.near = 1f;
+//        cam.lookAt(0, 0, 0);
     }
 
     @Override

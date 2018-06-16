@@ -13,12 +13,14 @@ public class Planet{
 	void generateIcosphere(int subdivisions){
 		//hardcoded ico shit
 
-		float phi = 1.0f + (float)Math.sqrt(5.0f)/2.0f;
+		float phi = (float)((1.0f + Math.sqrt(5.0f))/2.0f);
 		float u = 1.0f/(float)Math.sqrt(phi*phi + 1.0f);
 		float v = phi*u;
 		
 		Array<Node> nodes = new Array<Node>();
-		
+
+
+		// Points are scaled x10 so the camera is more flexible
 		Vector3[] points =
 			{
 				new Vector3(0.0f,   +u,   +v).scl(10),
