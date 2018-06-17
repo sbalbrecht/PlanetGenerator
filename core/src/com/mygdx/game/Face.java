@@ -10,10 +10,14 @@ public class Face{
     public Array<Face> nbrs = new Array<Face>();
 
     Face(Vector3 p0, Vector3 p1, Vector3 p2) {
-        this.pts[0] = p0;
-        this.pts[1] = p1;
-        this.pts[2] = p2;
-        this.centroid = vmath.convertToUnitSphere(getCentroid(p0, p1, p2));
+        pts[0] = p0;
+        pts[1] = p1;
+        pts[2] = p2;
+        centroid = vmath.convertToUnitSphere(getCentroid(p0, p1, p2));
+    }
+
+    public void addNbr(Face face) {
+        nbrs.add(face);
     }
 
     boolean testNeighbor(Face b) {
@@ -21,14 +25,13 @@ public class Face{
             return true;
         int count = 0;
         for(int i = 0; i < pts.length; i++) {
-            for(int j = 0; j < pts.length; j++) {
+            for(int j = 0; j < b.pts.length; j++) {
                 if (pts[i] == b.pts[j]) //if true
                     count++;
+                    break;
             }
         }
         if(count == 2) {
-            nbrs.add(b);
-            b.nbrs.add(this);
             return true;
         } else
             return false;
