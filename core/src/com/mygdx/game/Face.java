@@ -10,7 +10,7 @@ public class Face{
         this.pts[2] = p2;
         this.centroid = utils.convertToUnitSphere(getCentroid(p0, p1, p2));
     }
- 
+
     boolean testNeighbor(Face b) {
         if(nbrs.contains(b, false))
             return true;
