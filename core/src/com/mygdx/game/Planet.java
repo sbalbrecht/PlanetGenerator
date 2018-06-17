@@ -2,6 +2,7 @@ package com.mygdx.game;
 
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
+import com.mygdx.game.util.vmath;
 
 public class Planet{
     public Array<Face> faces = new Array<Face>();
@@ -17,8 +18,6 @@ public class Planet{
 		float phi = (float)((1.0f + Math.sqrt(5.0f))/2.0f);
 		float u = 1.0f/(float)Math.sqrt(phi*phi + 1.0f);
 		float v = phi*u;
-		
-		Array<Node> nodes = new Array<Node>();
 
 
 		// Points are scaled x10 so the camera is more flexible
@@ -37,67 +36,36 @@ public class Planet{
 				new Vector3(-v,   0.0f,   +u).scl(10),
 				new Vector3(-v,   0.0f,   -u).scl(10)
 			};
-		for (Vector3 p : points) nodes.add(new Node(p));
 
 	    // 20 faces
-		faces.add(new Face(points[0], points[ 1], points[ 8]));
-		faces.add(new Face(points[0], points[ 4], points[ 5]));
-		faces.add(new Face(points[0], points[ 5], points[10]));
-		faces.add(new Face(points[0], points[ 8], points[ 4]));
-		faces.add(new Face(points[0], points[10], points[ 1]));
-		faces.add(new Face(points[1], points[ 6], points[ 8]));
-		faces.add(new Face(points[1], points[ 7], points[ 6]));
-		faces.add(new Face(points[1], points[10], points[ 7]));
-		faces.add(new Face(points[2], points[ 3], points[11]));
-		faces.add(new Face(points[2], points[ 4], points[ 9]));
-		faces.add(new Face(points[2], points[ 5], points[ 4]));
-		faces.add(new Face(points[2], points[ 9], points[ 3]));
-		faces.add(new Face(points[2], points[11], points[ 5]));
-		faces.add(new Face(points[3], points[ 6], points[ 7]));
-		faces.add(new Face(points[3], points[ 7], points[11]));
-		faces.add(new Face(points[3], points[ 9], points[ 6]));
-		faces.add(new Face(points[4], points[ 8], points[ 9]));
-		faces.add(new Face(points[5], points[11], points[10]));
-		faces.add(new Face(points[6], points[ 9], points[ 8]));
-		faces.add(new Face(points[7], points[10], points[11]));
+		faces.addAll(
+			new Face(points[0], points[ 1], points[ 8]),
+			new Face(points[0], points[ 4], points[ 5]),
+			new Face(points[0], points[ 5], points[10]),
+			new Face(points[0], points[ 8], points[ 4]),
+			new Face(points[0], points[10], points[ 1]),
+			new Face(points[1], points[ 6], points[ 8]),
+			new Face(points[1], points[ 7], points[ 6]),
+			new Face(points[1], points[10], points[ 7]),
+			new Face(points[2], points[ 3], points[11]),
+			new Face(points[2], points[ 4], points[ 9]),
+			new Face(points[2], points[ 5], points[ 4]),
+			new Face(points[2], points[ 9], points[ 3]),
+			new Face(points[2], points[11], points[ 5]),
+			new Face(points[3], points[ 6], points[ 7]),
+			new Face(points[3], points[ 7], points[11]),
+			new Face(points[3], points[ 9], points[ 6]),
+			new Face(points[4], points[ 8], points[ 9]),
+			new Face(points[5], points[11], points[10]),
+			new Face(points[6], points[ 9], points[ 8]),
+			new Face(points[7], points[10], points[11])
+		 );
 
         subdivide(subdivisions);
 
 //        convertDual();
 
-
-        // OH GOD IT HURTS
-//		Array<Edge> edges = new Array<Edge>();
-//		edges.add(new Edge(nodes.get(0), nodes.get(1)));
-//		edges.add(new Edge(nodes.get(0), nodes.get(4)));
-//		edges.add(new Edge(nodes.get(0), nodes.get(5)));
-//		edges.add(new Edge(nodes.get(0), nodes.get(8)));
-//		edges.add(new Edge(nodes.get(0), nodes.get(10)));
-//		edges.add(new Edge(nodes.get(1), nodes.get(6)));
-//		edges.add(new Edge(nodes.get(1), nodes.get(7)));
-//		edges.add(new Edge(nodes.get(1), nodes.get(8)));
-//		edges.add(new Edge(nodes.get(1), nodes.get(10)));
-//		edges.add(new Edge(nodes.get(2), nodes.get(3)));
-//		edges.add(new Edge(nodes.get(2), nodes.get(1)));
-//		edges.add(new Edge(nodes.get(2), nodes.get(1)));
-//		edges.add(new Edge(nodes.get(2), nodes.get(1)));
-//		edges.add(new Edge(nodes.get(2), nodes.get(1)));
-//		edges.add(new Edge(nodes.get(3), nodes.get(1)));
-//		edges.add(new Edge(nodes.get(3), nodes.get(1)));
-//		edges.add(new Edge(nodes.get(3), nodes.get(1)));
-//		edges.add(new Edge(nodes.get(3), nodes.get(1)));
-//		edges.add(new Edge(nodes.get(4), nodes.get(1)));
-//		edges.add(new Edge(nodes.get(4), nodes.get(1)));
-//		edges.add(new Edge(nodes.get(4), nodes.get(1)));
-//		edges.add(new Edge(nodes.get(5), nodes.get(1)));
-//		edges.add(new Edge(nodes.get(5), nodes.get(1)));
-//		edges.add(new Edge(nodes.get(6), nodes.get(1)));
-//		edges.add(new Edge(nodes.get(6), nodes.get(1)));
-//		edges.add(new Edge(nodes.get(6), nodes.get(1)));
-//		edges.add(new Edge(nodes.get(7), nodes.get(1)));
-//		edges.add(new Edge(nodes.get(7), nodes.get(1)));
-//		edges.add(new Edge(nodes.get(8), nodes.get(1)));
-//		edges.add(new Edge(nodes.get(10), nodes.get(1)));
+	
 	}
 
 	/* Iterates through tiles and sets the neighbors of every face */
@@ -129,9 +97,9 @@ public class Planet{
                 Vector3 p1 = face.pts[1];
                 Vector3 p2 = face.pts[2];
 
-                Vector3 q0 = utils.getMiddlePoint(p0, p1);
-                Vector3 q1 = utils.getMiddlePoint(p1, p2);
-                Vector3 q2 = utils.getMiddlePoint(p2, p0);
+                Vector3 q0 = vmath.getMiddlePoint(p0, p1);
+                Vector3 q1 = vmath.getMiddlePoint(p1, p2);
+                Vector3 q2 = vmath.getMiddlePoint(p2, p0);
 
                 newFaces.add(new Face(q0, q2, p0));
                 newFaces.add(new Face(q1, q0, p1));

@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.Array;
 
 import java.util.Random;
 
@@ -22,6 +23,8 @@ public class MyGdxGame extends ApplicationAdapter {
     public Model model;
     public FrameRate fr;
 
+    public Array<Layer> layers = new Array<Layer>();
+    
     @Override
 	public void create () {
         super.create();
@@ -70,21 +73,32 @@ public class MyGdxGame extends ApplicationAdapter {
 
         camController = new CameraInputController(cam);
         Gdx.input.setInputProcessor(camController);
+        
+        //Set up our graphics layers
+		fr = new FrameRate();
+		layers.add(fr);
+	
+
+		
 	}
 
 
 	@Override
 	public void render () {
         camController.update();
-        fr = new FrameRate();
 
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-
-        modelBatch.begin(cam);
-        modelBatch.render(instance, environment);
-        fr.update();
-        fr.render();
+        
+		for (int i = 0; i < layers.size; i++){
+			if(layers.get(i).getOn()) layers.get(i).update();
+		}
+		for (int i = 0; i < layers.size; i++){
+			if(layers.get(i).getOn()) layers.get(i).render();
+		}
+		
+		modelBatch.begin(cam);
+		modelBatch.render(instance, environment);
         modelBatch.end();
 	}
 

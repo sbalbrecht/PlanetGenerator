@@ -1,8 +1,8 @@
-package com.mygdx.game;
+package com.mygdx.game.util;
 
 import com.badlogic.gdx.math.Vector3;
 
-public final class utils {
+public final class vmath{
 
     /* gets the middle point b/w two vectors, then shifts it to the unit sphere */
     public static Vector3 getMiddlePoint(Vector3 u, Vector3 v) {
