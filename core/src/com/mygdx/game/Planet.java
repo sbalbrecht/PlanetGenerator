@@ -5,6 +5,7 @@ import com.badlogic.gdx.utils.Array;
 
 public class Planet{
     public Array<Face> faces = new Array<Face>();
+    public Array<Tile> tiles = new Array<Tile>();
     // create Planet constructor
     Planet() {
 
@@ -60,9 +61,9 @@ public class Planet{
 		faces.add(new Face(points[6], points[ 9], points[ 8]));
 		faces.add(new Face(points[7], points[10], points[11]));
 
-		// subdivide here
         subdivide(subdivisions);
 
+//        convertDual();
 
 
         // OH GOD IT HURTS
@@ -99,12 +100,21 @@ public class Planet{
 //		edges.add(new Edge(nodes.get(10), nodes.get(1)));
 	}
 
-	/* Iterates through faces and sets the neighbors of every face */
-    public void setNeighbors() {
+	/* Iterates through tiles and sets the neighbors of every face */
+    public void setTileNeighbors() {
+        for(int i = 0; i < tiles.size-1; i++) {
+            for(int j = i+1; j < tiles.size; j++) {
+                if(tiles.get(i).nbrs.size == 6)
+                    break;
+                tiles.get(i).testNeighbor(tiles.get(j));
+            }
+        }
+    }
+    public void setFaceNeighbors() {
         for(int i = 0; i < faces.size-1; i++) {
-            if(faces.get(i).nbrs.size == 5)     // only for icosahedron, not dodecahedron
-                continue;
             for(int j = i+1; j < faces.size; j++) {
+                if(faces.get(i).nbrs.size == 4)
+                    break;
                 faces.get(i).testNeighbor(faces.get(j));
             }
         }
@@ -133,6 +143,30 @@ public class Planet{
             faces.shrink();
             faces.ensureCapacity(newFaces.size);
             faces.addAll(newFaces);
+        }
+    }
+
+    // unfinished
+    public void convertDual() {
+        Array<Vector3> points = new Array<Vector3>();
+        for(Face face : faces) {
+            Vector3 centroid = face.centroid;           // tile centroid
+            Vector3 p1 = face.pts[0];
+            Vector3 p2 = face.pts[2];
+            for (int i = 0; i < faces.size; i++) {
+                if(face.equals(faces.get(i)))          //
+                    continue;
+                int count = 0;
+                for(int j = 0; j < faces.get(i).pts.length; j++) {
+                    if (faces.get(i).pts[j] == p1 ||
+                            faces.get(i).pts[j] == p2)
+                        count++;
+                }
+                if(count == 2) {
+                    // then they neighbors good
+                    // this face becomes the next face to focus on
+                }
+            }
         }
     }
 }
