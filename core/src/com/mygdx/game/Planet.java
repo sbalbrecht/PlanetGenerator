@@ -41,32 +41,35 @@ public class Planet{
 		edges.add(new Edge(nodes.get(1), nodes.get(8)));
 		edges.add(new Edge(nodes.get(1), nodes.get(10)));
 		edges.add(new Edge(nodes.get(2), nodes.get(3)));
-		edges.add(new Edge(nodes.get(2), nodes.get(1)));
-		edges.add(new Edge(nodes.get(2), nodes.get(1)));
-		edges.add(new Edge(nodes.get(2), nodes.get(1)));
-		edges.add(new Edge(nodes.get(2), nodes.get(1)));
-		edges.add(new Edge(nodes.get(3), nodes.get(1)));
-		edges.add(new Edge(nodes.get(3), nodes.get(1)));
-		edges.add(new Edge(nodes.get(3), nodes.get(1)));
-		edges.add(new Edge(nodes.get(3), nodes.get(1)));
-		edges.add(new Edge(nodes.get(4), nodes.get(1)));
-		edges.add(new Edge(nodes.get(4), nodes.get(1)));
-		edges.add(new Edge(nodes.get(4), nodes.get(1)));
-		edges.add(new Edge(nodes.get(5), nodes.get(1)));
-		edges.add(new Edge(nodes.get(5), nodes.get(1)));
-		edges.add(new Edge(nodes.get(6), nodes.get(1)));
-		edges.add(new Edge(nodes.get(6), nodes.get(1)));
-		edges.add(new Edge(nodes.get(6), nodes.get(1)));
-		edges.add(new Edge(nodes.get(7), nodes.get(1)));
-		edges.add(new Edge(nodes.get(7), nodes.get(1)));
-		edges.add(new Edge(nodes.get(8), nodes.get(1)));
-		edges.add(new Edge(nodes.get(10), nodes.get(1)));
+		edges.add(new Edge(nodes.get(2), nodes.get(4)));
+		edges.add(new Edge(nodes.get(2), nodes.get(5)));
+		edges.add(new Edge(nodes.get(2), nodes.get(9)));
+		edges.add(new Edge(nodes.get(2), nodes.get(11)));
+		edges.add(new Edge(nodes.get(3), nodes.get(6)));
+		edges.add(new Edge(nodes.get(3), nodes.get(7)));
+		edges.add(new Edge(nodes.get(3), nodes.get(9)));
+		edges.add(new Edge(nodes.get(3), nodes.get(11)));
+		edges.add(new Edge(nodes.get(4), nodes.get(5)));
+		edges.add(new Edge(nodes.get(4), nodes.get(8)));
+		edges.add(new Edge(nodes.get(4), nodes.get(9)));
+		edges.add(new Edge(nodes.get(5), nodes.get(10)));
+		edges.add(new Edge(nodes.get(5), nodes.get(11)));
+		edges.add(new Edge(nodes.get(6), nodes.get(7)));
+		edges.add(new Edge(nodes.get(6), nodes.get(8)));
+		edges.add(new Edge(nodes.get(6), nodes.get(9)));
+		edges.add(new Edge(nodes.get(7), nodes.get(10)));
+		edges.add(new Edge(nodes.get(7), nodes.get(11)));
+		edges.add(new Edge(nodes.get(8), nodes.get(9)));
+		edges.add(new Edge(nodes.get(10), nodes.get(11)));
+		
+		Array<Face> faces = new Array<Face>(); //TRIANGULAR FACES ONLY
+		faces.addAll(new Face[]{
+				new Face(nodes.get())
+		});
 		
 		
 		
-		
-		
-		Vector3[] faces = new Vector3[20];
+		//faces.add();
 		
 		
 		
