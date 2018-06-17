@@ -5,6 +5,7 @@ import com.badlogic.gdx.utils.Array;
 import com.mygdx.game.util.vmath;
 
 public class Face{
+    
     public Vector3[] pts = new Vector3[3];
     public Vector3 centroid;
     public Array<Face> nbrs = new Array<Face>();
@@ -13,7 +14,7 @@ public class Face{
         this.pts[0] = p0;
         this.pts[1] = p1;
         this.pts[2] = p2;
-        this.centroid = vmath.convertToUnitSphere(getCentroid(p0, p1, p2));
+        this.centroid = getCentroid(p0, p1, p2).nor();
     }
 
     boolean testNeighbor(Face b) {

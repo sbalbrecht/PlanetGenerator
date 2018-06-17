@@ -21,7 +21,6 @@ public class MyGdxGame extends ApplicationAdapter {
     public ModelInstance instance;
     public ModelBatch modelBatch;
     public Model model;
-    public FrameRate fr;
     
     public Array<Layer> layers = new Array<Layer>();
     
@@ -47,7 +46,10 @@ public class MyGdxGame extends ApplicationAdapter {
 	    // Subdivided icosahedron test
         long startTime = System.currentTimeMillis();
         Planet planet = new Planet();
-        planet.generateIcosphere(4);
+			planet.generateIcosphere(10.0f, 1);
+        	planet.randomizeTopography();
+		
+        
         long endTime = System.currentTimeMillis();
         System.out.println("Generation Time: " + (endTime - startTime) + " ms");
         System.out.println(planet.faces.size + " faces");
@@ -75,10 +77,8 @@ public class MyGdxGame extends ApplicationAdapter {
         Gdx.input.setInputProcessor(camController);
         
         //Set up our graphics layers
-		fr = new FrameRate();
-		layers.add(fr);
-	
 
+		layers.add(new FrameRate());
 		
 	}
 
