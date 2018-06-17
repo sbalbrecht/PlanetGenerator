@@ -75,4 +75,73 @@ public class Planet{
 		
 		
 	}
+	/* Iterates through tiles and sets the neighbors of every face */
+    public void setTileNeighbors() {
+        for(int i = 0; i < tiles.size-1; i++) {
+            for(int j = i+1; j < tiles.size; j++) {
+                if(tiles.get(i).nbrs.size == 6)
+                    break;
+                tiles.get(i).testNeighbor(tiles.get(j));
+            }
+        }
+    }
+    public void setFaceNeighbors() {
+        for(int i = 0; i < faces.size-1; i++) {
+            for(int j = i+1; j < faces.size; j++) {
+                if(faces.get(i).nbrs.size == 4)
+                    break;
+                faces.get(i).testNeighbor(faces.get(j));
+            }
+        }
+    }
+
+    /* subdivides faces n times */
+    public void subdivide(int degree) {
+        for(int i = 0; i < degree; i++) {
+            Array<Face> newFaces = new Array<Face>();
+            for(Face face : faces) {
+                Vector3 p0 = face.pts[0];
+                Vector3 p1 = face.pts[1];
+                Vector3 p2 = face.pts[2];
+
+                Vector3 q0 = utils.getMiddlePoint(p0, p1);
+                Vector3 q1 = utils.getMiddlePoint(p1, p2);
+                Vector3 q2 = utils.getMiddlePoint(p2, p0);
+
+                newFaces.add(new Face(q0, q2, p0));
+                newFaces.add(new Face(q1, q0, p1));
+                newFaces.add(new Face(q2, q1, p2));
+                newFaces.add(new Face(q0, q1, q2));
+            }
+            // set faces = newFaces
+            faces.clear();
+            faces.shrink();
+            faces.ensureCapacity(newFaces.size);
+            faces.addAll(newFaces);
+        }
+    }
+
+    // unfinished
+    public void convertDual() {
+        Array<Vector3> points = new Array<Vector3>();
+        for(Face face : faces) {
+            Vector3 centroid = face.centroid;           // tile centroid
+            Vector3 p1 = face.pts[0];
+            Vector3 p2 = face.pts[2];
+            for (int i = 0; i < faces.size; i++) {
+                if(face.equals(faces.get(i)))          //
+                    continue;
+                int count = 0;
+                for(int j = 0; j < faces.get(i).pts.length; j++) {
+                    if (faces.get(i).pts[j] == p1 ||
+                            faces.get(i).pts[j] == p2)
+                        count++;
+                }
+                if(count == 2) {
+                    // then they neighbors good
+                    // this face becomes the next face to focus on
+                }
+            }
+        }
+    } 
 }
