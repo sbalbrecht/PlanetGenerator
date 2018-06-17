@@ -21,12 +21,9 @@ public class FrameRate extends Layer implements Disposable{
     private BitmapFont font;
     private SpriteBatch batch;
     private OrthographicCamera cam;
-
-    public FrameRate(){
-        new FrameRate("Framerate Layer", true);
-    }
-    public FrameRate(String name, boolean on) {
-        super(name, on);
+    
+    public FrameRate() {
+        //super(name, on);
         lastTimeCounted = TimeUtils.millis();
         sinceChange = 0;
         frameRate = Gdx.graphics.getFramesPerSecond();

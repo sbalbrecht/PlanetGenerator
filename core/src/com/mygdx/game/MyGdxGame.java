@@ -21,7 +21,8 @@ public class MyGdxGame extends ApplicationAdapter {
     public ModelInstance instance;
     public ModelBatch modelBatch;
     public Model model;
-
+    public FrameRate fr;
+    
     public Array<Layer> layers = new Array<Layer>();
     
     @Override
@@ -74,7 +75,8 @@ public class MyGdxGame extends ApplicationAdapter {
         Gdx.input.setInputProcessor(camController);
         
         //Set up our graphics layers
-		layers.add(new FrameRate("Framerate Meter", true));
+		fr = new FrameRate();
+		layers.add(fr);
 	
 
 		
