@@ -47,7 +47,7 @@ public class MyGdxGame extends ApplicationAdapter {
         long startTime = System.currentTimeMillis();
         Planet planet = new Planet();
 			    planet.generateIcosphere(10.0f, 1);
-        	//planet.randomizeTopography();
+        	planet.randomizeTopography();
 		
       
         long endTime = System.currentTimeMillis();
