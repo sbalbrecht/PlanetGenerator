@@ -106,17 +106,24 @@ public class Planet{
     public void subdivide(int degree) {
         for(int i = 0; i < degree; i++) {
             Array<Face> newFaces = new Array<Face>();
+            Array<Vector3> newPoints = new Array<Vector3>();
+            
             for(Face face : faces) {
                 Vector3 p0 = face.pts[0];
                 Vector3 p1 = face.pts[1];
                 Vector3 p2 = face.pts[2];
-
+                
                 Vector3 q0 = vmath.mid(p0, p1);
                 Vector3 q1 = vmath.mid(p1, p2);
                 Vector3 q2 = vmath.mid(p2, p0);
 
-                points.addAll(q0, q1, q2);
-                
+                if(!newPoints.contains(q0, false)){ newPoints.add(q0); }
+					else { q0 = newPoints.get(newPoints.indexOf(q0, false)); }
+				if(!newPoints.contains(q1, false)){ newPoints.add(q1); }
+					else { q1 = newPoints.get(newPoints.indexOf(q1, false)); }
+				if(!newPoints.contains(q2, false)){ newPoints.add(q2); }
+					else { q2 = newPoints.get(newPoints.indexOf(q2, false)); }
+					
                 newFaces.addAll(
                         new Face(q0, q2, p0),
                         new Face(q1, q0, p1),
@@ -126,7 +133,8 @@ public class Planet{
                 
             }
             // set faces = newFaces
-            faces.clear();
+            points.addAll(newPoints);
+			faces.clear();
             faces.ensureCapacity(newFaces.size - faces.size);
             faces.addAll(newFaces);
         }
