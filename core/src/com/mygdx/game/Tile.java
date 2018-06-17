@@ -14,22 +14,4 @@ public class Tile {
             this.pts.add(pt);
         }
     }
-
-    boolean testNeighbor(Tile b) {
-        if(nbrs.contains(b, false))
-            return true;
-        int count = 0;
-        for(int i = 0; i < pts.size; i++) {
-            for(int j = 0; j < b.pts.size; j++) {
-                if (pts.get(i) == b.pts.get(j)) //if true
-                    count++;
-            }
-        }
-        if(count == 2) {
-            nbrs.add(b);
-            b.nbrs.add(this);
-            return true;
-        } else
-            return false;
-    }
 }

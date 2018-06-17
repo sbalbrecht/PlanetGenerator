@@ -47,7 +47,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	    // Subdivided icosahedron test
         long startTime = System.currentTimeMillis();
         Planet planet = new Planet();
-        planet.generateIcosphere(0);
+        planet.generateIcosphere(1);
         long endTime = System.currentTimeMillis();
         System.out.println("Generation Time: " + (endTime - startTime) + " ms");
 

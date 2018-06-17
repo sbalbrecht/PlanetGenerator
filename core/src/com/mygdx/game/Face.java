@@ -22,13 +22,14 @@ public class Face{
 
     boolean testNeighbor(Face b) {
         if(nbrs.contains(b, false))
-            return true;
+            return false;
         int count = 0;
         for(int i = 0; i < pts.length; i++) {
             for(int j = 0; j < b.pts.length; j++) {
-                if (pts[i] == b.pts[j]) //if true
+                if (pts[i] == b.pts[j]) {
                     count++;
                     break;
+                }
             }
         }
         if(count == 2) {
