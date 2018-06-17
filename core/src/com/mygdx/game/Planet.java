@@ -62,13 +62,13 @@ public class Planet{
 		 );
 
         subdivide(subdivisions);
-
+        setFaceNeighbors();
 //        convertDual();
 
 	
 	}
 
-	/* Iterates through tiles and sets the neighbors of every face */
+	/* Iterates through tiles and sets every neighbor */
     public void setTileNeighbors() {
         for(int i = 0; i < tiles.size-1; i++) {
             for(int j = i+1; j < tiles.size; j++) {
@@ -118,23 +118,26 @@ public class Planet{
     public void convertDual() {
         Array<Vector3> points = new Array<Vector3>();
         for(Face face : faces) {
-            Vector3 centroid = face.centroid;           // tile centroid
-            Vector3 p1 = face.pts[0];
-            Vector3 p2 = face.pts[2];
-            for (int i = 0; i < faces.size; i++) {
-                if(face.equals(faces.get(i)))          //
-                    continue;
-                int count = 0;
-                for(int j = 0; j < faces.get(i).pts.length; j++) {
-                    if (faces.get(i).pts[j] == p1 ||
-                            faces.get(i).pts[j] == p2)
-                        count++;
+            Face curr = face;
+            Vector3 p1 = curr.pts[0];        // Tile centroid
+            do {
+                points.add(curr.centroid);       // add point
+                Vector3 p2 = curr.pts[2];        // CCW point
+                for (Face nbr : curr.nbrs) {     // find CCW neighbor
+                    int count = 1;
+                    for(int i = 0; i < nbr.pts.length; i++) {
+                        if(nbr.pts[i] == p1 || nbr.pts[i] == p2) {
+                            count++;
+                        }
+                    }
+                    if(count == 2) {
+                        curr = nbr;
+                        break;
+                    }
                 }
-                if(count == 2) {
-                    // then they neighbors good
-                    // this face becomes the next face to focus on
-                }
-            }
+            } while(points.size < 6);
+            tiles.add(new Tile(p1, points));
+            faces.clear();
         }
     }
 }
