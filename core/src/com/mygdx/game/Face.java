@@ -29,7 +29,6 @@ public class Face{
             for(int j = 0; j < b.pts.length; j++) {
                 if (pts[i] == b.pts[j]) {
                     count++;
-                    break;
                 }
             }
         }

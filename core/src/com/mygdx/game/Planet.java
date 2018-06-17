@@ -26,44 +26,44 @@ public class Planet{
 		// Points are scaled x10 so the camera is more flexible
 
 		points.addAll(
-				new Vector3(0.0f,   +u,   +v),
-				new Vector3(0.0f,   -u,   +v),
-				new Vector3(0.0f,   +u,   -v),
-				new Vector3(0.0f,   -u,   -v),
-				new Vector3(+u,     +v, 0.0f),
-				new Vector3(-u,     +v, 0.0f),
-				new Vector3(+u,     -v, 0.0f),
-				new Vector3(-u,     -v, 0.0f),
-				new Vector3(+v,   0.0f,   +u),
-				new Vector3(+v,   0.0f,   -u),
-				new Vector3(-v,   0.0f,   +u),
-				new Vector3(-v,   0.0f,   -u)
+                new Vector3(0.0f,   +v,   +u),
+                new Vector3(0.0f,   +v,   -u),
+                new Vector3(0.0f,   -v,   +u),
+                new Vector3(0.0f,   -v,   -u),
+                new Vector3(+u,   0.0f,   +v),
+                new Vector3(-u,   0.0f,   +v),
+                new Vector3(+u,   0.0f,   -v),
+                new Vector3(-u,   0.0f,   -v),
+                new Vector3(+v,     +u, 0.0f),
+                new Vector3(+v,     -u, 0.0f),
+                new Vector3(-v,     +u, 0.0f),
+                new Vector3(-v,     -u, 0.0f)
 			);
 		
 		//for (Vector3 p: points){ p.scl(scale);}
 		
 	    // 20 faces
 		faces.addAll(
-			new Face(points.get(0), points.get( 1), points.get( 8)),
-			new Face(points.get(0), points.get( 4), points.get( 5)),
-			new Face(points.get(0), points.get( 5), points.get(10)),
-			new Face(points.get(0), points.get( 8), points.get( 4)),
-			new Face(points.get(0), points.get(10), points.get( 1)),
-			new Face(points.get(1), points.get( 6), points.get( 8)),
-			new Face(points.get(1), points.get( 7), points.get( 6)),
-			new Face(points.get(1), points.get(10), points.get( 7)),
-			new Face(points.get(2), points.get( 3), points.get(11)),
-			new Face(points.get(2), points.get( 4), points.get( 9)),
-			new Face(points.get(2), points.get( 5), points.get( 4)),
-			new Face(points.get(2), points.get( 9), points.get( 3)),
-			new Face(points.get(2), points.get(11), points.get( 5)),
-			new Face(points.get(3), points.get( 6), points.get( 7)),
-			new Face(points.get(3), points.get( 7), points.get(11)),
-			new Face(points.get(3), points.get( 9), points.get( 6)),
-			new Face(points.get(4), points.get( 8), points.get( 9)),
-			new Face(points.get(5), points.get(11), points.get(10)),
-			new Face(points.get(6), points.get( 9), points.get( 8)),
-			new Face(points.get(7), points.get(10), points.get(11))
+                new Face(points.get(0), points.get( 8),  points.get( 1)),
+                new Face(points.get(0), points.get( 5),  points.get( 4)),
+                new Face(points.get(0), points.get(10),  points.get( 5)),
+                new Face(points.get(0), points.get( 4),  points.get( 8)),
+                new Face(points.get(0), points.get( 1),  points.get(10)),
+                new Face(points.get(1), points.get( 8),  points.get( 6)),
+                new Face(points.get(1), points.get( 6),  points.get( 7)),
+                new Face(points.get(1), points.get( 7),  points.get(10)),
+                new Face(points.get(2), points.get(11),  points.get( 3)),
+                new Face(points.get(2), points.get( 9),  points.get( 4)),
+                new Face(points.get(2), points.get( 4),  points.get( 5)),
+                new Face(points.get(2), points.get( 3),  points.get( 9)),
+                new Face(points.get(2), points.get( 5),  points.get(11)),
+                new Face(points.get(3), points.get( 7),  points.get( 6)),
+                new Face(points.get(3), points.get(11),  points.get( 7)),
+                new Face(points.get(3), points.get( 6),  points.get( 9)),
+                new Face(points.get(4), points.get( 9),  points.get( 8)),
+                new Face(points.get(5), points.get(10),  points.get(11)),
+                new Face(points.get(6), points.get( 8),  points.get( 9)),
+                new Face(points.get(7), points.get(11),  points.get(10))
 		 );
 
         subdivide(subdivisions);
@@ -117,16 +117,17 @@ public class Planet{
 
                 points.addAll(q0, q1, q2);
                 
-                newFaces.add(new Face(q0, q2, p0));
-                newFaces.add(new Face(q1, q0, p1));
-                newFaces.add(new Face(q2, q1, p2));
-                newFaces.add(new Face(q0, q1, q2));
+                newFaces.addAll(
+                        new Face(q0, q2, p0),
+                        new Face(q1, q0, p1),
+                        new Face(q2, q1, p2),
+                        new Face(q0, q1, q2)
+                );
                 
             }
             // set faces = newFaces
             faces.clear();
-            faces.shrink();
-            faces.ensureCapacity(newFaces.size);
+            faces.ensureCapacity(newFaces.size - faces.size);
             faces.addAll(newFaces);
         }
     }
@@ -187,12 +188,16 @@ public class Planet{
 
     public int getCwPt(Face face, Vector3 TileCentroid) {
         int index = 0;
+
+        // Find the index being used for the centroid
         for(int i = 0; i < face.pts.length; i++) {
             if(face.pts[i] == TileCentroid) {
                 index = i;
                 break;
             }
         }
+
+        // Find the index of the next point CW from the centroid index
         if(index + 2 >= face.pts.length) {
             return index - 1;
         } else
