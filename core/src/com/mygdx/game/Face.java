@@ -1,8 +1,12 @@
 package com.mygdx.game;
 
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 
 public class Face{
+    public Vector3[] pts = new Vector3[3];
+    public Vector3 centroid;
+    public Array<Face> nbrs = new Array<Face>();
 
     Face(Vector3 p0, Vector3 p1, Vector3 p2) {
         this.pts[0] = p0;
