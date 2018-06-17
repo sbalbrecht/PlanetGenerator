@@ -17,19 +17,23 @@ public class Face{
         this.centroid = getCentroid(p0, p1, p2).nor();
     }
 
+    public void addNbr(Face face) {
+        nbrs.add(face);
+    }
+
     boolean testNeighbor(Face b) {
         if(nbrs.contains(b, false))
-            return true;
+            return false;
         int count = 0;
         for(int i = 0; i < pts.length; i++) {
-            for(int j = 0; j < pts.length; j++) {
-                if (pts[i] == b.pts[j]) //if true
+            for(int j = 0; j < b.pts.length; j++) {
+                if (pts[i] == b.pts[j]) {
                     count++;
+                    break;
+                }
             }
         }
         if(count == 2) {
-            nbrs.add(b);
-            b.nbrs.add(this);
             return true;
         } else
             return false;

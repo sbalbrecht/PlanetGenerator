@@ -9,10 +9,10 @@ public class Planet{
     public Array<Tile> tiles = new Array<Tile>();
     public Array<Vector3> points = new Array<Vector3>();
     private float scale;
+  
     // create Planet constructor
-    Planet() {
 
-    }
+    Planet() {}
 
 	void generateIcosphere(float scale, int subdivisions){
 		//hardcoded ico shit
@@ -24,6 +24,7 @@ public class Planet{
 		this.scale = scale;
 
 		// Points are scaled x10 so the camera is more flexible
+
 		points.addAll(
 				new Vector3(0.0f,   +u,   +v),
 				new Vector3(0.0f,   -u,   +v),
@@ -39,7 +40,7 @@ public class Planet{
 				new Vector3(-v,   0.0f,   -u)
 			);
 		
-		for (Vector3 p: points){ p.scl(scale);}
+		//for (Vector3 p: points){ p.scl(scale);}
 		
 	    // 20 faces
 		faces.addAll(
@@ -66,31 +67,27 @@ public class Planet{
 		 );
 
         subdivide(subdivisions);
-		for (Vector3 p : points){
-			p.nor().scl(scale);
-		}
-
-//        convertDual();
-
-	
+    
+        for (Vector3 p : points){
+          p.nor().scl(scale);
+        }
+    
+        setFaceNeighbors();
+        //convertToDual();
+        System.out.println("Faces: " + faces.size);
+        System.out.println("Tiles: " + tiles.size);
 	}
 
-	/* Iterates through tiles and sets the neighbors of every face */
-    public void setTileNeighbors() {
-        for(int i = 0; i < tiles.size-1; i++) {
-            for(int j = i+1; j < tiles.size; j++) {
-                if(tiles.get(i).nbrs.size == 6)
-                    break;
-                tiles.get(i).testNeighbor(tiles.get(j));
-            }
-        }
-    }
     public void setFaceNeighbors() {
-        for(int i = 0; i < faces.size-1; i++) {
-            for(int j = i+1; j < faces.size; j++) {
-                if(faces.get(i).nbrs.size == 4)
-                    break;
-                faces.get(i).testNeighbor(faces.get(j));
+        for(int i = 0; i < faces.size; i++) {
+            for(int j = 0; j < faces.size; j++) {
+                if(i == j) continue;
+                if(faces.get(i).nbrs.size == 3) break;
+                if(faces.get(i).testNeighbor(faces.get(j))) {
+                    System.out.println(i + " and " + j + " are neighbors");
+                    faces.get(i).addNbr(faces.get(j));
+                    faces.get(j).addNbr(faces.get(i));
+                }
             }
         }
     }
@@ -134,27 +131,71 @@ public class Planet{
         }
     }
 
-    // unfinished
-    public void convertDual() {
-        Array<Vector3> points = new Array<Vector3>();
+    public void convertToDual() {
+        Array<Vector3> points = new Array<Vector3>();             // Array for Tile points
+        Face curr;
+        boolean isTile;
         for(Face face : faces) {
-            Vector3 centroid = face.centroid;           // tile centroid
-            Vector3 p1 = face.pts[0];
-            Vector3 p2 = face.pts[2];
-            for (int i = 0; i < faces.size; i++) {
-                if(face.equals(faces.get(i)))          //
-                    continue;
-                int count = 0;
-                for(int j = 0; j < faces.get(i).pts.length; j++) {
-                    if (faces.get(i).pts[j] == p1 ||
-                            faces.get(i).pts[j] == p2)
-                        count++;
-                }
-                if(count == 2) {
-                    // then they neighbors good
-                    // this face becomes the next face to focus on
+            curr = face;
+            isTile = false;
+            Vector3 p1 = curr.pts[0];                       // Tile centroid
+
+            for(Tile tile : tiles) {                        // Check if tile with
+                if(tile.centroid == p1) {                   //   that center exists
+                    p1 = curr.pts[1];                       // If so, go to next point
+                    break;
                 }
             }
+            for(Tile tile : tiles) {                        // Check if tile with
+                if(tile.centroid == p1) {                   //   next center exists
+                    isTile = true;                          // If so, every point on face
+                    break;                                  //   is a tile, move on
+                }
+            }
+            if(isTile) continue;
+
+            do {
+                points.add(curr.centroid);                  // add current centroid
+                Vector3 p2 = curr.pts[getCwPt(curr, p1)];   // CCW point
+//                System.out.println("Cn: " + p1.x + "," + p1.y + "," + p1.z);
+//                System.out.println("Cw: " + p2.x + "," + p2.y + "," + p2.z);
+
+                for (Face nbr : curr.nbrs) {                // find CCW neighbor
+                    int count = 0;
+                    for(int i = 0; i < nbr.pts.length; i++) {
+                        if(nbr.pts[i] == p1 || nbr.pts[i] == p2) {
+                            count++;
+                        }
+                    }
+                    if(count == 2) {
+                        curr = nbr;
+//                        System.out.println("Nbr p1: " + nbr.pts[0].x + "," + nbr.pts[0].y + "," + nbr.pts[0].z);
+//                        System.out.println("Nbr p2: " + nbr.pts[1].x + "," + nbr.pts[1].y + "," + nbr.pts[1].z);
+//                        System.out.println("Nbr p3: " + nbr.pts[2].x + "," + nbr.pts[2].y + "," + nbr.pts[2].z);
+
+                        break;
+                    }
+                }
+            } while(curr != face);
+
+            tiles.add(new Tile(p1, points));
+            System.out.println("Tile added, centroid (" + p1.x + "," + p1.y + "," + p1.z
+                    + "), " + points.size + " points");
+            points.clear();                                 // clear points for next tile
         }
+    }
+
+    public int getCwPt(Face face, Vector3 TileCentroid) {
+        int index = 0;
+        for(int i = 0; i < face.pts.length; i++) {
+            if(face.pts[i] == TileCentroid) {
+                index = i;
+                break;
+            }
+        }
+        if(index + 2 >= face.pts.length) {
+            return index - 1;
+        } else
+            return index + 2;
     }
 }
