@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
+import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
@@ -18,6 +19,7 @@ public class MyGdxGame extends ApplicationAdapter {
     public CameraInputController camController;
     public Environment environment;
     public ModelBuilder modelBuilder;
+    MeshPartBuilder partBuilder;
     public ModelInstance instance;
     public ModelBatch modelBatch;
     public Model model;
@@ -46,7 +48,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	    // Subdivided icosahedron test
         long startTime = System.currentTimeMillis();
         Planet planet = new Planet();
-			    planet.generateIcosphere(10.0f, 2);
+			    planet.generateIcosphere(10.0f, 1);
 //        	planet.randomizeTopography();
 		
       
@@ -68,6 +70,7 @@ public class MyGdxGame extends ApplicationAdapter {
 //                            new Vector3(planet.faces.get(i).pts[2]));
 //        }
 
+        partBuilder = modelBuilder.part("tile", GL20.GL_TRIANGLES, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal, new Material());
         for(int i = 0; i < planet.tiles.size; i++) {
             float red = r.nextFloat();
             float grn = r.nextFloat();
@@ -75,8 +78,8 @@ public class MyGdxGame extends ApplicationAdapter {
             for(int j = 0; j < planet.tiles.get(i).pts.size; j++) {
                 int k = j+1;
                 if(k == planet.tiles.get(i).pts.size) k = 0;
-                modelBuilder.part("tile"+i+"t"+j, GL20.GL_TRIANGLES, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal,
-                        new Material(ColorAttribute.createDiffuse(red, grn, blu, 1))).triangle(
+                partBuilder.setColor(red, grn, blu,1);
+                partBuilder.triangle(
                                 planet.tiles.get(i).centroid,
                                 planet.tiles.get(i).pts.get(j),
                                 planet.tiles.get(i).pts.get(k));
