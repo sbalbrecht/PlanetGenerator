@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
+import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
@@ -18,6 +19,7 @@ public class MyGdxGame extends ApplicationAdapter {
     public CameraInputController camController;
     public Environment environment;
     public ModelBuilder modelBuilder;
+    MeshPartBuilder partBuilder;
     public ModelInstance instance;
     public ModelBatch modelBatch;
     public Model model;
@@ -52,7 +54,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	    // Subdivided icosahedron test
         long startTime = System.currentTimeMillis();
         Planet planet = new Planet();
-			    planet.generateIcosphere(10.0f, 4);
+			    planet.generateIcosphere(10.0f, 1);
         	planet.randomizeTopography();
 		
       
@@ -64,19 +66,23 @@ public class MyGdxGame extends ApplicationAdapter {
         modelBuilder = new ModelBuilder();      // Declare the ModelBuilder
         modelBuilder.begin();                   // LET THE GAMES BEGIN
 
-		{Face f; 	//Loop variable
-        	for(int i = 0; i < planet.faces.size; i++) {
-				f = planet.faces.get(i);
-				
-				modelBuilder.part("face"+i, GL20.GL_TRIANGLES, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal,
-						new Material(ColorAttribute.createDiffuse(r.nextFloat()/2, r.nextFloat(), 1.0f/(0.01f*f.centroid.len2()), 1)))
-						//new Material(ColorAttribute.createDiffuse(Color.GREEN)))
-						.triangle(
-								f.pts[0],
-								f.pts[1],
-								f.pts[2]);
-        	}
-		}
+
+        partBuilder = modelBuilder.part("tile", GL20.GL_TRIANGLES, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal, new Material());
+        for(int i = 0; i < planet.tiles.size; i++) {
+            float red = r.nextFloat();
+            float grn = r.nextFloat();
+            float blu = r.nextFloat();
+            for(int j = 0; j < planet.tiles.get(i).pts.size; j++) {
+                int k = j+1;
+                if(k == planet.tiles.get(i).pts.size) k = 0;
+                partBuilder.setColor(red, grn, blu,1);
+                partBuilder.triangle(
+                                planet.tiles.get(i).centroid,
+                                planet.tiles.get(i).pts.get(j),
+                                planet.tiles.get(i).pts.get(k));
+            }
+        }
+
 
         model = modelBuilder.end();         // The model is then assigned
 
