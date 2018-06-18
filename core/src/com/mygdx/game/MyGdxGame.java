@@ -55,7 +55,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	    // Subdivided icosahedron test
         long startTime = System.currentTimeMillis();
         Planet planet = new Planet();
-			    planet.generateIcosphere(10.0f, 5);
+			    planet.generateIcosphere(10.0f, 6);
         	//planet.randomizeTopography();
 		
       
@@ -67,7 +67,7 @@ public class MyGdxGame extends ApplicationAdapter {
         modelBuilder = new ModelBuilder();      // Declare the ModelBuilder
         modelBuilder.begin();                   // LET THE GAMES BEGIN
 
-
+        startTime = System.currentTimeMillis();
         partBuilder = modelBuilder.part("tile", GL20.GL_TRIANGLES, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.ColorPacked, new Material());
         
         int q = 0;
@@ -80,6 +80,7 @@ public class MyGdxGame extends ApplicationAdapter {
                 int k = j+1;
                 if(k == planet.tiles.get(i).pts.size) k = 0;
                 partBuilder.setColor(0.5f+0.5f*(float)Math.sin(q*Math.PI), 0.5f + 0.5f*(float)Math.cos((q)*Math.PI/2.0f), 0.5f - 0.5f*(float)Math.sin(q*Math.PI), 1.0f);
+
 				partBuilder.triangle(
                                 planet.tiles.get(i).centroid,
                                 planet.tiles.get(i).pts.get(j),
@@ -89,7 +90,8 @@ public class MyGdxGame extends ApplicationAdapter {
 
 
         model = modelBuilder.end();         // The model is then assigned
-
+        endTime = System.currentTimeMillis();
+        System.out.println("Build Time: " + (endTime - startTime) + " ms");
         // Create a new instance of the model
         instance = new ModelInstance(model, 0, 0 ,0);
 

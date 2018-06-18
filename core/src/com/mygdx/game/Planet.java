@@ -65,10 +65,21 @@ public class Planet{
                 new Face(points.get(6), points.get( 8),  points.get( 9)),
                 new Face(points.get(7), points.get(11),  points.get(10))
 		 );
-
+        long startTime = System.currentTimeMillis();
         subdivide(subdivisions);
+        long endTime = System.currentTimeMillis();
+        System.out.println("Subdivision Time: " + (endTime - startTime) + " ms");
+
+        startTime = System.currentTimeMillis();
         setFaceNeighbors();
+        endTime = System.currentTimeMillis();
+        System.out.println("SetNeighbors Time: " + (endTime - startTime) + " ms");
+
+        startTime = System.currentTimeMillis();
         convertToDual();
+        endTime = System.currentTimeMillis();
+        System.out.println("Conversion Time: " + (endTime - startTime) + " ms");
+
         for (Vector3 p : points){
             p.nor().scl(scale);
         }
@@ -83,7 +94,7 @@ public class Planet{
 
     public void setFaceNeighbors() {
         for(int i = 0; i < faces.size; i++) {
-            for(int j = 0; j < faces.size; j++) {
+            for(int j = i+1; j < faces.size; j++) {
                 if(i == j) continue;
                 if(faces.get(i).nbrs.size == 3) break;
                 if(faces.get(i).testNeighbor(faces.get(j))) {
@@ -152,19 +163,10 @@ public class Planet{
             isTile = false;
 
             Vector3 p1 = curr.pts[0];                       // Tile centroid
-            for(Tile tile : tiles) {                        // Check if tile with
-                if(tile.centroid == p1) {                   //   that center exists
-                    p1 = curr.pts[1];                       // If so, go to next point
-                    break;
-                }
-            }
-            for(Tile tile : tiles) {                        // Check if tile with
-                if(tile.centroid == p1) {                   //   next center exists
-                    isTile = true;                          // If so, every point on face
-                    break;                                  //   is a tile centroid, move on
-                }
-            }
-            if(isTile) continue;
+            if(face.ptsUsedAsTileCentroid.contains(p1, false))
+                p1 = curr.pts[1];
+            if(face.ptsUsedAsTileCentroid.contains(p1, false))
+                continue;
 
             do {
                 pts.add(curr.centroid);                  // add current centroid
@@ -179,6 +181,7 @@ public class Planet{
                     }
                     if(count == 2) {
                         curr = nbr;
+                        curr.addPtUsedInTileCentroid(p1);
                         break;
                     }
                 }

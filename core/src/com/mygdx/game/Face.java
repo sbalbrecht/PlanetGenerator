@@ -9,6 +9,7 @@ public class Face{
     public Vector3[] pts = new Vector3[3];
     public Vector3 centroid;
     public Array<Face> nbrs = new Array<Face>();
+    public Array<Vector3> ptsUsedAsTileCentroid = new Array<Vector3>();
 
     Face(Vector3 p0, Vector3 p1, Vector3 p2) {
         this.pts[0] = p0;
@@ -19,6 +20,9 @@ public class Face{
 
     public void addNbr(Face face) {
         nbrs.add(face);
+    }
+    public void addPtUsedInTileCentroid(Vector3 pt) {
+        ptsUsedAsTileCentroid.add(pt);
     }
 
     boolean testNeighbor(Face b) {
