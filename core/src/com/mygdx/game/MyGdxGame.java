@@ -47,7 +47,7 @@ public class MyGdxGame extends ApplicationAdapter {
         long startTime = System.currentTimeMillis();
         Planet planet = new Planet();
 			    planet.generateIcosphere(10.0f, 2);
-        	planet.randomizeTopography();
+//        	planet.randomizeTopography();
 		
       
         long endTime = System.currentTimeMillis();
@@ -58,14 +58,29 @@ public class MyGdxGame extends ApplicationAdapter {
         modelBuilder = new ModelBuilder();      // Declare the ModelBuilder
         modelBuilder.begin();                   // LET THE GAMES BEGIN
 
-        for(int i = 0; i < planet.faces.size; i++) {
-            modelBuilder.part("face"+i, GL20.GL_TRIANGLES, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal,
-                    new Material(ColorAttribute.createDiffuse(r.nextFloat(), r.nextFloat(), r.nextFloat(), 1)))
-                    //new Material(ColorAttribute.createDiffuse(Color.GREEN)))
-                    .triangle(
-                            new Vector3(planet.faces.get(i).pts[0]),
-                            new Vector3(planet.faces.get(i).pts[1]),
-                            new Vector3(planet.faces.get(i).pts[2]));
+//        for(int i = 0; i < planet.faces.size; i++) {
+//            modelBuilder.part("face"+i, GL20.GL_TRIANGLES, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal,
+//                    new Material(ColorAttribute.createDiffuse(r.nextFloat(), r.nextFloat(), r.nextFloat(), 1)))
+//                    //new Material(ColorAttribute.createDiffuse(Color.GREEN)))
+//                    .triangle(
+//                            new Vector3(planet.faces.get(i).pts[0]),
+//                            new Vector3(planet.faces.get(i).pts[1]),
+//                            new Vector3(planet.faces.get(i).pts[2]));
+//        }
+
+        for(int i = 0; i < planet.tiles.size; i++) {
+            float red = r.nextFloat();
+            float grn = r.nextFloat();
+            float blu = r.nextFloat();
+            for(int j = 0; j < planet.tiles.get(i).pts.size; j++) {
+                int k = j+1;
+                if(k == planet.tiles.get(i).pts.size) k = 0;
+                modelBuilder.part("tile"+i+"t"+j, GL20.GL_TRIANGLES, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal,
+                        new Material(ColorAttribute.createDiffuse(red, grn, blu, 1))).triangle(
+                                planet.tiles.get(i).centroid,
+                                planet.tiles.get(i).pts.get(j),
+                                planet.tiles.get(i).pts.get(k));
+            }
         }
 
         model = modelBuilder.end();         // The model is then assigned

@@ -67,13 +67,16 @@ public class Planet{
 		 );
 
         subdivide(subdivisions);
-    
-        for (Vector3 p : points){
-          p.nor().scl(scale);
-        }
-    
         setFaceNeighbors();
-        //convertToDual();
+        convertToDual();
+        for (Vector3 p : points){
+            p.nor().scl(scale);
+        }
+        for(Tile tile : tiles) {
+            for(Vector3 p : tile.pts) {
+                p.nor().scl(scale);
+            }
+        }
         System.out.println("Faces: " + faces.size);
         System.out.println("Tiles: " + tiles.size);
 	}
@@ -84,7 +87,7 @@ public class Planet{
                 if(i == j) continue;
                 if(faces.get(i).nbrs.size == 3) break;
                 if(faces.get(i).testNeighbor(faces.get(j))) {
-                    System.out.println(i + " and " + j + " are neighbors");
+//                    System.out.println(i + " and " + j + " are neighbors");
                     faces.get(i).addNbr(faces.get(j));
                     faces.get(j).addNbr(faces.get(i));
                 }
@@ -141,14 +144,14 @@ public class Planet{
     }
 
     public void convertToDual() {
-        Array<Vector3> points = new Array<Vector3>();             // Array for Tile points
+        Array<Vector3> pts = new Array<Vector3>();             // Array for Tile points
         Face curr;
         boolean isTile;
         for(Face face : faces) {
             curr = face;
             isTile = false;
-            Vector3 p1 = curr.pts[0];                       // Tile centroid
 
+            Vector3 p1 = curr.pts[0];                       // Tile centroid
             for(Tile tile : tiles) {                        // Check if tile with
                 if(tile.centroid == p1) {                   //   that center exists
                     p1 = curr.pts[1];                       // If so, go to next point
@@ -158,16 +161,16 @@ public class Planet{
             for(Tile tile : tiles) {                        // Check if tile with
                 if(tile.centroid == p1) {                   //   next center exists
                     isTile = true;                          // If so, every point on face
-                    break;                                  //   is a tile, move on
+                    break;                                  //   is a tile centroid, move on
                 }
             }
             if(isTile) continue;
 
+            //System.out.println("Tile C: " + p1.x + "," + p1.y + "," + p1.z);
             do {
-                points.add(curr.centroid);                  // add current centroid
+                pts.add(curr.centroid);                  // add current centroid
                 Vector3 p2 = curr.pts[getCwPt(curr, p1)];   // CCW point
-//                System.out.println("Cn: " + p1.x + "," + p1.y + "," + p1.z);
-//                System.out.println("Cw: " + p2.x + "," + p2.y + "," + p2.z);
+                //System.out.println("Face c: " + curr.centroid.x + "," + curr.centroid.y + "," + curr.centroid.z);
 
                 for (Face nbr : curr.nbrs) {                // find CCW neighbor
                     int count = 0;
@@ -178,19 +181,18 @@ public class Planet{
                     }
                     if(count == 2) {
                         curr = nbr;
-//                        System.out.println("Nbr p1: " + nbr.pts[0].x + "," + nbr.pts[0].y + "," + nbr.pts[0].z);
-//                        System.out.println("Nbr p2: " + nbr.pts[1].x + "," + nbr.pts[1].y + "," + nbr.pts[1].z);
-//                        System.out.println("Nbr p3: " + nbr.pts[2].x + "," + nbr.pts[2].y + "," + nbr.pts[2].z);
+//                        System.out.println("(" + nbr.pts[0].x + "," + nbr.pts[0].y + "," + nbr.pts[0].z
+//                                + "), (" + nbr.pts[1].x + "," + nbr.pts[1].y + "," + nbr.pts[1].z + ")"
+//                                + "), (" + nbr.pts[2].x + "," + nbr.pts[2].y + "," + nbr.pts[2].z + ")");
 
                         break;
                     }
                 }
             } while(curr != face);
 
-            tiles.add(new Tile(p1, points));
-            System.out.println("Tile added, centroid (" + p1.x + "," + p1.y + "," + p1.z
-                    + "), " + points.size + " points");
-            points.clear();                                 // clear points for next tile
+            tiles.add(new Tile(p1, pts));
+//            System.out.println("======== Tile added, " + pts.size + " points ========");
+            pts.clear();                                 // clear points for next tile
         }
     }
 
