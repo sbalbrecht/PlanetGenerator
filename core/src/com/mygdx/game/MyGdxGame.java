@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
+import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
@@ -40,7 +41,7 @@ public class MyGdxGame extends ApplicationAdapter {
         // Lighting
         environment = new Environment();
        // environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 1f, 1f, 1f, 1f));
-        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.05f, 0.05f, 0.05f, 0.05f));
+        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.15f, 0.15f, 0.15f, 0.15f));
         environment.add(new DirectionalLight().set(0.95f, 0.95f, 0.95f, -1f, -0.8f, -0.2f));
 
         // Camera
@@ -54,8 +55,8 @@ public class MyGdxGame extends ApplicationAdapter {
 	    // Subdivided icosahedron test
         long startTime = System.currentTimeMillis();
         Planet planet = new Planet();
-			    planet.generateIcosphere(10.0f, 1);
-        	planet.randomizeTopography();
+			    planet.generateIcosphere(10.0f, 5);
+        	//planet.randomizeTopography();
 		
       
         long endTime = System.currentTimeMillis();
@@ -67,16 +68,19 @@ public class MyGdxGame extends ApplicationAdapter {
         modelBuilder.begin();                   // LET THE GAMES BEGIN
 
 
-        partBuilder = modelBuilder.part("tile", GL20.GL_TRIANGLES, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal, new Material());
+        partBuilder = modelBuilder.part("tile", GL20.GL_TRIANGLES, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.ColorPacked, new Material());
+        
+        int q = 0;
+        
         for(int i = 0; i < planet.tiles.size; i++) {
-            float red = r.nextFloat();
-            float grn = r.nextFloat();
-            float blu = r.nextFloat();
-            for(int j = 0; j < planet.tiles.get(i).pts.size; j++) {
+			if(i%600 == 0){
+				partBuilder = modelBuilder.part("tile" + i, GL20.GL_TRIANGLES, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.ColorPacked, new Material());
+				q++;
+			}for(int j = 0; j < planet.tiles.get(i).pts.size; j++) {
                 int k = j+1;
                 if(k == planet.tiles.get(i).pts.size) k = 0;
-                partBuilder.setColor(red, grn, blu,1);
-                partBuilder.triangle(
+                partBuilder.setColor(0.5f+0.5f*(float)Math.sin(q*Math.PI), 0.5f + 0.5f*(float)Math.cos((q)*Math.PI/2.0f), 0.5f - 0.5f*(float)Math.sin(q*Math.PI), 1.0f);
+				partBuilder.triangle(
                                 planet.tiles.get(i).centroid,
                                 planet.tiles.get(i).pts.get(j),
                                 planet.tiles.get(i).pts.get(k));
@@ -95,7 +99,7 @@ public class MyGdxGame extends ApplicationAdapter {
         //Set up our graphics layers
 
 		layers.add(new FrameRateLayer());
-		layers.add(til);
+		//layers.add(til);
 		
 	}
 
