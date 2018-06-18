@@ -128,9 +128,9 @@ public class Planet{
 					else { q2 = newPoints.get(newPoints.indexOf(q2, false)); }
 					
                 newFaces.addAll(
-                        new Face(q0, q2, p0),
-                        new Face(q1, q0, p1),
-                        new Face(q2, q1, p2),
+                        new Face(p0, q0, q2),
+                        new Face(p1, q1, q0),
+                        new Face(p2, q2, q1),
                         new Face(q0, q1, q2)
                 );
                 
@@ -166,11 +166,9 @@ public class Planet{
             }
             if(isTile) continue;
 
-            //System.out.println("Tile C: " + p1.x + "," + p1.y + "," + p1.z);
             do {
                 pts.add(curr.centroid);                  // add current centroid
                 Vector3 p2 = curr.pts[getCwPt(curr, p1)];   // CCW point
-                //System.out.println("Face c: " + curr.centroid.x + "," + curr.centroid.y + "," + curr.centroid.z);
 
                 for (Face nbr : curr.nbrs) {                // find CCW neighbor
                     int count = 0;
@@ -181,17 +179,12 @@ public class Planet{
                     }
                     if(count == 2) {
                         curr = nbr;
-//                        System.out.println("(" + nbr.pts[0].x + "," + nbr.pts[0].y + "," + nbr.pts[0].z
-//                                + "), (" + nbr.pts[1].x + "," + nbr.pts[1].y + "," + nbr.pts[1].z + ")"
-//                                + "), (" + nbr.pts[2].x + "," + nbr.pts[2].y + "," + nbr.pts[2].z + ")");
-
                         break;
                     }
                 }
             } while(curr != face);
 
             tiles.add(new Tile(p1, pts));
-//            System.out.println("======== Tile added, " + pts.size + " points ========");
             pts.clear();                                 // clear points for next tile
         }
     }
