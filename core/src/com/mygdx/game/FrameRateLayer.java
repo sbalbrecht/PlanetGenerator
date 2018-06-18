@@ -14,7 +14,7 @@ import com.badlogic.gdx.utils.TimeUtils;
  * @author William Hartman
  * https://gist.github.com/williamahartman/5584f037ed2748f57432
  */
-public class FrameRate extends Layer implements Disposable{
+public class FrameRateLayer extends Layer implements Disposable{
     long lastTimeCounted;
     private float sinceChange;
     private float frameRate;
@@ -22,7 +22,7 @@ public class FrameRate extends Layer implements Disposable{
     private SpriteBatch batch;
     private OrthographicCamera cam;
     
-    public FrameRate() {
+    public FrameRateLayer() {
         //super(name, on);
         lastTimeCounted = TimeUtils.millis();
         sinceChange = 0;

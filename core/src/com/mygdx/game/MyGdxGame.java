@@ -9,7 +9,7 @@ import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
-import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
 
 import java.util.Random;
@@ -24,18 +24,24 @@ public class MyGdxGame extends ApplicationAdapter {
     public ModelBatch modelBatch;
     public Model model;
     
-    public Array<Layer> layers = new Array<Layer>();
+    private Ray cursor;
+    
+    public TileInfoLayer til;
+    
+    public Array<Layer> layers;
     
     @Override
 	public void create () {
         super.create();
+        cursor = new Ray();
+        layers = new Array<Layer>();
         modelBatch = new ModelBatch();
-
+		
         // Lighting
         environment = new Environment();
        // environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 1f, 1f, 1f, 1f));
-        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.8f, 0.8f, 0.8f, 1f));
-        environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
+        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.05f, 0.05f, 0.05f, 0.05f));
+        environment.add(new DirectionalLight().set(0.95f, 0.95f, 0.95f, -1f, -0.8f, -0.2f));
 
         // Camera
 	    cam = new PerspectiveCamera(50, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -49,7 +55,7 @@ public class MyGdxGame extends ApplicationAdapter {
         long startTime = System.currentTimeMillis();
         Planet planet = new Planet();
 			    planet.generateIcosphere(10.0f, 1);
-//        	planet.randomizeTopography();
+        	planet.randomizeTopography();
 		
       
         long endTime = System.currentTimeMillis();
@@ -60,15 +66,6 @@ public class MyGdxGame extends ApplicationAdapter {
         modelBuilder = new ModelBuilder();      // Declare the ModelBuilder
         modelBuilder.begin();                   // LET THE GAMES BEGIN
 
-//        for(int i = 0; i < planet.faces.size; i++) {
-//            modelBuilder.part("face"+i, GL20.GL_TRIANGLES, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal,
-//                    new Material(ColorAttribute.createDiffuse(r.nextFloat(), r.nextFloat(), r.nextFloat(), 1)))
-//                    //new Material(ColorAttribute.createDiffuse(Color.GREEN)))
-//                    .triangle(
-//                            new Vector3(planet.faces.get(i).pts[0]),
-//                            new Vector3(planet.faces.get(i).pts[1]),
-//                            new Vector3(planet.faces.get(i).pts[2]));
-//        }
 
         partBuilder = modelBuilder.part("tile", GL20.GL_TRIANGLES, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal, new Material());
         for(int i = 0; i < planet.tiles.size; i++) {
@@ -86,6 +83,7 @@ public class MyGdxGame extends ApplicationAdapter {
             }
         }
 
+
         model = modelBuilder.end();         // The model is then assigned
 
         // Create a new instance of the model
@@ -96,15 +94,19 @@ public class MyGdxGame extends ApplicationAdapter {
         
         //Set up our graphics layers
 
-		layers.add(new FrameRate());
+		layers.add(new FrameRateLayer());
+		layers.add(til);
 		
 	}
 
 
 	@Override
 	public void render () {
+    	
         camController.update();
 
+        
+        
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
         
