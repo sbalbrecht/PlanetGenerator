@@ -8,7 +8,6 @@ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
-import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
@@ -20,7 +19,7 @@ public class MyGdxGame extends ApplicationAdapter {
     public CameraInputController camController;
     public Environment environment;
     public ModelBuilder modelBuilder;
-    MeshPartBuilder partBuilder;
+    public MeshPartBuilder partBuilder;
     public ModelInstance instance;
     public ModelBatch modelBatch;
     public Model model;
@@ -48,7 +47,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	    cam = new PerspectiveCamera(50, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 	    cam.position.set(20f,20f,20f);
 	    cam.lookAt(0f,0f,0f);
-	    cam.near = 1f;
+	    cam.near = 0.1f;
 	    cam.far = 50f;
 	    cam.update();
 
@@ -73,26 +72,47 @@ public class MyGdxGame extends ApplicationAdapter {
         int q = 0;
         
         for(int i = 0; i < planet.tiles.size; i++) {
-			if(i%600 == 0){
+			if(i%1000 == 0){
 				partBuilder = modelBuilder.part("tile" + i, GL20.GL_TRIANGLES, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.ColorPacked, new Material());
 				q++;
-			}for(int j = 0; j < planet.tiles.get(i).pts.size; j++) {
-                int k = j+1;
-                if(k == planet.tiles.get(i).pts.size) k = 0;
-                partBuilder.setColor(0.5f+0.5f*(float)Math.sin(q*Math.PI), 0.5f + 0.5f*(float)Math.cos((q)*Math.PI/2.0f), 0.5f - 0.5f*(float)Math.sin(q*Math.PI), 1.0f);
-
-				partBuilder.triangle(
-                                planet.tiles.get(i).centroid,
-                                planet.tiles.get(i).pts.get(j),
-                                planet.tiles.get(i).pts.get(k));
+			}
+            int numPts = planet.tiles.get(i).pts.size;
+            if (numPts == 6) {
+                partBuilder.setColor(0.5f + 0.5f * (float) Math.sin(q * Math.PI), 0.5f + 0.5f * (float) Math.cos((q) * Math.PI / 2.0f), 0.5f - 0.5f * (float) Math.sin(q * Math.PI), 1.0f);
+                partBuilder.rect(
+                        planet.tiles.get(i).pts.get(0),
+                        planet.tiles.get(i).pts.get(1),
+                        planet.tiles.get(i).pts.get(3),
+                        planet.tiles.get(i).pts.get(4),
+                        planet.tiles.get(i).centroid
+                );
+                partBuilder.triangle(
+                        planet.tiles.get(i).pts.get(0),
+                        planet.tiles.get(i).pts.get(4),
+                        planet.tiles.get(i).pts.get(5)
+                );
+                partBuilder.triangle(
+                        planet.tiles.get(i).pts.get(1),
+                        planet.tiles.get(i).pts.get(2),
+                        planet.tiles.get(i).pts.get(3)
+                );
+            } else {
+                for (int j = 0; j < numPts; j++) {
+                    int k = j + 1;
+                    if (k == numPts) k = 0;
+                    partBuilder.setColor(0.5f + 0.5f * (float) Math.sin(q * Math.PI), 0.5f + 0.5f * (float) Math.cos((q) * Math.PI / 2.0f), 0.5f - 0.5f * (float) Math.sin(q * Math.PI), 1.0f);
+                    partBuilder.triangle(
+                            planet.tiles.get(i).centroid,
+                            planet.tiles.get(i).pts.get(j),
+                            planet.tiles.get(i).pts.get(k));
+                }
             }
         }
 
 
-        model = modelBuilder.end();         // The model is then assigned
+        model = modelBuilder.end();
         endTime = System.currentTimeMillis();
         System.out.println("Build Time: " + (endTime - startTime) + " ms");
-        // Create a new instance of the model
         instance = new ModelInstance(model, 0, 0 ,0);
 
         camController = new CameraInputController(cam);

@@ -95,7 +95,6 @@ public class Planet{
     public void setFaceNeighbors() {
         for(int i = 0; i < faces.size; i++) {
             for(int j = i+1; j < faces.size; j++) {
-                if(i == j) continue;
                 if(faces.get(i).nbrs.size == 3) break;
                 if(faces.get(i).testNeighbor(faces.get(j))) {
 //                    System.out.println(i + " and " + j + " are neighbors");
@@ -137,40 +136,45 @@ public class Planet{
 					else { q1 = newPoints.get(newPoints.indexOf(q1, false)); }
 				if(!newPoints.contains(q2, false)){ newPoints.add(q2); }
 					else { q2 = newPoints.get(newPoints.indexOf(q2, false)); }
-					
-                newFaces.addAll(
-                        new Face(p0, q0, q2),
-                        new Face(p1, q1, q0),
-                        new Face(p2, q2, q1),
-                        new Face(q0, q1, q2)
-                );
-                
+
+				Face f0 = new Face(p0, q0, q2);
+				Face f1 = new Face(p1, q1, q0);
+				Face f2 = new Face(p2, q2, q1);
+				Face f3 = new Face(q0, q1, q2);
+				if(i == degree-1) {
+                    f3.addNbr(f0);
+                    f3.addNbr(f1);
+                    f3.addNbr(f2);
+                    f0.addNbr(f3);
+                    f1.addNbr(f3);
+                    f2.addNbr(f3);
+                }
+				newFaces.addAll(f0, f1, f2, f3);
+
             }
             // set faces = newFaces
             points.addAll(newPoints);
 			faces.clear();
-            faces.ensureCapacity(newFaces.size - faces.size);
+            faces.ensureCapacity(newFaces.size);
             faces.addAll(newFaces);
         }
     }
 
     public void convertToDual() {
-        Array<Vector3> pts = new Array<Vector3>();             // Array for Tile points
+        Array<Vector3> pts = new Array<Vector3>();  // Array for Tile points
         Face curr;
-        boolean isTile;
         for(Face face : faces) {
             curr = face;
-            isTile = false;
 
-            Vector3 p1 = curr.pts[0];                       // Tile centroid
+            Vector3 p1 = curr.pts[0];         // Tile centroid
             if(face.ptsUsedAsTileCentroid.contains(p1, false))
                 p1 = curr.pts[1];
             if(face.ptsUsedAsTileCentroid.contains(p1, false))
                 continue;
 
             do {
-                pts.add(curr.centroid);                  // add current centroid
-                Vector3 p2 = curr.pts[getCwPt(curr, p1)];   // CCW point
+                pts.add(curr.centroid);                     // add current centroid
+                Vector3 p2 = curr.pts[getCwPt(curr, p1)];   // CW point
 
                 for (Face nbr : curr.nbrs) {                // find CCW neighbor
                     int count = 0;
