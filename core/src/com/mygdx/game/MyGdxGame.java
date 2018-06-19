@@ -5,10 +5,12 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
 
@@ -66,19 +68,22 @@ public class MyGdxGame extends ApplicationAdapter {
         modelBuilder = new ModelBuilder();      // Declare the ModelBuilder
         modelBuilder.begin();                   // LET THE GAMES BEGIN
 
+        /* Render tiles */
         startTime = System.currentTimeMillis();
         partBuilder = modelBuilder.part("tile", GL20.GL_TRIANGLES, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.ColorPacked, new Material());
-        
         int q = 0;
-        
+        int tileLimit = 1000;
         for(int i = 0; i < planet.tiles.size; i++) {
-			if(i%1000 == 0){
+            float red = r.nextFloat();
+            float grn = r.nextFloat();
+            float blu = r.nextFloat();
+			if(i % tileLimit == 0){
 				partBuilder = modelBuilder.part("tile" + i, GL20.GL_TRIANGLES, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.ColorPacked, new Material());
 				q++;
 			}
             int numPts = planet.tiles.get(i).pts.size;
             if (numPts == 6) {
-                partBuilder.setColor(0.5f + 0.5f * (float) Math.sin(q * Math.PI), 0.5f + 0.5f * (float) Math.cos((q) * Math.PI / 2.0f), 0.5f - 0.5f * (float) Math.sin(q * Math.PI), 1.0f);
+                partBuilder.setColor(red, grn, blu, 1.0f);
                 partBuilder.rect(
                         planet.tiles.get(i).pts.get(0),
                         planet.tiles.get(i).pts.get(1),
@@ -87,9 +92,9 @@ public class MyGdxGame extends ApplicationAdapter {
                         planet.tiles.get(i).centroid
                 );
                 partBuilder.triangle(
-                        planet.tiles.get(i).pts.get(0),
                         planet.tiles.get(i).pts.get(4),
-                        planet.tiles.get(i).pts.get(5)
+                        planet.tiles.get(i).pts.get(5),
+                        planet.tiles.get(i).pts.get(0)
                 );
                 partBuilder.triangle(
                         planet.tiles.get(i).pts.get(1),
@@ -100,7 +105,7 @@ public class MyGdxGame extends ApplicationAdapter {
                 for (int j = 0; j < numPts; j++) {
                     int k = j + 1;
                     if (k == numPts) k = 0;
-                    partBuilder.setColor(0.5f + 0.5f * (float) Math.sin(q * Math.PI), 0.5f + 0.5f * (float) Math.cos((q) * Math.PI / 2.0f), 0.5f - 0.5f * (float) Math.sin(q * Math.PI), 1.0f);
+                    partBuilder.setColor(red, grn, blu, 1.0f);
                     partBuilder.triangle(
                             planet.tiles.get(i).centroid,
                             planet.tiles.get(i).pts.get(j),
@@ -109,6 +114,26 @@ public class MyGdxGame extends ApplicationAdapter {
             }
         }
 
+        /* Render wireframe */
+//        Material lineColor = new Material(ColorAttribute.createDiffuse(Color.valueOf("202020")));
+//        partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
+//        for(int i = 0; i < planet.tiles.size; i++) {
+//            if(i % tileLimit == 0){
+//                partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
+//            }
+//            int numPts = planet.tiles.get(i).pts.size;
+//            for (int j = 0; j < numPts; j++) {
+//                int k = j + 1;
+//                if (k == numPts) k = 0;
+//                Vector3 p1 = planet.tiles.get(i).pts.get(j);
+//                Vector3 p2 = planet.tiles.get(i).pts.get(k);
+//                if(planet.tiles.get(i).getNbr(p1, p2).drawn)
+//                    continue;
+//                else
+//                    partBuilder.line(p1.scl(1.000008f), p2.scl(1.000008f));
+//            }
+//            planet.tiles.get(i).drawn = true;
+//        }
 
         model = modelBuilder.end();
         endTime = System.currentTimeMillis();
@@ -131,8 +156,6 @@ public class MyGdxGame extends ApplicationAdapter {
     	
         camController.update();
 
-        
-        
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
         

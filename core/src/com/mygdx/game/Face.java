@@ -36,6 +36,7 @@ public class Face{
                     break;
                 }
             }
+            if(count == 2) break;
         }
         if(count == 2) {
             return true;
