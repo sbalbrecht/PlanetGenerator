@@ -117,6 +117,8 @@ public class MyGdxGame extends ApplicationAdapter {
         /* Render wireframe */
 //        Material lineColor = new Material(ColorAttribute.createDiffuse(Color.valueOf("202020")));
 //        partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
+//        Vector3 p1;
+//        Vector3 p2;
 //        for(int i = 0; i < planet.tiles.size; i++) {
 //            if(i % tileLimit == 0){
 //                partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
@@ -125,8 +127,8 @@ public class MyGdxGame extends ApplicationAdapter {
 //            for (int j = 0; j < numPts; j++) {
 //                int k = j + 1;
 //                if (k == numPts) k = 0;
-//                Vector3 p1 = planet.tiles.get(i).pts.get(j);
-//                Vector3 p2 = planet.tiles.get(i).pts.get(k);
+//                p1 = planet.tiles.get(i).pts.get(j).cpy();
+//                p2 = planet.tiles.get(i).pts.get(k).cpy();
 //                if(planet.tiles.get(i).getNbr(p1, p2).drawn)
 //                    continue;
 //                else
