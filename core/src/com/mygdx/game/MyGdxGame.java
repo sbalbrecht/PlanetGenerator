@@ -42,7 +42,8 @@ public class MyGdxGame extends ApplicationAdapter {
         // Lighting
         environment = new Environment();
        // environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 1f, 1f, 1f, 1f));
-        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.15f, 0.15f, 0.15f, 0.15f));
+//        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.15f, 0.15f, 0.15f, 0.15f));
+        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.8f, 0.8f, 0.8f, 0.8f));
         environment.add(new DirectionalLight().set(0.95f, 0.95f, 0.95f, -1f, -0.8f, -0.2f));
 
         // Camera
@@ -74,6 +75,7 @@ public class MyGdxGame extends ApplicationAdapter {
         int q = 0;
         int tileLimit = 1000;
         for(int i = 0; i < planet.tiles.size; i++) {
+
             float red = r.nextFloat();
             float grn = r.nextFloat();
             float blu = r.nextFloat();
@@ -81,9 +83,17 @@ public class MyGdxGame extends ApplicationAdapter {
 				partBuilder = modelBuilder.part("tile" + i, GL20.GL_TRIANGLES, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.ColorPacked, new Material());
 				q++;
 			}
+
+			int plateId = planet.tiles.get(i).plateId;
+            for(int p = 0; p < planet.plates.size; p++) {
+                if(planet.plates.get(p).id == plateId) {
+                    partBuilder.setColor(planet.plates.get(p).color);
+                    break;
+                }
+            }
+
             int numPts = planet.tiles.get(i).pts.size;
             if (numPts == 6) {
-                partBuilder.setColor(red, grn, blu, 1.0f);
                 partBuilder.rect(
                         planet.tiles.get(i).pts.get(0),
                         planet.tiles.get(i).pts.get(1),
@@ -105,7 +115,6 @@ public class MyGdxGame extends ApplicationAdapter {
                 for (int j = 0; j < numPts; j++) {
                     int k = j + 1;
                     if (k == numPts) k = 0;
-                    partBuilder.setColor(red, grn, blu, 1.0f);
                     partBuilder.triangle(
                             planet.tiles.get(i).centroid,
                             planet.tiles.get(i).pts.get(j),
