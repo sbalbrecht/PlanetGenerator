@@ -73,12 +73,17 @@ public class Planet{
         startTime = System.currentTimeMillis();
         setFaceNeighbors();
         endTime = System.currentTimeMillis();
-        System.out.println("SetNeighbors Time: " + (endTime - startTime) + " ms");
+        System.out.println("FaceNeighbors Time: " + (endTime - startTime) + " ms");
 
         startTime = System.currentTimeMillis();
         convertToDual();
         endTime = System.currentTimeMillis();
         System.out.println("Conversion Time: " + (endTime - startTime) + " ms");
+
+        startTime = System.currentTimeMillis();
+        setTileNeighbors();
+        endTime = System.currentTimeMillis();
+        System.out.println("TileNeighbors Time: " + (endTime - startTime) + " ms");
 
         for (Vector3 p : points){
             p.nor().scl(scale);
@@ -104,7 +109,22 @@ public class Planet{
             }
         }
     }
-	
+
+    public void setTileNeighbors() {
+        for(int i = 0; i < tiles.size; i++) {
+            for(int j = i+1; j < tiles.size; j++) {
+                if(tiles.get(i).nbrs.size == 6) break;
+                if(tiles.get(i).testNeighbor(tiles.get(j))) {
+//                    System.out.println(i + " and " + j + " are neighbors");
+                    tiles.get(i).addNbr(tiles.get(j));
+                    tiles.get(j).addNbr(tiles.get(i));
+                }
+            }
+        }
+    }
+
+
+
 	void randomizeTopography(){
     	Face tempFc;
     	for (int i = 0; i < faces.size; i++){
