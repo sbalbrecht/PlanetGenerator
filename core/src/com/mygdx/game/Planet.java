@@ -4,10 +4,16 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.mygdx.game.util.vmath;
 
+import java.util.Random;
+
 public class Planet{
+    public final int PLATE_COUNT = 72;
+
+    public Array<Vector3> points = new Array<Vector3>();
     public Array<Face> faces = new Array<Face>();
     public Array<Tile> tiles = new Array<Tile>();
-    public Array<Vector3> points = new Array<Vector3>();
+    public Array<Plate> plates = new Array<Plate>();
+
     private float scale;
   
     // create Planet constructor
@@ -85,6 +91,11 @@ public class Planet{
         endTime = System.currentTimeMillis();
         System.out.println("TileNeighbors Time: " + (endTime - startTime) + " ms");
 
+        startTime = System.currentTimeMillis();
+        generatePlates();
+        endTime = System.currentTimeMillis();
+        System.out.println("GeneratePlates Time: " + (endTime - startTime) + " ms");
+
         for (Vector3 p : points){
             p.nor().scl(scale);
         }
@@ -93,8 +104,9 @@ public class Planet{
                 p.nor().scl(scale);
             }
         }
-        System.out.println("Faces: " + faces.size);
-        System.out.println("Tiles: " + tiles.size);
+//        System.out.println("Faces:  " + faces.size);
+        System.out.println("Tiles:  " + tiles.size);
+        System.out.println("Plates: " + plates.size);
 	}
 
     public void setFaceNeighbors() {
@@ -122,8 +134,6 @@ public class Planet{
             }
         }
     }
-
-
 
 	void randomizeTopography(){
     	Face tempFc;
@@ -232,5 +242,45 @@ public class Planet{
             return index - 1;
         } else
             return index + 2;
+    }
+
+    public void generatePlates() {
+        Random r = new Random();
+        int id;
+        int tileInd;
+        boolean taken = false;
+        // create initial plates
+        while(plates.size < PLATE_COUNT) {
+            id = r.nextInt(0xffffff);
+            tileInd = r.nextInt(tiles.size);
+            if(tiles.get(tileInd).plateId != -1) continue;
+            for(Plate plate : plates) {
+                if(plate.id == id) {
+                    taken = true;
+                    break;
+                }
+            }
+            if(!taken) {
+                plates.add(new Plate(tiles.get(tileInd), id));
+            } else {
+                continue;
+            }
+        }
+        // flood fill
+//        for(int i = 0; i < tiles.size; i++) {
+//            plates.get(i % plates.size).grow();
+//        }
+
+        // BlOOD fill
+        float roll;
+        for(int i = 0; i < tiles.size*1.2; i++) {
+            roll = r.nextFloat()*1000;
+            if(roll < 2f) {
+                plates.get(r.nextInt(54) + 18).grow();
+            } else if(roll < 25f) {
+                plates.get(r.nextInt(10) + 8).grow();
+            } else
+                plates.get(r.nextInt(7)).grow();
+        }
     }
 }
