@@ -8,6 +8,7 @@ public class Tile {
     public Array<Vector3> pts = new Array<Vector3>();
     public Array<Tile> nbrs = new Array<Tile>();
     public boolean drawn = false;
+    public int plateId = -1;
 
     Tile(Vector3 centroid, Array<Vector3> points) {
         this.centroid = centroid;
