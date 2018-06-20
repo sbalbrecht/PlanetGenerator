@@ -13,6 +13,7 @@ public class Tile {
     public TileAttribute elevation;
     public TileAttribute area;
     public TileAttribute power;
+    public TileAttribute density;
     
     public boolean drawn = false;
     public int plateId = -1;
@@ -27,6 +28,7 @@ public class Tile {
             this.elevation = new TileAttribute("Elevation");
             this.area = new TileAttribute("Area");
             this.power = new TileAttribute("Solar Power");
+            this.density = new TileAttribute("Density");
         attributes.addAll(temperature, elevation, area, power);
         
         for(Vector3 pt : points) {
