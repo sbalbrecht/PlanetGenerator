@@ -18,6 +18,7 @@ public class Planet{
     private float scale;
     
     Vector3 position;
+    Vector3 NORTH;
   
     // create Planet constructor
 
@@ -32,6 +33,8 @@ public class Planet{
 
 		this.scale = scale;
 		this.position = position;
+		
+		NORTH = new Vector3(0, 0, 1);
 
 		// Points are scaled x10 so the camera is more flexible
 
@@ -102,7 +105,7 @@ public class Planet{
             addBaseAttributes();
             randomizeElevations();
             randomizeTemperatures();
-            generateSolPower(new Sun(new Vector3(20.0f, 20.0f, 20.0f), 40000.0f));
+            generateSolPower(new Sun(new Vector3( 150000000.0f, 0,  0),  3.8679289e20f));
         l.end();
         
         Log.log("Tile 0 attributes:\n" + tiles.get(0).getAttributes());
@@ -318,6 +321,8 @@ public class Planet{
         Vector3 r3;
         float p;
         
+        float km_m = 1.0f/1000.0f;
+        
         
         for (Tile t : tiles){
             t.area.setValue((float)Math.PI*4.0f*scale/tiles.size);
@@ -329,7 +334,7 @@ public class Planet{
             area_fractional = t.area.getValue()*(r1.dot(r2));
             
             area_fractional = (area_fractional < 0.0f) ? 0.0f : area_fractional;
-            p = (k/r3.len2())*area_fractional;
+            p = (k/r3.len2())*area_fractional*km_m*km_m;
             t.power.setValue(p);
         }
     }

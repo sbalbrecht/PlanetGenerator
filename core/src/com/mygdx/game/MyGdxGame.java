@@ -46,21 +46,21 @@ public class MyGdxGame extends ApplicationAdapter {
        // environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 1f, 1f, 1f, 1f));
 //        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.15f, 0.15f, 0.15f, 0.15f));
         environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.2f, 0.2f, 0.2f, 0.2f));
-        environment.add(new DirectionalLight().set(0.95f, 0.95f, 0.95f, -1, -1, -1));
+        environment.add(new DirectionalLight().set(0.95f, 0.95f, 0.95f, -1, 0, 0));
 
         // Camera
 	    cam = new PerspectiveCamera(50, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        viewport = new ScreenViewport(cam);
-	    cam.position.set(20f,20f,20f);
+      viewport = new ScreenViewport(cam);
+	    cam.position.set(2*6371f,2*6371f,2*6371f);
 	    cam.lookAt(0f,0f,0f);
 	    cam.near = 0.1f;
-	    cam.far = 50000f;
+	    cam.far = 50000000.0f;
 	    cam.update();
 
 	    // Subdivided icosahedron test
         long startTime = System.currentTimeMillis();
         Planet planet = new Planet();
-			    planet.generateIcosphere(new Vector3(0, 0, 0), 10.0f, 5);
+			  planet.generateIcosphere(new Vector3(0, 0, 0), 6371.0f, 3);
         	//planet.randomizeTopography();
 		
       
@@ -137,7 +137,7 @@ public class MyGdxGame extends ApplicationAdapter {
                 partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
             }
                 p1 = planet.tiles.get(i).centroid;
-				partBuilder.line(p1.scl(1.0f), p1.cpy().scl(1.0f + 0.00125f*planet.tiles.get(i).power.getValue()));
+				partBuilder.line(p1.scl(1.0f), p1.cpy().scl(1.0f + 0.00000000000000125f*planet.tiles.get(i).power.getValue()));
         }
         
 //        Material lineColor = new Material(ColorAttribute.createDiffuse(Color.valueOf("202020")));
