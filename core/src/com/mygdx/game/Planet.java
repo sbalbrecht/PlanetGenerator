@@ -2,7 +2,8 @@ package com.mygdx.game;
 
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
-import com.mygdx.game.util.vmath;
+import com.mygdx.game.util.Log;
+import com.mygdx.game.util.VMath;
 
 import java.util.Random;
 
@@ -13,14 +14,16 @@ public class Planet{
     public Array<Face> faces = new Array<Face>();
     public Array<Tile> tiles = new Array<Tile>();
     public Array<Plate> plates = new Array<Plate>();
-
+    
     private float scale;
+    
+    Vector3 position;
   
     // create Planet constructor
 
     Planet() {}
 
-	void generateIcosphere(float scale, int subdivisions){
+	void generateIcosphere(Vector3 position, float scale, int subdivisions){
 		//hardcoded ico shit
 
 		float phi = (float)((1.0f + Math.sqrt(5.0f))/2.0f);
@@ -28,6 +31,7 @@ public class Planet{
 		float v = phi*u;
 
 		this.scale = scale;
+		this.position = position;
 
 		// Points are scaled x10 so the camera is more flexible
 
@@ -71,30 +75,37 @@ public class Planet{
                 new Face(points.get(6), points.get( 8),  points.get( 9)),
                 new Face(points.get(7), points.get(11),  points.get(10))
 		 );
-        long startTime = System.currentTimeMillis();
-        subdivide(subdivisions);
-        long endTime = System.currentTimeMillis();
-        System.out.println("Subdivision Time: " + (endTime - startTime) + " ms");
-
-        startTime = System.currentTimeMillis();
+		
+		Log l = new Log();
+		
+		l.start("Subdivision time");
+		subdivide(subdivisions);
+        l.end();
+        
+        l.start("Set Face Neighbors");
         setFaceNeighbors();
-        endTime = System.currentTimeMillis();
-        System.out.println("FaceNeighbors Time: " + (endTime - startTime) + " ms");
+        l.end();
+        
+        l.start("Dual Conversion");
+            convertToDual();
+        l.end();
 
-        startTime = System.currentTimeMillis();
-        convertToDual();
-        endTime = System.currentTimeMillis();
-        System.out.println("Conversion Time: " + (endTime - startTime) + " ms");
-
-        startTime = System.currentTimeMillis();
-        setTileNeighbors();
-        endTime = System.currentTimeMillis();
-        System.out.println("TileNeighbors Time: " + (endTime - startTime) + " ms");
-
-        startTime = System.currentTimeMillis();
-        generatePlates();
-        endTime = System.currentTimeMillis();
-        System.out.println("GeneratePlates Time: " + (endTime - startTime) + " ms");
+        l.start("Set Tile Neighbors");
+            setTileNeighbors();
+        l.end();
+        
+        l.start("Plate generation");
+            generatePlates();
+        l.end();
+        
+        l.start("Assign Attributes");
+            addBaseAttributes();
+            randomizeElevations();
+            randomizeTemperatures();
+            generateSolPower(new Sun(new Vector3(20.0f, 20.0f, 20.0f), 40000.0f));
+        l.end();
+        
+        Log.log("Tile 0 attributes:\n" + tiles.get(0).getAttributes());
 
         for (Vector3 p : points){
             p.nor().scl(scale);
@@ -135,7 +146,8 @@ public class Planet{
         }
     }
 
-	void randomizeTopography(){
+    //BROKEN:
+	/*void randomizeTopography(){
     	Face tempFc;
     	for (int i = 0; i < faces.size; i++){
 			tempFc = faces.get(i);
@@ -143,7 +155,7 @@ public class Planet{
 				tempFc.pts[j].scl(1.0f + 0.1f*(float)Math.random());
 			}
 		}
-	}
+	}*/
 
     /* subdivides faces n times */
     public void subdivide(int degree) {
@@ -156,9 +168,9 @@ public class Planet{
                 Vector3 p1 = face.pts[1];
                 Vector3 p2 = face.pts[2];
                 
-                Vector3 q0 = vmath.mid(p0, p1);
-                Vector3 q1 = vmath.mid(p1, p2);
-                Vector3 q2 = vmath.mid(p2, p0);
+                Vector3 q0 = VMath.mid(p0, p1);
+                Vector3 q1 = VMath.mid(p1, p2);
+                Vector3 q2 = VMath.mid(p2, p0);
 
                 if(!newPoints.contains(q0, false)){ newPoints.add(q0); }
 					else { q0 = newPoints.get(newPoints.indexOf(q0, false)); }
@@ -187,6 +199,8 @@ public class Planet{
 			faces.clear();
             faces.ensureCapacity(newFaces.size);
             faces.addAll(newFaces);
+    
+            
         }
     }
 
@@ -224,6 +238,8 @@ public class Planet{
             tiles.add(new Tile(p1, pts));
             pts.clear();                                 // clear points for next tile
         }
+        
+        
     }
 
     public int getCwPt(Face face, Vector3 TileCentroid) {
@@ -283,4 +299,49 @@ public class Planet{
                 plates.get(r.nextInt(7)).grow();
         }
     }
+    
+    public void addBaseAttributes(){
+        for (Tile t : tiles){
+            t.setElevation(0.0f);   //0m above sea level
+            t.setTemperature(0.0f); //0K
+        }
+    }
+    
+    public void randomizeElevations(){
+        for (Tile t : tiles){
+            t.setElevation((0.5f - (float)Math.random())*100.0f);
+        }
+    }
+    public void randomizeTemperatures(){
+        for (Tile t : tiles){
+            t.setTemperature((float)Math.random()*300.0f);
+        }
+    }
+    
+    public void generateSolPower(Sun S){
+        
+        float k = S.totalPower/(4.0f*(float)Math.PI); //solar power square law
+        float area_fractional;
+        Vector3 r1;
+        Vector3 r2;
+        Vector3 r3;
+        float p;
+        
+        
+        for (Tile t : tiles){
+            t.area.setValue((float)Math.PI*4.0f*scale/tiles.size);
+            
+            r1 = new Vector3(t.centroid).sub(this.position).nor();
+            r2 = new Vector3(S.position).sub(this.position).nor();
+            r3 = new Vector3(S.position).sub(t.centroid).nor();
+            
+            area_fractional = t.area.getValue()*(r1.dot(r2));
+            
+            area_fractional = (area_fractional < 0.0f) ? 0.0f : area_fractional;
+            p = (k/r3.len2())*area_fractional;
+            t.power.setValue(p);
+        }
+    }
+    
+    
 }

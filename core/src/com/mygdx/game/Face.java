@@ -2,7 +2,6 @@ package com.mygdx.game;
 
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
-import com.mygdx.game.util.vmath;
 
 public class Face{
     

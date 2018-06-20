@@ -43,29 +43,28 @@ public class MyGdxGame extends ApplicationAdapter {
         environment = new Environment();
        // environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 1f, 1f, 1f, 1f));
 //        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.15f, 0.15f, 0.15f, 0.15f));
-        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.8f, 0.8f, 0.8f, 0.8f));
-        environment.add(new DirectionalLight().set(0.95f, 0.95f, 0.95f, -1f, -0.8f, -0.2f));
+        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.2f, 0.2f, 0.2f, 0.2f));
+        environment.add(new DirectionalLight().set(0.95f, 0.95f, 0.95f, -1, -1, -1));
 
         // Camera
 	    cam = new PerspectiveCamera(50, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 	    cam.position.set(20f,20f,20f);
 	    cam.lookAt(0f,0f,0f);
 	    cam.near = 0.1f;
-	    cam.far = 50f;
+	    cam.far = 50000f;
 	    cam.update();
 
 	    // Subdivided icosahedron test
         long startTime = System.currentTimeMillis();
         Planet planet = new Planet();
-			    planet.generateIcosphere(10.0f, 6);
+			    planet.generateIcosphere(new Vector3(0, 0, 0), 10.0f, 3);
         	//planet.randomizeTopography();
 		
       
         long endTime = System.currentTimeMillis();
         System.out.println("Generation Time: " + (endTime - startTime) + " ms");
 
-
-        Random r = new Random();                // for colors
+        
         modelBuilder = new ModelBuilder();      // Declare the ModelBuilder
         modelBuilder.begin();                   // LET THE GAMES BEGIN
 
@@ -74,17 +73,18 @@ public class MyGdxGame extends ApplicationAdapter {
         partBuilder = modelBuilder.part("tile", GL20.GL_TRIANGLES, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.ColorPacked, new Material());
         int q = 0;
         int tileLimit = 1000;
+        
+		{Tile t;
         for(int i = 0; i < planet.tiles.size; i++) {
-
-            float red = r.nextFloat();
-            float grn = r.nextFloat();
-            float blu = r.nextFloat();
+        	
+        	t = planet.tiles.get(i);
+        	
 			if(i % tileLimit == 0){
 				partBuilder = modelBuilder.part("tile" + i, GL20.GL_TRIANGLES, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.ColorPacked, new Material());
 				q++;
 			}
 
-			int plateId = planet.tiles.get(i).plateId;
+			int plateId = t.plateId;
             for(int p = 0; p < planet.plates.size; p++) {
                 if(planet.plates.get(p).id == plateId) {
                     partBuilder.setColor(planet.plates.get(p).color);
@@ -92,38 +92,51 @@ public class MyGdxGame extends ApplicationAdapter {
                 }
             }
 
-            int numPts = planet.tiles.get(i).pts.size;
+            int numPts = t.pts.size;
             if (numPts == 6) {
                 partBuilder.rect(
-                        planet.tiles.get(i).pts.get(0),
-                        planet.tiles.get(i).pts.get(1),
-                        planet.tiles.get(i).pts.get(3),
-                        planet.tiles.get(i).pts.get(4),
-                        planet.tiles.get(i).centroid
+                        t.pts.get(0),
+                        t.pts.get(1),
+                        t.pts.get(3),
+                        t.pts.get(4),
+                        t.centroid
                 );
                 partBuilder.triangle(
-                        planet.tiles.get(i).pts.get(4),
-                        planet.tiles.get(i).pts.get(5),
-                        planet.tiles.get(i).pts.get(0)
+                        t.pts.get(4),
+                        t.pts.get(5),
+                        t.pts.get(0)
                 );
                 partBuilder.triangle(
-                        planet.tiles.get(i).pts.get(1),
-                        planet.tiles.get(i).pts.get(2),
-                        planet.tiles.get(i).pts.get(3)
+                        t.pts.get(1),
+                        t.pts.get(2),
+                        t.pts.get(3)
                 );
             } else {
                 for (int j = 0; j < numPts; j++) {
                     int k = j + 1;
                     if (k == numPts) k = 0;
                     partBuilder.triangle(
-                            planet.tiles.get(i).centroid,
-                            planet.tiles.get(i).pts.get(j),
-                            planet.tiles.get(i).pts.get(k));
+                            t.centroid,
+                            t.pts.get(j),
+                            t.pts.get(k));
                 }
             }
         }
+		}
 
         /* Render wireframe */
+		Material lineColor = new Material(ColorAttribute.createDiffuse(Color.valueOf("ffffff")));
+
+		Vector3 p1;
+		partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
+        for(int i = 0; i < planet.tiles.size; i++) {
+            if(i % tileLimit == 0){
+                partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
+            }
+                p1 = planet.tiles.get(i).centroid;
+				partBuilder.line(p1.scl(1.0f), p1.cpy().scl(1.0f + 0.00125f*planet.tiles.get(i).power.getValue()));
+        }
+        
 //        Material lineColor = new Material(ColorAttribute.createDiffuse(Color.valueOf("202020")));
 //        partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
 //        Vector3 p1;
@@ -149,7 +162,7 @@ public class MyGdxGame extends ApplicationAdapter {
         model = modelBuilder.end();
         endTime = System.currentTimeMillis();
         System.out.println("Build Time: " + (endTime - startTime) + " ms");
-        instance = new ModelInstance(model, 0, 0 ,0);
+        instance = new ModelInstance(model, planet.position);
 
         camController = new CameraInputController(cam);
         Gdx.input.setInputProcessor(camController);
