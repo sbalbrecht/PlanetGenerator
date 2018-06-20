@@ -125,7 +125,6 @@ public class Planet{
             for(int j = i+1; j < faces.size; j++) {
                 if(faces.get(i).nbrs.size == 3) break;
                 if(faces.get(i).testNeighbor(faces.get(j))) {
-//                    System.out.println(i + " and " + j + " are neighbors");
                     faces.get(i).addNbr(faces.get(j));
                     faces.get(j).addNbr(faces.get(i));
                 }
@@ -138,7 +137,6 @@ public class Planet{
             for(int j = i+1; j < tiles.size; j++) {
                 if(tiles.get(i).nbrs.size == 6) break;
                 if(tiles.get(i).testNeighbor(tiles.get(j))) {
-//                    System.out.println(i + " and " + j + " are neighbors");
                     tiles.get(i).addNbr(tiles.get(j));
                     tiles.get(j).addNbr(tiles.get(i));
                 }
@@ -243,16 +241,14 @@ public class Planet{
     }
 
     public int getCwPt(Face face, Vector3 TileCentroid) {
-        int index = 0;
-
         // Find the index being used for the centroid
+        int index = 0;
         for(int i = 0; i < face.pts.length; i++) {
             if(face.pts[i] == TileCentroid) {
                 index = i;
                 break;
             }
         }
-
         // Find the index of the next point CW from the centroid index
         if(index + 2 >= face.pts.length) {
             return index - 1;
@@ -283,17 +279,12 @@ public class Planet{
             }
         }
         // flood fill
-//        for(int i = 0; i < tiles.size; i++) {
-//            plates.get(i % plates.size).grow();
-//        }
-
-        // BlOOD fill
         float roll;
         for(int i = 0; i < tiles.size*1.2; i++) {
-            roll = r.nextFloat()*1000;
+            roll = r.nextFloat()*100;
             if(roll < 2f) {
                 plates.get(r.nextInt(54) + 18).grow();
-            } else if(roll < 25f) {
+            } else if(roll < 14.7f) {
                 plates.get(r.nextInt(10) + 8).grow();
             } else
                 plates.get(r.nextInt(7)).grow();

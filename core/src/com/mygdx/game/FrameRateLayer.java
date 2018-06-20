@@ -1,63 +1,43 @@
 package com.mygdx.game;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.utils.Disposable;
-import com.badlogic.gdx.utils.TimeUtils;
 
-/**
- * A nicer class for showing framerate that doesn't spam the console
- * like Logger.log()
- * 
- * @author William Hartman
- * https://gist.github.com/williamahartman/5584f037ed2748f57432
- */
 public class FrameRateLayer extends Layer implements Disposable{
-    long lastTimeCounted;
-    private float sinceChange;
-    private float frameRate;
-    private BitmapFont font;
-    private SpriteBatch batch;
-    private OrthographicCamera cam;
+
+    protected Stage stage;
+    protected Label label;
+    protected BitmapFont font;
+    protected StringBuilder stringBuilder;
     
     public FrameRateLayer() {
         //super(name, on);
-        lastTimeCounted = TimeUtils.millis();
-        sinceChange = 0;
-        frameRate = Gdx.graphics.getFramesPerSecond();
+        stage = new Stage();
         font = new BitmapFont();
-        batch = new SpriteBatch();
-        cam = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        label = new Label(" ", new Label.LabelStyle(font, Color.WHITE));
+        stage.addActor(label);
+        stringBuilder = new StringBuilder();
     }
 
     public void resize(int screenWidth, int screenHeight) {
-        cam = new OrthographicCamera(screenWidth, screenHeight);
-        cam.translate(screenWidth / 2, screenHeight / 2);
-        cam.update();
-        batch.setProjectionMatrix(cam.combined);
+        stage.getViewport().update(screenWidth, screenHeight, true);
     }
 
     public void update() {
-        long delta = TimeUtils.timeSinceMillis(lastTimeCounted);
-        lastTimeCounted = TimeUtils.millis();
-
-        sinceChange += delta;
-        if(sinceChange >= 1000) {
-            sinceChange = 0;
-            frameRate = Gdx.graphics.getFramesPerSecond();
-        }
     }
 
     public void render() {
-        batch.begin();
-        font.draw(batch, (int)frameRate + " fps", 3, Gdx.graphics.getHeight() - 3);
-        batch.end();
+        stringBuilder.setLength(0);
+        stringBuilder.append(" FPS: ").append(Gdx.graphics.getFramesPerSecond());
+        label.setText(stringBuilder);
+        stage.draw();
     }
 
     public void dispose() {
         font.dispose();
-        batch.dispose();
     }
 }
