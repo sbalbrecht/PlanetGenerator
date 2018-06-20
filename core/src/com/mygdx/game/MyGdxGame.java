@@ -13,6 +13,8 @@ import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
 
 import java.util.Random;
 
@@ -25,7 +27,7 @@ public class MyGdxGame extends ApplicationAdapter {
     public ModelInstance instance;
     public ModelBatch modelBatch;
     public Model model;
-    
+    public Viewport viewport;
     private Ray cursor;
     
     public TileInfoLayer til;
@@ -48,6 +50,7 @@ public class MyGdxGame extends ApplicationAdapter {
 
         // Camera
 	    cam = new PerspectiveCamera(50, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+      viewport = new ScreenViewport(cam);
 	    cam.position.set(2*6371f,2*6371f,2*6371f);
 	    cam.lookAt(0f,0f,0f);
 	    cam.near = 0.1f;
@@ -57,7 +60,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	    // Subdivided icosahedron test
         long startTime = System.currentTimeMillis();
         Planet planet = new Planet();
-			    planet.generateIcosphere(new Vector3(0, 0, 0), 6371.0f, 3);
+			  planet.generateIcosphere(new Vector3(0, 0, 0), 6371.0f, 3);
         	//planet.randomizeTopography();
 		
       
@@ -65,8 +68,8 @@ public class MyGdxGame extends ApplicationAdapter {
         System.out.println("Generation Time: " + (endTime - startTime) + " ms");
 
         
-        modelBuilder = new ModelBuilder();      // Declare the ModelBuilder
-        modelBuilder.begin();                   // LET THE GAMES BEGIN
+        modelBuilder = new ModelBuilder();
+        modelBuilder.begin();
 
         /* Render tiles */
         startTime = System.currentTimeMillis();
@@ -210,11 +213,10 @@ public class MyGdxGame extends ApplicationAdapter {
 
     @Override
     public void resize (int width, int height) {
-//        float aspectRatio = (float) width / (float) height;
-//        cam = new PerspectiveCamera(67, 2f * aspectRatio, 2f);
-//        cam.far = 30f;
-//        cam.near = 1f;
-//        cam.lookAt(0, 0, 0);
+        viewport.update(width, height);
+        for (int i = 0; i < layers.size; i++){
+            if(layers.get(i).getOn()) layers.get(i).resize(height, width);
+        }
     }
 
     @Override
