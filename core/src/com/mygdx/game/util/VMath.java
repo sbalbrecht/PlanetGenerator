@@ -2,7 +2,7 @@ package com.mygdx.game.util;
 
 import com.badlogic.gdx.math.Vector3;
 
-public final class vmath{
+public final class VMath{
 
     /* gets the middle point b/w two vectors*/
     public static Vector3 mid(Vector3 u, Vector3 v) {
