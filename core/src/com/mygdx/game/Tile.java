@@ -1,5 +1,6 @@
 package com.mygdx.game;
 
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 
@@ -14,6 +15,8 @@ public class Tile {
     public TileAttribute area;
     public TileAttribute power;
     public TileAttribute density;
+    public TileAttribute latitude;
+    public TileAttribute longitude;
     
     public boolean drawn = false;
     public int plateId = -1;
@@ -29,11 +32,18 @@ public class Tile {
             this.area = new TileAttribute("Area");
             this.power = new TileAttribute("Solar Power");
             this.density = new TileAttribute("Density");
+            this.latitude = new TileAttribute("Latitude");
+            this.longitude = new TileAttribute("Longitude");
         attributes.addAll(temperature, elevation, area, power);
         
         for(Vector3 pt : points) {
             this.pts.add(pt);
         }
+        
+        Vector3 temp = new Vector3(this.centroid);
+        this.longitude.setValue(MathUtils.atan2(temp.y, temp.x));
+        this.latitude.setValue(MathUtils.atan2((float)Math.sqrt(temp.x*temp.x + temp.y*temp.y), temp.z));
+        
     }
 
     public void addNbr(Tile tile) {

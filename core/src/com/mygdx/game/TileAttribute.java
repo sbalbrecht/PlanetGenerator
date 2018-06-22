@@ -1,6 +1,6 @@
 package com.mygdx.game;
 
-public class TileAttribute{
+public class TileAttribute implements Comparable<TileAttribute>{
 	private String name;
 	private float value;
 	
@@ -43,5 +43,12 @@ public class TileAttribute{
 	@Override
 	public String toString(){
 		return String.format("%12s: %2.3f", name, value);
+	}
+	
+	@Override
+	public int compareTo(TileAttribute o){
+		if (o.getValue() < this.value) return -1;
+		else if (o.getValue() > this.value) return 1;
+		else return 0;
 	}
 }

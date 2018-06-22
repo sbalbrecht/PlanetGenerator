@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
@@ -60,7 +61,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	    // Subdivided icosahedron test
         long startTime = System.currentTimeMillis();
         Planet planet = new Planet();
-			  planet.generateIcosphere(new Vector3(0, 0, 0), 6371.0f, 3);
+			  planet.generateIcosphere(new Vector3(0, 0, 0), 6371.0f, 5);
         	//planet.randomizeTopography();
 		
       
@@ -127,19 +128,33 @@ public class MyGdxGame extends ApplicationAdapter {
         }
 		}
 
-        /* Render wireframe */
-		Material lineColor = new Material(ColorAttribute.createDiffuse(Color.valueOf("ffffff")));
-
+        /* Render spikes*/
+		/*Material lineColor = new Material(ColorAttribute.createDiffuse(Color.valueOf("ffffff")));
+	
 		Vector3 p1;
 		partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
-        for(int i = 0; i < planet.tiles.size; i++) {
-            if(i % tileLimit == 0){
-                partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
-            }
-                p1 = planet.tiles.get(i).centroid;
-				partBuilder.line(p1.scl(1.0f), p1.cpy().scl(1.0f + 0.00000000000000125f*planet.tiles.get(i).power.getValue()));
-        }
-        
+		for(int i = 0; i < planet.tiles.size; i++) {
+			if(i % tileLimit == 0){
+				partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
+			}
+			p1 = planet.tiles.get(i).centroid;
+			partBuilder.line(p1.scl(1.0f), p1.cpy().scl(1.0f + 0.00000000000000125f*planet.tiles.get(i).power.getValue()));
+		}*/
+	
+		/* Render picked tile*/
+		Material lineColor = new Material(ColorAttribute.createDiffuse(Color.valueOf("ffffff")));
+		partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
+	
+		float k = -MathUtils.PI;
+		Vector3 p1, p2;
+		for (int i = 0; i < 8; i++){
+			for (int j = 0; j < 8; j++){
+				p1 = planet.getNearestLatLong((i*(MathUtils.PI/4.0f))-MathUtils.PI, j*(MathUtils.PI/4.0f)-MathUtils.PI).centroid;
+				p2 = p1.cpy().scl(1.5f);
+				partBuilder.line(p1, p2);
+			}
+		}
+		
 //        Material lineColor = new Material(ColorAttribute.createDiffuse(Color.valueOf("202020")));
 //        partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
 //        Vector3 p1;
@@ -161,7 +176,10 @@ public class MyGdxGame extends ApplicationAdapter {
 //            }
 //            planet.tiles.get(i).drawn = true;
 //        }
-
+		
+		
+		
+		
         model = modelBuilder.end();
         endTime = System.currentTimeMillis();
         System.out.println("Build Time: " + (endTime - startTime) + " ms");
@@ -176,7 +194,6 @@ public class MyGdxGame extends ApplicationAdapter {
 		//layers.add(til);
 		
 	}
-
 
 	@Override
 	public void render () {

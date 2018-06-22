@@ -5,6 +5,8 @@ import com.badlogic.gdx.utils.Array;
 import com.mygdx.game.util.Log;
 import com.mygdx.game.util.VMath;
 
+import java.util.Dictionary;
+import java.util.Enumeration;
 import java.util.Random;
 
 public class Planet{
@@ -14,6 +16,11 @@ public class Planet{
     public Array<Face> faces = new Array<Face>();
     public Array<Tile> tiles = new Array<Tile>();
     public Array<Plate> plates = new Array<Plate>();
+    
+    public TileMap tileMap;
+    
+    public Array<Tile> tiles_latitude = new Array<Tile>();  //tiles by latitude
+    public Array<Tile> tiles_longitude = new Array<Tile>(); //tiles by longitude
     
     private float scale;
     
@@ -118,11 +125,19 @@ public class Planet{
                 p.nor().scl(scale);
             }
         }
+        l.start("Assemble tileMap");
+            tileMap = new TileMap(tiles);
+        l.end();
 //        System.out.println("Faces:  " + faces.size);
         System.out.println("Tiles:  " + tiles.size);
         System.out.println("Plates: " + plates.size);
 	}
+    
+    public Tile getNearestLatLong(float latitude, float longitude){
+        return this.tileMap.getNearest(latitude, longitude);
+    }
 
+    
     public void setFaceNeighbors() {
         for(int i = 0; i < faces.size; i++) {
             for(int j = i+1; j < faces.size; j++) {
