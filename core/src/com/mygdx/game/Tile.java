@@ -14,8 +14,9 @@ public class Tile {
     public TileAttribute area;
     public TileAttribute power;
     public TileAttribute density;
-    
+
     public boolean drawn = false;
+    public boolean root = false;
     public int plateId = -1;
 
     Tile(Vector3 centroid, Array<Vector3> points) {

@@ -5,6 +5,7 @@ import com.badlogic.gdx.utils.Array;
 import com.mygdx.game.util.Log;
 import com.mygdx.game.util.VMath;
 
+import java.util.Dictionary;
 import java.util.Random;
 
 public class Planet{
@@ -14,6 +15,8 @@ public class Planet{
     public Array<Face> faces = new Array<Face>();
     public Array<Tile> tiles = new Array<Tile>();
     public Array<Plate> plates = new Array<Plate>();
+    
+    public Dictionary<Long, Integer> midpointCache;
     
     private float scale;
     
@@ -265,6 +268,24 @@ public class Planet{
         int tileInd;
         boolean taken = false;
         // create initial plates
+//        while(plates.size < PLATE_COUNT) {
+//            id = r.nextInt(0xffffff);
+//            tileInd = r.nextInt(tiles.size);
+//            if(tiles.get(tileInd).plateId != -1) continue;
+//            for(Plate plate : plates) {
+//                if(plate.id == id) {
+//                    taken = true;
+//                    break;
+//                }
+//            }
+//            if(!taken) {
+//                plates.add(new Plate(tiles.get(tileInd), id));
+//            } else {
+//                continue;
+//            }
+//        }
+
+        // generate 72 random plates
         while(plates.size < PLATE_COUNT) {
             id = r.nextInt(0xffffff);
             tileInd = r.nextInt(tiles.size);
@@ -281,17 +302,37 @@ public class Planet{
                 continue;
             }
         }
-        // flood fill
-        float roll;
-        for(int i = 0; i < tiles.size*1.2; i++) {
-            roll = r.nextFloat()*100;
-            if(roll < 2f) {
-                plates.get(r.nextInt(54) + 18).grow();
-            } else if(roll < 14.7f) {
-                plates.get(r.nextInt(10) + 8).grow();
-            } else
-                plates.get(r.nextInt(7)).grow();
+        // flood fill randoms
+        for(int i = 0; i < tiles.size*1.4; i++) {
+            plates.get(r.nextInt(plates.size)).grow();
         }
+        // calculate area
+        for(Plate plate : plates) {
+            plate.percentArea = plate.members.size / tiles.size;
+        }
+        while(plates.size > 8) {
+            // find longest plate
+
+            // find its neighbor which takes up most of its border
+
+            // absorb that neighbor if their combined area < 20% of globe
+
+
+        }
+
+
+
+        // flood fill
+//        float roll;
+//        for(int i = 0; i < tiles.size*1.2; i++) {
+//            roll = r.nextFloat()*100;
+//            if(roll < 2f) {
+//                plates.get(r.nextInt(54) + 18).grow();
+//            } else if(roll < 14.7f) {
+//                plates.get(r.nextInt(10) + 8).grow();
+//            } else
+//                plates.get(r.nextInt(7)).grow();
+//        }
     }
     
     public void addBaseAttributes(){
