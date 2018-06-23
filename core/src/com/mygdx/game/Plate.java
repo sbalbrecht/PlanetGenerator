@@ -1,6 +1,7 @@
 package com.mygdx.game;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 
 import java.util.Random;
@@ -29,12 +30,12 @@ public class Plate {
         }
     }
 
-    public void grow() {
+    public void grow(Array<Vector3> pts) {
         if(front.size == 0) return;                    // plate full
         int ind = 0;                                       // closest front tile
-        float tmp, currMin = root.centroid.dst(front.get(0).centroid);
+        float tmp, currMin = pts.get(root.centroid).dst(pts.get(front.get(0).centroid));
         for(int i = 0; i < front.size; i++) {
-            tmp = root.centroid.dst(front.get(i).centroid);
+            tmp = pts.get(root.centroid).dst(pts.get(front.get(i).centroid));
             if(tmp < currMin) {
                 ind = i;
             }
@@ -44,7 +45,7 @@ public class Plate {
 
         if(front.get(ind).plateId != -1) {             // if tile is no longer avail,
             front.removeIndex(ind);                    //   remove it from fronts
-            this.grow();                                // try again
+            this.grow(pts);                            // try again
         } else {
             front.get(ind).plateId = id;               // set tile id
             members.add(front.get(ind));               // add tile to members
@@ -55,6 +56,23 @@ public class Plate {
             }
             border.add(front.get(ind));                // add tile to border
             front.removeIndex(ind);                    // remove curr tile from front
+        }
+    }
+
+    public void calibrateBorder() {
+        boolean isBorder = false;
+        for(int i = 0; i < border.size; i++) {
+            for(Tile nbr : border.get(i).nbrs) {
+                if(nbr.plateId != id) {
+                    isBorder = true;
+                    break;
+                }
+            }
+            if(!isBorder) {
+                border.removeIndex(i);
+                this.calibrateBorder();
+                return;
+            }
         }
     }
 }

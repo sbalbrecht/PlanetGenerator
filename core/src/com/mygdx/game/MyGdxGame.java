@@ -78,12 +78,12 @@ public class MyGdxGame extends ApplicationAdapter {
         partBuilder = modelBuilder.part("tile", GL20.GL_TRIANGLES, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.ColorPacked, new Material());
         int q = 0;
         int tileLimit = 1000;
-        
+
 		{Tile t;
         for(int i = 0; i < planet.tiles.size; i++) {
-        	
+
         	t = planet.tiles.get(i);
-        	
+
 			if(i % tileLimit == 0){
 				partBuilder = modelBuilder.part("tile" + i, GL20.GL_TRIANGLES, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.ColorPacked, new Material());
 				q++;
@@ -104,7 +104,7 @@ public class MyGdxGame extends ApplicationAdapter {
                         t.pts.get(1),
                         t.pts.get(3),
                         t.pts.get(4),
-                        t.centroid
+                        planet.points.get(t.centroid)
                 );
                 partBuilder.triangle(
                         t.pts.get(4),
@@ -121,13 +121,14 @@ public class MyGdxGame extends ApplicationAdapter {
                     int k = j + 1;
                     if (k == numPts) k = 0;
                     partBuilder.triangle(
-                            t.centroid,
+                            planet.points.get(t.centroid),
                             t.pts.get(j),
                             t.pts.get(k));
                 }
             }
         }
 		}
+
 
 //        /* Render wireframe */
 //		Material lineColor = new Material(ColorAttribute.createDiffuse(Color.valueOf("ffffff")));

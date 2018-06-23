@@ -4,7 +4,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 
 public class Tile {
-    public Vector3 centroid;
+    public int centroid;
     public Array<Vector3> pts;
     public Array<Tile> nbrs;
     
@@ -19,7 +19,7 @@ public class Tile {
     public boolean root = false;
     public int plateId = -1;
 
-    Tile(Vector3 centroid, Array<Vector3> points) {
+    Tile(Integer centroid, Array<Vector3> points) {
         this.centroid = centroid;
         pts = new Array<Vector3>();
         nbrs = new Array<Tile>();

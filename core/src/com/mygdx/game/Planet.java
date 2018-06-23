@@ -5,7 +5,9 @@ import com.badlogic.gdx.utils.Array;
 import com.mygdx.game.util.Log;
 import com.mygdx.game.util.VMath;
 
-import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Random;
 
 public class Planet{
@@ -15,8 +17,8 @@ public class Planet{
     public Array<Face> faces = new Array<Face>();
     public Array<Tile> tiles = new Array<Tile>();
     public Array<Plate> plates = new Array<Plate>();
-    
-    public Dictionary<Long, Integer> midpointCache;
+
+    public Map<Long, Integer> midpointCache = new HashMap<Long, Integer>();
     
     private float scale;
     
@@ -39,47 +41,43 @@ public class Planet{
 		
 		NORTH = new Vector3(0, 0, 1);
 
-		// Points are scaled x10 so the camera is more flexible
-
-		points.addAll(
-                new Vector3(0.0f,   +v,   +u),
-                new Vector3(0.0f,   +v,   -u),
-                new Vector3(0.0f,   -v,   +u),
-                new Vector3(0.0f,   -v,   -u),
-                new Vector3(+u,   0.0f,   +v),
-                new Vector3(-u,   0.0f,   +v),
-                new Vector3(+u,   0.0f,   -v),
-                new Vector3(-u,   0.0f,   -v),
-                new Vector3(+v,     +u, 0.0f),
-                new Vector3(+v,     -u, 0.0f),
-                new Vector3(-v,     +u, 0.0f),
-                new Vector3(-v,     -u, 0.0f)
-			);
+        addVertex(new Vector3(0.0f,   +v,   +u));
+        addVertex(new Vector3(0.0f,   +v,   -u));
+        addVertex(new Vector3(0.0f,   -v,   +u));
+        addVertex(new Vector3(0.0f,   -v,   -u));
+        addVertex(new Vector3(+u,   0.0f,   +v));
+        addVertex(new Vector3(-u,   0.0f,   +v));
+        addVertex(new Vector3(+u,   0.0f,   -v));
+        addVertex(new Vector3(-u,   0.0f,   -v));
+        addVertex(new Vector3(+v,     +u, 0.0f));
+        addVertex(new Vector3(+v,     -u, 0.0f));
+        addVertex(new Vector3(-v,     +u, 0.0f));
+        addVertex(new Vector3(-v,     -u, 0.0f));
 		
 		//for (Vector3 p: points){ p.scl(scale);}
 		
 	    // 20 faces
 		faces.addAll(
-                new Face(points.get(0), points.get( 8),  points.get( 1)),
-                new Face(points.get(0), points.get( 5),  points.get( 4)),
-                new Face(points.get(0), points.get(10),  points.get( 5)),
-                new Face(points.get(0), points.get( 4),  points.get( 8)),
-                new Face(points.get(0), points.get( 1),  points.get(10)),
-                new Face(points.get(1), points.get( 8),  points.get( 6)),
-                new Face(points.get(1), points.get( 6),  points.get( 7)),
-                new Face(points.get(1), points.get( 7),  points.get(10)),
-                new Face(points.get(2), points.get(11),  points.get( 3)),
-                new Face(points.get(2), points.get( 9),  points.get( 4)),
-                new Face(points.get(2), points.get( 4),  points.get( 5)),
-                new Face(points.get(2), points.get( 3),  points.get( 9)),
-                new Face(points.get(2), points.get( 5),  points.get(11)),
-                new Face(points.get(3), points.get( 7),  points.get( 6)),
-                new Face(points.get(3), points.get(11),  points.get( 7)),
-                new Face(points.get(3), points.get( 6),  points.get( 9)),
-                new Face(points.get(4), points.get( 9),  points.get( 8)),
-                new Face(points.get(5), points.get(10),  points.get(11)),
-                new Face(points.get(6), points.get( 8),  points.get( 9)),
-                new Face(points.get(7), points.get(11),  points.get(10))
+                new Face(0,  8,  1, points),
+                new Face(0,  5,  4, points),
+                new Face(0, 10,  5, points),
+                new Face(0,  4,  8, points),
+                new Face(0,  1, 10, points),
+                new Face(1,  8,  6, points),
+                new Face(1,  6,  7, points),
+                new Face(1,  7, 10, points),
+                new Face(2, 11,  3, points),
+                new Face(2,  9,  4, points),
+                new Face(2,  4,  5, points),
+                new Face(2,  3,  9, points),
+                new Face(2,  5, 11, points),
+                new Face(3,  7,  6, points),
+                new Face(3, 11,  7, points),
+                new Face(3,  6,  9, points),
+                new Face(4,  9,  8, points),
+                new Face(5, 10, 11, points),
+                new Face(6,  8,  9, points),
+                new Face(7, 11, 10, points)
 		 );
 		
 		Log l = new Log();
@@ -99,11 +97,11 @@ public class Planet{
         l.start("Set Tile Neighbors");
             setTileNeighbors();
         l.end();
-        
+
         l.start("Plate generation");
             generatePlates();
         l.end();
-        
+
         l.start("Assign Attributes");
             addBaseAttributes();
             randomizeElevations();
@@ -121,7 +119,7 @@ public class Planet{
                 p.nor().scl(scale);
             }
         }
-//        System.out.println("Faces:  " + faces.size);
+        System.out.println("Faces:  " + faces.size);
         System.out.println("Tiles:  " + tiles.size);
         System.out.println("Plates: " + plates.size);
 	}
@@ -165,28 +163,20 @@ public class Planet{
     public void subdivide(int degree) {
         for(int i = 0; i < degree; i++) {
             Array<Face> newFaces = new Array<Face>();
-            Array<Vector3> newPoints = new Array<Vector3>();
-            
+
             for(Face face : faces) {
-                Vector3 p0 = face.pts[0];
-                Vector3 p1 = face.pts[1];
-                Vector3 p2 = face.pts[2];
+                int p0 = face.pts[0];
+                int p1 = face.pts[1];
+                int p2 = face.pts[2];
                 
-                Vector3 q0 = VMath.mid(p0, p1);
-                Vector3 q1 = VMath.mid(p1, p2);
-                Vector3 q2 = VMath.mid(p2, p0);
+                int q0 = mid(p0, p1);
+                int q1 = mid(p1, p2);
+                int q2 = mid(p2, p0);
 
-                if(!newPoints.contains(q0, false)){ newPoints.add(q0); }
-					else { q0 = newPoints.get(newPoints.indexOf(q0, false)); }
-				if(!newPoints.contains(q1, false)){ newPoints.add(q1); }
-					else { q1 = newPoints.get(newPoints.indexOf(q1, false)); }
-				if(!newPoints.contains(q2, false)){ newPoints.add(q2); }
-					else { q2 = newPoints.get(newPoints.indexOf(q2, false)); }
-
-				Face f0 = new Face(p0, q0, q2);
-				Face f1 = new Face(p1, q1, q0);
-				Face f2 = new Face(p2, q2, q1);
-				Face f3 = new Face(q0, q1, q2);
+				Face f0 = new Face(p0, q0, q2, points);
+				Face f1 = new Face(p1, q1, q0, points);
+				Face f2 = new Face(p2, q2, q1, points);
+				Face f3 = new Face(q0, q1, q2, points);
 				if(i == degree-1) {
                     f3.addNbr(f0);
                     f3.addNbr(f1);
@@ -199,7 +189,6 @@ public class Planet{
 
             }
             // set faces = newFaces
-            points.addAll(newPoints);
 			faces.clear();
             faces.ensureCapacity(newFaces.size);
             faces.addAll(newFaces);
@@ -214,7 +203,7 @@ public class Planet{
         for(Face face : faces) {
             curr = face;
 
-            Vector3 p1 = curr.pts[0];         // Tile centroid
+            int p1 = curr.pts[0];         // Tile centroid
             if(face.ptsUsedAsTileCentroid.contains(p1, false))
                 p1 = curr.pts[1];
             if(face.ptsUsedAsTileCentroid.contains(p1, false))
@@ -222,7 +211,7 @@ public class Planet{
 
             do {
                 pts.add(curr.centroid);                     // add current centroid
-                Vector3 p2 = curr.pts[getCwPt(curr, p1)];   // CW point
+                int p2 = curr.pts[getCwPt(curr, p1)];       // CW point
 
                 for (Face nbr : curr.nbrs) {                // find CCW neighbor
                     int count = 0;
@@ -242,11 +231,11 @@ public class Planet{
             tiles.add(new Tile(p1, pts));
             pts.clear();                                 // clear points for next tile
         }
-        
-        
+
+
     }
 
-    public int getCwPt(Face face, Vector3 TileCentroid) {
+    public int getCwPt(Face face, int TileCentroid) {
         // Find the index being used for the centroid
         int index = 0;
         for(int i = 0; i < face.pts.length; i++) {
@@ -268,23 +257,6 @@ public class Planet{
         int tileInd;
         boolean taken = false;
         // create initial plates
-//        while(plates.size < PLATE_COUNT) {
-//            id = r.nextInt(0xffffff);
-//            tileInd = r.nextInt(tiles.size);
-//            if(tiles.get(tileInd).plateId != -1) continue;
-//            for(Plate plate : plates) {
-//                if(plate.id == id) {
-//                    taken = true;
-//                    break;
-//                }
-//            }
-//            if(!taken) {
-//                plates.add(new Plate(tiles.get(tileInd), id));
-//            } else {
-//                continue;
-//            }
-//        }
-
         // generate 72 random plates
         while(plates.size < PLATE_COUNT) {
             id = r.nextInt(0xffffff);
@@ -303,24 +275,68 @@ public class Planet{
             }
         }
         // flood fill randoms
-        for(int i = 0; i < tiles.size*1.4; i++) {
-            plates.get(r.nextInt(plates.size)).grow();
+        for(int i = 0; i < tiles.size*1.6; i++) {
+            plates.get(r.nextInt(plates.size)).grow(points);
         }
         // calculate area
         for(Plate plate : plates) {
-            plate.percentArea = plate.members.size / tiles.size;
+            plate.calibrateBorder();
         }
         while(plates.size > 8) {
             // find longest plate
-
+            Map<Integer, Integer> numOccurrences = new HashMap<Integer, Integer>();
+            Plate longest = plates.get(0);
+            float longestRatio = (float)longest.border.size / (float)longest.members.size;
+            float newRatio = longestRatio;
+            for(int i = 1; i < plates.size; i++) {
+                newRatio = (float)plates.get(i).border.size / (float)plates.get(i).members.size;
+                if(newRatio > longestRatio) {
+                    longest = plates.get(i);
+                    longestRatio = newRatio;
+                }
+            }
+//            System.out.printf("%.2f, %.2f\n", longestRatio, newRatio);
             // find its neighbor which takes up most of its border
-
+            for(Tile t : longest.border) {
+                for(Tile nbr : t.nbrs) {
+                    if(nbr.plateId != longest.id) {
+                        try {
+                            numOccurrences.put(nbr.plateId, numOccurrences.get(nbr.plateId)+1);
+                        } catch (NullPointerException e) {
+                            numOccurrences.put(nbr.plateId, 1);
+                        }
+                    }
+                }
+            }
+            Plate biggestNbr = longest;
+            int plateId = longest.id;
+            int bigNbrOccurrences = 0;
+            for (Map.Entry<Integer, Integer> entry : numOccurrences.entrySet()) {
+                Integer key = entry.getKey();
+                Integer value = entry.getValue();
+                if(value > bigNbrOccurrences) {
+                    bigNbrOccurrences = value;
+                    plateId = key;
+                }
+            }
+            int index = 0;
+            for(int i = 0; i < plates.size; i++) {
+                if(plates.get(i).id == plateId) {
+                    biggestNbr = plates.get(i);
+                    index = i;
+                    break;
+                }
+            }
             // absorb that neighbor if their combined area < 20% of globe
-
-
+//            if((biggestNbr.members.size + longest.members.size) / tiles.size > 0.3) {
+                for (Tile t : biggestNbr.members) {
+                    t.plateId = longest.id;
+                    longest.members.add(t);
+                }
+                plates.removeIndex(index);
+                longest.calibrateBorder();
+//            }
         }
-
-
 
         // flood fill
 //        float roll;
@@ -354,31 +370,58 @@ public class Planet{
     }
     
     public void generateSolPower(Sun S){
-        
+
         float k = S.totalPower/(4.0f*(float)Math.PI); //solar power square law
         float area_fractional;
         Vector3 r1;
         Vector3 r2;
         Vector3 r3;
         float p;
-        
+
         float km_m = 1.0f/1000.0f;
-        
-        
+
+
         for (Tile t : tiles){
             t.area.setValue((float)Math.PI*4.0f*scale/tiles.size);
-            
-            r1 = new Vector3(t.centroid).sub(this.position).nor();
+
+            r1 = points.get(t.centroid).sub(this.position).nor();
             r2 = new Vector3(S.position).sub(this.position).nor();
             r3 = new Vector3(S.position).sub(t.centroid).nor();
-            
+
             area_fractional = t.area.getValue()*(r1.dot(r2));
-            
+
             area_fractional = (area_fractional < 0.0f) ? 0.0f : area_fractional;
             p = (k/r3.len2())*area_fractional*km_m*km_m;
             t.power.setValue(p);
         }
     }
-    
-    
+
+    private int addVertex(Vector3 p)
+    {
+        float length = (float)Math.sqrt(p.x * p.x + p.y * p.y + p.z * p.z);
+        points.add(new Vector3(p.x/length, p.y/length, p.z/length));
+        return points.size - 1;
+    }
+
+    public int mid(int p1, int p2) {
+        boolean firstIsSmaller = p1 < p2;
+        Long smallerIndex = (long)(firstIsSmaller ? p1 : p2);
+        Long greaterIndex = (long)(firstIsSmaller ? p2 : p1);
+        Long key = (smallerIndex << 32) + greaterIndex;
+        int i;
+        try {
+            i = midpointCache.get(key);
+        } catch (NullPointerException e) {
+            Vector3 u = points.get(p1);
+            Vector3 v = points.get(p2);
+            Vector3 w = u.cpy().add(v).scl(0.5f);
+
+            i = addVertex(w);
+            midpointCache.put(key, i);
+        }
+        return i;  
+
+    }
+
+
 }
