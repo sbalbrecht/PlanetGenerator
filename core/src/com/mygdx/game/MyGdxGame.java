@@ -43,15 +43,17 @@ public class MyGdxGame extends ApplicationAdapter {
 		
         // Lighting
         environment = new Environment();
-       // environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 1f, 1f, 1f, 1f));
+        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 1f, 1f, 1f, 1f));
 //        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.15f, 0.15f, 0.15f, 0.15f));
-        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.2f, 0.2f, 0.2f, 0.2f));
+//        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.2f, 0.2f, 0.2f, 0.2f));
         environment.add(new DirectionalLight().set(0.95f, 0.95f, 0.95f, -1, 0, 0));
 
         // Camera
+        float planetRadius = 10;
+
 	    cam = new PerspectiveCamera(50, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
       viewport = new ScreenViewport(cam);
-	    cam.position.set(2*6371f,2*6371f,2*6371f);
+	    cam.position.set(2*planetRadius,2*planetRadius,2*planetRadius);
 	    cam.lookAt(0f,0f,0f);
 	    cam.near = 0.1f;
 	    cam.far = 50000000.0f;
@@ -60,7 +62,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	    // Subdivided icosahedron test
         long startTime = System.currentTimeMillis();
         Planet planet = new Planet();
-			  planet.generateIcosphere(new Vector3(0, 0, 0), 6371.0f, 3);
+			  planet.generateIcosphere(new Vector3(0, 0, 0), planetRadius, 6);
         	//planet.randomizeTopography();
 		
       
@@ -76,12 +78,12 @@ public class MyGdxGame extends ApplicationAdapter {
         partBuilder = modelBuilder.part("tile", GL20.GL_TRIANGLES, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.ColorPacked, new Material());
         int q = 0;
         int tileLimit = 1000;
-        
+
 		{Tile t;
         for(int i = 0; i < planet.tiles.size; i++) {
-        	
+
         	t = planet.tiles.get(i);
-        	
+
 			if(i % tileLimit == 0){
 				partBuilder = modelBuilder.part("tile" + i, GL20.GL_TRIANGLES, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.ColorPacked, new Material());
 				q++;
@@ -102,7 +104,7 @@ public class MyGdxGame extends ApplicationAdapter {
                         t.pts.get(1),
                         t.pts.get(3),
                         t.pts.get(4),
-                        t.centroid
+                        planet.points.get(t.centroid)
                 );
                 partBuilder.triangle(
                         t.pts.get(4),
@@ -119,7 +121,7 @@ public class MyGdxGame extends ApplicationAdapter {
                     int k = j + 1;
                     if (k == numPts) k = 0;
                     partBuilder.triangle(
-                            t.centroid,
+                            planet.points.get(t.centroid),
                             t.pts.get(j),
                             t.pts.get(k));
                 }
@@ -127,18 +129,19 @@ public class MyGdxGame extends ApplicationAdapter {
         }
 		}
 
-        /* Render wireframe */
-		Material lineColor = new Material(ColorAttribute.createDiffuse(Color.valueOf("ffffff")));
 
-		Vector3 p1;
-		partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
-        for(int i = 0; i < planet.tiles.size; i++) {
-            if(i % tileLimit == 0){
-                partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
-            }
-                p1 = planet.tiles.get(i).centroid;
-				partBuilder.line(p1.scl(1.0f), p1.cpy().scl(1.0f + 0.00000000000000125f*planet.tiles.get(i).power.getValue()));
-        }
+//        /* Render wireframe */
+//		Material lineColor = new Material(ColorAttribute.createDiffuse(Color.valueOf("ffffff")));
+//
+//		Vector3 p1;
+//		partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
+//        for(int i = 0; i < planet.tiles.size; i++) {
+//            if(i % tileLimit == 0){
+//                partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
+//            }
+//                p1 = planet.tiles.get(i).centroid;
+//				partBuilder.line(p1.scl(1.0f), p1.cpy().scl(1.0f + 0.00000000000000125f*planet.tiles.get(i).power.getValue()));
+//        }
         
 //        Material lineColor = new Material(ColorAttribute.createDiffuse(Color.valueOf("202020")));
 //        partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
