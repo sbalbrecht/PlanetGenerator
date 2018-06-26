@@ -32,6 +32,20 @@ public class Plate {
         }
     }
 
+    Plate(Tile seed, int id, Map<Integer, Plate> newPlates) {
+        this.root = seed;
+        seed.root = true;
+        seed.plateId = id;
+        this.id = id;
+        color = new Color(r.nextFloat(), r.nextFloat(), r.nextFloat(), 1.0f);
+        members.add(seed);
+        for(Tile nbr : root.nbrs) {
+            if(newPlates.get(nbr.plateId) == null) {
+                front.add(nbr);
+            }
+        }
+    }
+
     public void grow(Array<Vector3> pts) {
         if(front.size == 0) return;                    // plate full
         int ind = 0;                                       // closest front tile
@@ -71,16 +85,16 @@ public class Plate {
             }
         }
 
-        if(r.nextInt(100) < 60) ind=r.nextInt(front.size);
+        if(r.nextInt(100) < 20) ind=r.nextInt(front.size);
 
         if(plates.get(front.get(ind).plateId) != null) {// if tile is taken by newPlate,
             front.removeIndex(ind);                     //   remove it from fronts
-            this.grow(pts);                             // try again
+            grow(pts);                             // try again
         } else {
             front.get(ind).plateId = id;               // set tile id
             members.add(front.get(ind));               // add tile to members
             for(Tile nbr : front.get(ind).nbrs) {      // for each neighbor
-                if(plates.get(nbr.plateId) != null) {  //   if it is avail
+                if(plates.get(nbr.plateId) == null) {  //   if it is avail
                     front.add(nbr);                    //   add to front
                 }
             }

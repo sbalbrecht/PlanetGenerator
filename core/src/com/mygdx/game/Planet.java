@@ -16,6 +16,8 @@ public class Planet{
 //    public Array<Plate> plates = new Array<Plate>();
 
     public Map<Long, Integer> midpointCache = new HashMap<Long, Integer>();
+    public Map<Long, Face[]> faceNbrs = new HashMap<Long, Face[]>();
+    public Map<Long, Tile[]> tileNbrs = new HashMap<Long, Tile[]>();
     public Map<Integer, Plate> plates = new HashMap<Integer, Plate>();
     
     private float scale;
@@ -84,10 +86,6 @@ public class Planet{
 		subdivide(subdivisions);
         l.end();
         
-        l.start("Set Face Neighbors");
-        setFaceNeighbors();
-        l.end();
-        
         l.start("Dual Conversion");
             convertToDual();
         l.end();
@@ -151,13 +149,23 @@ public class Planet{
 				Face f1 = new Face(p1, q1, q0, points);
 				Face f2 = new Face(p2, q2, q1, points);
 				Face f3 = new Face(q0, q1, q2, points);
+
 				if(i == degree-1) {
-                    f3.addNbr(f0);
-                    f3.addNbr(f1);
-                    f3.addNbr(f2);
-                    f0.addNbr(f3);
-                    f1.addNbr(f3);
-                    f2.addNbr(f3);
+                    // for each face's edge, look up existence in map
+                    // if it doesn't exist, create it
+                    // if it does, add face to the array
+                    faceNbrCache(f0, f0.pts[0], f0.pts[1]);
+                    faceNbrCache(f0, f0.pts[1], f0.pts[2]);
+                    faceNbrCache(f0, f0.pts[2], f0.pts[0]);
+                    faceNbrCache(f1, f1.pts[0], f1.pts[1]);
+                    faceNbrCache(f1, f1.pts[1], f1.pts[2]);
+                    faceNbrCache(f1, f1.pts[2], f1.pts[0]);
+                    faceNbrCache(f2, f2.pts[0], f2.pts[1]);
+                    faceNbrCache(f2, f2.pts[1], f2.pts[2]);
+                    faceNbrCache(f2, f2.pts[2], f2.pts[0]);
+                    faceNbrCache(f3, f3.pts[0], f3.pts[1]);
+                    faceNbrCache(f3, f3.pts[1], f3.pts[2]);
+                    faceNbrCache(f3, f3.pts[2], f3.pts[0]);
                 }
 				newFaces.addAll(f0, f1, f2, f3);
 
@@ -166,22 +174,6 @@ public class Planet{
 			faces.clear();
             faces.ensureCapacity(newFaces.size);
             faces.addAll(newFaces);
-        }
-    }
-
-    private void setFaceNeighbors() {
-        Face a;
-        Face b;
-        for(int i = 0; i < faces.size; i++) {
-            a = faces.get(i);
-            for(int j = i+1; j < faces.size; j++) {
-                b = faces.get(j);
-                if(a.nbrs.size == 3) break;
-                if(a.testNeighbor(b)) {
-                    a.addNbr(b);
-                    b.addNbr(a);
-                }
-            }
         }
     }
 
@@ -229,7 +221,9 @@ public class Planet{
                     }
                 }
             } while(curr != face);
-            tiles.add(new Tile(p1, pts));
+            Tile t = new Tile(p1, pts);
+//            tileNbrCache(t, pts.get(0), pts.get(1));
+            tiles.add(t);
             pts.clear();                                 // clear points for next tile
         }
     }
@@ -343,12 +337,7 @@ public class Planet{
             plate.border.clear();
             plate.createBorder();
         }
-        // Place 64 minor and micro plates along the borders of the majors
-        for(Integer key : plates.keySet()) {
-            System.out.println(plates.get(key).border.size);
-        }
-
-
+        // Place minor and micro plates along the borders of the majors
         while(newPlates.size() < PLATE_COUNT - plates.size()) {
             Tile t;
             id = r.nextInt(0xffffff);
@@ -376,12 +365,12 @@ public class Planet{
                     }
                 }
             }
-            newPlates.put(id, new Plate(t, id));
+            newPlates.put(id, new Plate(t, id, newPlates));
 
         }
-        // flood fill new plates... need new/modified grow algo
+        // flood fill new plates
         keysArray = new ArrayList<Integer>(newPlates.keySet());
-        for(int i = 0; i < tiles.size*.5; i++) {
+        for(int i = 0; i < tiles.size*1.5; i++) {
             newPlates.get(keysArray.get(r.nextInt(keysArray.size()))).grow(points, newPlates);
         }
         // add newPlates to plates
@@ -448,10 +437,7 @@ public class Planet{
     }
 
     private int mid(int p1, int p2) {
-        boolean firstIsSmaller = p1 < p2;
-        Long smallerIndex = (long)(firstIsSmaller ? p1 : p2);
-        Long greaterIndex = (long)(firstIsSmaller ? p2 : p1);
-        Long key = (smallerIndex << 32) + greaterIndex;
+        Long key = getKey(p1, p2);
         int i;
         try {
             i = midpointCache.get(key);
@@ -467,5 +453,42 @@ public class Planet{
 
     }
 
+    private void faceNbrCache(Face f, int p1, int p2) {
+        Long key = getKey(p1, p2);
+        Face[] fArr;
+        try {
+            fArr = faceNbrs.get(key);
+            fArr[1] = f;
+            faceNbrs.put(key, fArr);
+            fArr[0].nbrs.add(f);
+            fArr[1].nbrs.add(fArr[0]);
+        } catch (NullPointerException e) {
+            fArr = new Face[2];
+            fArr[0] = f;
+            faceNbrs.put(key, fArr);
+        }
+    }
 
+    private void tileNbrCache(Tile t, int p1, int p2) {
+        Long key = getKey(p1, p2);
+        Tile[] tArr;
+        try {
+            tArr = tileNbrs.get(key);
+            tArr[1] = t;
+            tileNbrs.put(key, tArr);
+            tArr[0].nbrs.add(t);
+            tArr[1].nbrs.add(tArr[0]);
+        } catch (NullPointerException e) {
+            tArr = new Tile[2];
+            tArr[0] = t;
+            tileNbrs.put(key, tArr);
+        }
+    }
+
+    private long getKey(int p1, int p2) {
+        boolean firstIsSmaller = p1 < p2;
+        Long smallerIndex = (long)(firstIsSmaller ? p1 : p2);
+        Long greaterIndex = (long)(firstIsSmaller ? p2 : p1);
+        return (smallerIndex << 32) + greaterIndex;
+    }
 }
