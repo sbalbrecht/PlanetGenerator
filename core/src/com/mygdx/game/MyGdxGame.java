@@ -15,19 +15,20 @@ import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.mygdx.game.util.Log;
 
 import java.util.Random;
 
 public class MyGdxGame extends ApplicationAdapter {
-    public PerspectiveCamera cam;
-    public CameraInputController camController;
-    public Environment environment;
-    public ModelBuilder modelBuilder;
-    public MeshPartBuilder partBuilder;
-    public ModelInstance instance;
-    public ModelBatch modelBatch;
-    public Model model;
-    public Viewport viewport;
+    private PerspectiveCamera cam;
+    private CameraInputController camController;
+    private Environment environment;
+    private ModelBuilder modelBuilder;
+    private MeshPartBuilder partBuilder;
+    private ModelInstance instance;
+    private ModelBatch modelBatch;
+    private Model model;
+    private Viewport viewport;
     private Ray cursor;
     
     public TileInfoLayer til;
@@ -52,7 +53,7 @@ public class MyGdxGame extends ApplicationAdapter {
         float planetRadius = 10;
 
 	    cam = new PerspectiveCamera(50, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-      viewport = new ScreenViewport(cam);
+        viewport = new ScreenViewport(cam);
 	    cam.position.set(2*planetRadius,2*planetRadius,2*planetRadius);
 	    cam.lookAt(0f,0f,0f);
 	    cam.near = 0.1f;
@@ -60,21 +61,20 @@ public class MyGdxGame extends ApplicationAdapter {
 	    cam.update();
 
 	    // Subdivided icosahedron test
-        long startTime = System.currentTimeMillis();
+        Log l = new Log();
+
+        l.start("Generation time");
         Planet planet = new Planet();
 			  planet.generateIcosphere(new Vector3(0, 0, 0), planetRadius, 6);
         	//planet.randomizeTopography();
-		
-      
-        long endTime = System.currentTimeMillis();
-        System.out.println("Generation Time: " + (endTime - startTime) + " ms");
+		l.end();
 
         
         modelBuilder = new ModelBuilder();
         modelBuilder.begin();
 
         /* Render tiles */
-        startTime = System.currentTimeMillis();
+        l.start("Build time");
         partBuilder = modelBuilder.part("tile", GL20.GL_TRIANGLES, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.ColorPacked, new Material());
         int q = 0;
         int tileLimit = 1000;
@@ -90,12 +90,7 @@ public class MyGdxGame extends ApplicationAdapter {
 			}
 
 			int plateId = t.plateId;
-            for(int p = 0; p < planet.plates.size; p++) {
-                if(planet.plates.get(p).id == plateId) {
-                    partBuilder.setColor(planet.plates.get(p).color);
-                    break;
-                }
-            }
+            partBuilder.setColor(planet.plates.get(plateId).color);
 
             int numPts = t.pts.size;
             if (numPts == 6) {
@@ -130,7 +125,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		}
 
 
-//        /* Render wireframe */
+        /* Render sun rays */
 //		Material lineColor = new Material(ColorAttribute.createDiffuse(Color.valueOf("ffffff")));
 //
 //		Vector3 p1;
@@ -142,7 +137,8 @@ public class MyGdxGame extends ApplicationAdapter {
 //                p1 = planet.tiles.get(i).centroid;
 //				partBuilder.line(p1.scl(1.0f), p1.cpy().scl(1.0f + 0.00000000000000125f*planet.tiles.get(i).power.getValue()));
 //        }
-        
+
+        /* Render wireframe */
 //        Material lineColor = new Material(ColorAttribute.createDiffuse(Color.valueOf("202020")));
 //        partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
 //        Vector3 p1;
@@ -166,9 +162,8 @@ public class MyGdxGame extends ApplicationAdapter {
 //        }
 
         model = modelBuilder.end();
-        endTime = System.currentTimeMillis();
-        System.out.println("Build Time: " + (endTime - startTime) + " ms");
         instance = new ModelInstance(model, planet.position);
+        l.end();
 
         camController = new CameraInputController(cam);
         Gdx.input.setInputProcessor(camController);
@@ -218,7 +213,7 @@ public class MyGdxGame extends ApplicationAdapter {
     public void resize (int width, int height) {
         viewport.update(width, height);
         for (int i = 0; i < layers.size; i++){
-            if(layers.get(i).getOn()) layers.get(i).resize(height, width);
+            if(layers.get(i).getOn()) layers.get(i).resize(width, height);
         }
     }
 
