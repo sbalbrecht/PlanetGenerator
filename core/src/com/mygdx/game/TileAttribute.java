@@ -17,8 +17,7 @@ public class TileAttribute{
 		this.name = n;
 		this.value = 0.0f;
 	}
-	
-	
+
 	public TileAttribute(String name, float value){
 		this.name = name;
 		this.value = value;
@@ -31,7 +30,7 @@ public class TileAttribute{
 	public void setName(String name){
 		this.name = name;
 	}
-	
+
 	public float getValue(){
 		return value;
 	}

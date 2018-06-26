@@ -20,6 +20,7 @@ public class Face{
     public void addNbr(Face face) {
         nbrs.add(face);
     }
+
     public void addPtUsedInTileCentroid(int pt) {
         ptsUsedAsTileCentroid.add(pt);
     }
@@ -28,25 +29,25 @@ public class Face{
         if(nbrs.contains(b, false))
             return false;
         int count = 0;
-        for(int i = 0; i < pts.length; i++) {
-            for(int j = 0; j < b.pts.length; j++) {
-                if (pts[i] == b.pts[j]) {
+        for(int ptA : pts) {
+            for(int ptB : b.pts) {
+                if (ptA == ptB) {
                     count++;
                     break;
                 }
             }
             if(count == 2) break;
         }
-        if(count == 2) {
-            return true;
-        } else
-            return false;
+        return (count == 2);
     }
 
-    Vector3 getCentroid(int p0, int p1, int p2, Array<Vector3> pts) {
+    private Vector3 getCentroid(int p0, int p1, int p2, Array<Vector3> pts) {
+        Vector3 u = pts.get(p0);
+        Vector3 v = pts.get(p1);
+        Vector3 w = pts.get(p2);
         return new Vector3(
-                (pts.get(p0).x + pts.get(p1).x + pts.get(p2).x)/3,
-                (pts.get(p0).y + pts.get(p1).y + pts.get(p2).y)/3,
-                (pts.get(p0).z + pts.get(p1).z + pts.get(p2).z)/3);
+                (u.x + v.x + w.x)/3,
+                (u.y + v.y + w.y)/3,
+                (u.z + v.z + w.z)/3);
     }
 }
