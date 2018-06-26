@@ -5,7 +5,7 @@ import com.badlogic.gdx.utils.Array;
 
 public class Tile {
     public int centroid;
-    public Array<Vector3> pts;
+    public Array<Integer> pts;
     public Array<Tile> nbrs;
     
     public Array<TileAttribute> attributes;
@@ -19,9 +19,9 @@ public class Tile {
     public boolean root = false;
     public int plateId = -1;
 
-    Tile(Integer centroid, Array<Vector3> points) {
+    Tile(int centroid, Array<Integer> points) {
         this.centroid = centroid;
-        pts = new Array<Vector3>();
+        pts = new Array<Integer>();
         nbrs = new Array<Tile>();
         
         attributes = new Array<TileAttribute>();
@@ -32,7 +32,7 @@ public class Tile {
             this.density = new TileAttribute("Density");
         attributes.addAll(temperature, elevation, area, power);
         
-        for(Vector3 pt : points) {
+        for(Integer pt : points) {
             this.pts.add(pt);
         }
     }
@@ -41,7 +41,7 @@ public class Tile {
         nbrs.add(tile);
     }
 
-    public Tile getNbr(Vector3 p1, Vector3 p2) {
+    public Tile getNbr(int p1, int p2) {
         for(Tile nbr : nbrs) {
             if(nbr.pts.contains(p1, false) && nbr.pts.contains(p2, false))
                 return nbr;
@@ -53,26 +53,6 @@ public class Tile {
         attributes.add(a);
     }
 
-    boolean testNeighbor(Tile b) {
-        if(nbrs.contains(b, false))
-            return false;
-        int count = 0;
-        for(int i = 0; i < pts.size; i++) {
-            for(int j = 0; j < b.pts.size; j++) {
-                if (pts.get(i) == b.pts.get(j)) {
-                    count++;
-                    break;
-                }
-            }
-            if(count == 2) break;
-        }
-        if(count == 2) {
-            return true;
-        } else
-            return false;
-    }
-    
-    
     public void setTemperature(float t){
         if(temperature == null) {temperature = new TileAttribute("Temperature", t);attributes.add(temperature);}
         else temperature.setValue(t);
