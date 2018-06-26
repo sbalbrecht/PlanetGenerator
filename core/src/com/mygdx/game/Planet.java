@@ -5,20 +5,18 @@ import com.badlogic.gdx.utils.Array;
 import com.mygdx.game.util.Log;
 import com.mygdx.game.util.VMath;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 public class Planet{
-    public final int PLATE_COUNT = 72;
+    public int PLATE_COUNT = 72;
 
     public Array<Vector3> points = new Array<Vector3>();
     public Array<Face> faces = new Array<Face>();
     public Array<Tile> tiles = new Array<Tile>();
-    public Array<Plate> plates = new Array<Plate>();
+//    public Array<Plate> plates = new Array<Plate>();
 
     public Map<Long, Integer> midpointCache = new HashMap<Long, Integer>();
+    public Map<Integer, Plate> plates = new HashMap<Integer, Plate>();
     
     private float scale;
     
@@ -121,32 +119,8 @@ public class Planet{
         }
         System.out.println("Faces:  " + faces.size);
         System.out.println("Tiles:  " + tiles.size);
-        System.out.println("Plates: " + plates.size);
+        System.out.println("Plates: " + plates.size());
 	}
-
-    public void setFaceNeighbors() {
-        for(int i = 0; i < faces.size; i++) {
-            for(int j = i+1; j < faces.size; j++) {
-                if(faces.get(i).nbrs.size == 3) break;
-                if(faces.get(i).testNeighbor(faces.get(j))) {
-                    faces.get(i).addNbr(faces.get(j));
-                    faces.get(j).addNbr(faces.get(i));
-                }
-            }
-        }
-    }
-
-    public void setTileNeighbors() {
-        for(int i = 0; i < tiles.size; i++) {
-            for(int j = i+1; j < tiles.size; j++) {
-                if(tiles.get(i).nbrs.size == 6) break;
-                if(tiles.get(i).testNeighbor(tiles.get(j))) {
-                    tiles.get(i).addNbr(tiles.get(j));
-                    tiles.get(j).addNbr(tiles.get(i));
-                }
-            }
-        }
-    }
 
     //BROKEN:
 	/*void randomizeTopography(){
@@ -160,7 +134,7 @@ public class Planet{
 	}*/
 
     /* subdivides faces n times */
-    public void subdivide(int degree) {
+    private void subdivide(int degree) {
         for(int i = 0; i < degree; i++) {
             Array<Face> newFaces = new Array<Face>();
 
@@ -192,17 +166,46 @@ public class Planet{
 			faces.clear();
             faces.ensureCapacity(newFaces.size);
             faces.addAll(newFaces);
-    
-            
         }
     }
 
-    public void convertToDual() {
+    private void setFaceNeighbors() {
+        Face a;
+        Face b;
+        for(int i = 0; i < faces.size; i++) {
+            a = faces.get(i);
+            for(int j = i+1; j < faces.size; j++) {
+                b = faces.get(j);
+                if(a.nbrs.size == 3) break;
+                if(a.testNeighbor(b)) {
+                    a.addNbr(b);
+                    b.addNbr(a);
+                }
+            }
+        }
+    }
+
+    private void setTileNeighbors() {
+        Tile a;
+        Tile b;
+        for(int i = 0; i < tiles.size; i++) {
+            a = tiles.get(i);
+            for(int j = i+1; j < tiles.size; j++) {
+                b = tiles.get(j);
+                if(a.nbrs.size == 6) break;
+                if(a.testNeighbor(b)) {
+                    a.addNbr(b);
+                    b.addNbr(a);
+                }
+            }
+        }
+    }
+
+    private void convertToDual() {
         Array<Vector3> pts = new Array<Vector3>();  // Array for Tile points
         Face curr;
         for(Face face : faces) {
             curr = face;
-
             int p1 = curr.pts[0];         // Tile centroid
             if(face.ptsUsedAsTileCentroid.contains(p1, false))
                 p1 = curr.pts[1];
@@ -212,7 +215,6 @@ public class Planet{
             do {
                 pts.add(curr.centroid);                     // add current centroid
                 int p2 = curr.pts[getCwPt(curr, p1)];       // CW point
-
                 for (Face nbr : curr.nbrs) {                // find CCW neighbor
                     int count = 0;
                     for(int i = 0; i < nbr.pts.length; i++) {
@@ -227,15 +229,12 @@ public class Planet{
                     }
                 }
             } while(curr != face);
-
             tiles.add(new Tile(p1, pts));
             pts.clear();                                 // clear points for next tile
         }
-
-
     }
 
-    public int getCwPt(Face face, int TileCentroid) {
+    private int getCwPt(Face face, int TileCentroid) {
         // Find the index being used for the centroid
         int index = 0;
         for(int i = 0; i < face.pts.length; i++) {
@@ -251,52 +250,49 @@ public class Planet{
             return index + 2;
     }
 
-    public void generatePlates() {
+    private void generatePlates() {
         Random r = new Random();
         int id;
         int tileInd;
-        boolean taken = false;
-        // create initial plates
+        Map<Integer, Integer> numOccurrences = new HashMap<Integer, Integer>();
+        Map<Integer, Plate> newPlates = new HashMap<Integer, Plate>();
+
         // generate 72 random plates
-        while(plates.size < PLATE_COUNT) {
+        while(plates.size() < PLATE_COUNT) {
             id = r.nextInt(0xffffff);
             tileInd = r.nextInt(tiles.size);
-            if(tiles.get(tileInd).plateId != -1) continue;
-            for(Plate plate : plates) {
-                if(plate.id == id) {
-                    taken = true;
-                    break;
-                }
-            }
-            if(!taken) {
-                plates.add(new Plate(tiles.get(tileInd), id));
-            } else {
-                continue;
-            }
+            if(tiles.get(tileInd).plateId != -1 || plates.get(id) != null) continue;
+            else plates.put(id, new Plate(tiles.get(tileInd), id));
         }
         // flood fill randoms
+        List<Integer> keysArray = new ArrayList<Integer>(plates.keySet());
         for(int i = 0; i < tiles.size*1.6; i++) {
-            plates.get(r.nextInt(plates.size)).grow(points);
+            plates.get(keysArray.get(r.nextInt(keysArray.size()))).grow(points);
         }
-        // calculate area
-        for(Plate plate : plates) {
-            plate.calibrateBorder();
+        // establish borders
+        for (Plate plate : plates.values()) {
+            plate.createBorder();
         }
-        while(plates.size > 8) {
-            // find longest plate
-            Map<Integer, Integer> numOccurrences = new HashMap<Integer, Integer>();
-            Plate longest = plates.get(0);
+
+        // Eliminate longest plates until 8 remain
+        Map<Integer, Plate> availPlates = new HashMap<Integer, Plate>(plates);
+        while(plates.size() > 8) {
+            if(availPlates.size() == 0) break;
+            // find plate with greatest border / area ratio
+            keysArray = new ArrayList<Integer>(availPlates.keySet());
+            Plate longest = availPlates.get(keysArray.get(0));
             float longestRatio = (float)longest.border.size / (float)longest.members.size;
-            float newRatio = longestRatio;
-            for(int i = 1; i < plates.size; i++) {
-                newRatio = (float)plates.get(i).border.size / (float)plates.get(i).members.size;
-                if(newRatio > longestRatio) {
-                    longest = plates.get(i);
+            float newRatio;
+            Plate p;
+            for (Integer key : availPlates.keySet()) {
+                p = availPlates.get(key);
+                newRatio = (float)p.border.size / (float)p.members.size;
+                if (newRatio > longestRatio) {
+                    longest = p;
                     longestRatio = newRatio;
                 }
             }
-//            System.out.printf("%.2f, %.2f\n", longestRatio, newRatio);
-            // find its neighbor which takes up most of its border
+            // find the neighbor which takes up most of its border
             for(Tile t : longest.border) {
                 for(Tile nbr : t.nbrs) {
                     if(nbr.plateId != longest.id) {
@@ -308,7 +304,6 @@ public class Planet{
                     }
                 }
             }
-            Plate biggestNbr = longest;
             int plateId = longest.id;
             int bigNbrOccurrences = 0;
             for (Map.Entry<Integer, Integer> entry : numOccurrences.entrySet()) {
@@ -319,57 +314,104 @@ public class Planet{
                     plateId = key;
                 }
             }
-            int index = 0;
-            for(int i = 0; i < plates.size; i++) {
-                if(plates.get(i).id == plateId) {
-                    biggestNbr = plates.get(i);
-                    index = i;
-                    break;
-                }
-            }
-            // absorb that neighbor if their combined area < 20% of globe
-//            if((biggestNbr.members.size + longest.members.size) / tiles.size > 0.3) {
+            Plate biggestNbr = plates.get(plateId);
+
+            // absorb that neighbor
+            // TODO: if their combined area < 25% of globe; keep track of 2nd longest for this
+            if((float)(longest.members.size + biggestNbr.members.size)/(float)tiles.size > 0.25) {
+                availPlates.remove(longest.id);
+                numOccurrences.clear();
+            } else {
                 for (Tile t : biggestNbr.members) {
                     t.plateId = longest.id;
-                    longest.members.add(t);
                 }
-                plates.removeIndex(index);
+                biggestNbr.root.root = false;
+                longest.members.ensureCapacity(biggestNbr.members.size);
+                longest.members.addAll(biggestNbr.members);
+                longest.border.ensureCapacity(biggestNbr.border.size);
+                longest.border.addAll(biggestNbr.border);
+                availPlates.remove(plateId);
+                plates.remove(plateId);
                 longest.calibrateBorder();
-//            }
+                numOccurrences.clear();
+//                System.out.println("BLOOD FOR THE BLOOD GOD: " + longest.members.size + " " + biggestNbr.members.size );
+
+            }
+        }
+        // recreate borders
+        for (Plate plate : plates.values()) {
+            plate.border.clear();
+            plate.createBorder();
+        }
+        // Place 64 minor and micro plates along the borders of the majors
+        for(Integer key : plates.keySet()) {
+            System.out.println(plates.get(key).border.size);
         }
 
-        // flood fill
-//        float roll;
-//        for(int i = 0; i < tiles.size*1.2; i++) {
-//            roll = r.nextFloat()*100;
-//            if(roll < 2f) {
-//                plates.get(r.nextInt(54) + 18).grow();
-//            } else if(roll < 14.7f) {
-//                plates.get(r.nextInt(10) + 8).grow();
-//            } else
-//                plates.get(r.nextInt(7)).grow();
-//        }
+
+        while(newPlates.size() < PLATE_COUNT - plates.size()) {
+            Tile t;
+            id = r.nextInt(0xffffff);
+            if(plates.get(id) != null || newPlates.get(id) != null) continue;
+            // need random border tile from random major plate
+            keysArray = new ArrayList<Integer>(plates.keySet());
+            int rId = keysArray.get(r.nextInt(keysArray.size()));
+            Plate rPlate = plates.get(rId);
+            // random border tile
+            t = rPlate.border.get(r.nextInt(rPlate.border.size));
+            if(r.nextFloat() < 0.2) { // border tile with two different neighbor plates
+                Array<Integer> nbrPlates = new Array<Integer>();
+                for(Tile bdr : rPlate.border) {
+                    int count = 0;
+                    for(Tile nbr : bdr.nbrs) {
+                        if(nbr.plateId != bdr.plateId && !nbrPlates.contains(nbr.plateId, true)) {
+                            nbrPlates.add(nbr.plateId);
+                            count++;
+                        }
+                    }
+                    if(count == 2) {
+                        t = bdr;
+                        rPlate.members.removeValue(t, false);
+                        break;
+                    }
+                }
+            }
+            newPlates.put(id, new Plate(t, id));
+
+        }
+        // flood fill new plates... need new/modified grow algo
+        keysArray = new ArrayList<Integer>(newPlates.keySet());
+        for(int i = 0; i < tiles.size*.5; i++) {
+            newPlates.get(keysArray.get(r.nextInt(keysArray.size()))).grow(points, newPlates);
+        }
+        // add newPlates to plates
+        plates.putAll(newPlates);
+        newPlates.clear();
+        // recalibrate all plate borders
+        for (Plate plate : plates.values()) {
+            plate.calibrateBorder();
+        }
     }
     
-    public void addBaseAttributes(){
+    private void addBaseAttributes(){
         for (Tile t : tiles){
             t.setElevation(0.0f);   //0m above sea level
             t.setTemperature(0.0f); //0K
         }
     }
     
-    public void randomizeElevations(){
+    private void randomizeElevations(){
         for (Tile t : tiles){
             t.setElevation((0.5f - (float)Math.random())*100.0f);
         }
     }
-    public void randomizeTemperatures(){
+    private void randomizeTemperatures(){
         for (Tile t : tiles){
             t.setTemperature((float)Math.random()*300.0f);
         }
     }
     
-    public void generateSolPower(Sun S){
+    private void generateSolPower(Sun S){
 
         float k = S.totalPower/(4.0f*(float)Math.PI); //solar power square law
         float area_fractional;
@@ -396,14 +438,16 @@ public class Planet{
         }
     }
 
-    private int addVertex(Vector3 p)
-    {
-        float length = (float)Math.sqrt(p.x * p.x + p.y * p.y + p.z * p.z);
-        points.add(new Vector3(p.x/length, p.y/length, p.z/length));
+    private int addVertex(Vector3 p) {
+//        float length = (float)Math.sqrt(p.x * p.x + p.y * p.y + p.z * p.z);
+//        points.add(new Vector3(p.x/length, p.y/length, p.z/length));
+
+        points.add(new Vector3(p));
+
         return points.size - 1;
     }
 
-    public int mid(int p1, int p2) {
+    private int mid(int p1, int p2) {
         boolean firstIsSmaller = p1 < p2;
         Long smallerIndex = (long)(firstIsSmaller ? p1 : p2);
         Long greaterIndex = (long)(firstIsSmaller ? p2 : p1);

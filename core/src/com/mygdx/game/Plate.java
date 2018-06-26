@@ -4,6 +4,8 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 public class Plate {
@@ -54,13 +56,52 @@ public class Plate {
                     front.add(nbr);                    //   add to front
                 }
             }
-            border.add(front.get(ind));                // add tile to border
             front.removeIndex(ind);                    // remove curr tile from front
+        }
+    }
+
+    public void grow(Array<Vector3> pts, Map<Integer, Plate> plates) {
+        if(front.size == 0) return;                    // plate full
+        int ind = 0;                                       // closest front tile
+        float tmp, currMin = pts.get(root.centroid).dst(pts.get(front.get(0).centroid));
+        for(int i = 0; i < front.size; i++) {
+            tmp = pts.get(root.centroid).dst(pts.get(front.get(i).centroid));
+            if(tmp < currMin) {
+                ind = i;
+            }
+        }
+
+        if(r.nextInt(100) < 60) ind=r.nextInt(front.size);
+
+        if(plates.get(front.get(ind).plateId) != null) {// if tile is taken by newPlate,
+            front.removeIndex(ind);                     //   remove it from fronts
+            this.grow(pts);                             // try again
+        } else {
+            front.get(ind).plateId = id;               // set tile id
+            members.add(front.get(ind));               // add tile to members
+            for(Tile nbr : front.get(ind).nbrs) {      // for each neighbor
+                if(plates.get(nbr.plateId) != null) {  //   if it is avail
+                    front.add(nbr);                    //   add to front
+                }
+            }
+            front.removeIndex(ind);                    // remove curr tile from front
+        }
+    }
+
+    public void createBorder() {
+        for(Tile t : members) {
+            for(Tile nbr : t.nbrs) {
+                if(nbr.plateId != id) {
+                    border.add(t);
+                    break;
+                }
+            }
         }
     }
 
     public void calibrateBorder() {
         boolean isBorder = false;
+        Array<Tile> bdrTilesToRmv = new Array<Tile>();
         for(int i = 0; i < border.size; i++) {
             for(Tile nbr : border.get(i).nbrs) {
                 if(nbr.plateId != id) {
@@ -69,10 +110,9 @@ public class Plate {
                 }
             }
             if(!isBorder) {
-                border.removeIndex(i);
-                this.calibrateBorder();
-                return;
+                bdrTilesToRmv.add(border.get(i));
             }
         }
+        border.removeAll(bdrTilesToRmv, false);
     }
 }
