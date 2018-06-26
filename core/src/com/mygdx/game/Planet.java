@@ -58,26 +58,26 @@ public class Planet{
 		
 	    // 20 faces
 		faces.addAll(
-                new Face(0,  8,  1, points),
-                new Face(0,  5,  4, points),
-                new Face(0, 10,  5, points),
-                new Face(0,  4,  8, points),
-                new Face(0,  1, 10, points),
-                new Face(1,  8,  6, points),
-                new Face(1,  6,  7, points),
-                new Face(1,  7, 10, points),
-                new Face(2, 11,  3, points),
-                new Face(2,  9,  4, points),
-                new Face(2,  4,  5, points),
-                new Face(2,  3,  9, points),
-                new Face(2,  5, 11, points),
-                new Face(3,  7,  6, points),
-                new Face(3, 11,  7, points),
-                new Face(3,  6,  9, points),
-                new Face(4,  9,  8, points),
-                new Face(5, 10, 11, points),
-                new Face(6,  8,  9, points),
-                new Face(7, 11, 10, points)
+                new Face(0,  8,  1, getCentroid(0, 8, 1)),
+                new Face(0,  5,  4, getCentroid(0, 5, 4)),
+                new Face(0, 10,  5, getCentroid(0,10, 5)),
+                new Face(0,  4,  8, getCentroid(0, 4, 8)),
+                new Face(0,  1, 10, getCentroid(0, 1,10)),
+                new Face(1,  8,  6, getCentroid(1, 8, 6)),
+                new Face(1,  6,  7, getCentroid(1, 6, 7)),
+                new Face(1,  7, 10, getCentroid(1, 7,10)),
+                new Face(2, 11,  3, getCentroid(2,11, 3)),
+                new Face(2,  9,  4, getCentroid(2, 9, 4)),
+                new Face(2,  4,  5, getCentroid(2, 4, 5)),
+                new Face(2,  3,  9, getCentroid(2, 3, 9)),
+                new Face(2,  5, 11, getCentroid(2, 5,11)),
+                new Face(3,  7,  6, getCentroid(3, 7, 6)),
+                new Face(3, 11,  7, getCentroid(3,11, 7)),
+                new Face(3,  6,  9, getCentroid(3, 6, 9)),
+                new Face(4,  9,  8, getCentroid(4, 9, 8)),
+                new Face(5, 10, 11, getCentroid(5,10,11)),
+                new Face(6,  8,  9, getCentroid(6, 8, 9)),
+                new Face(7, 11, 10, getCentroid(7,11,10))
 		 );
 		
 		Log l = new Log();
@@ -88,10 +88,6 @@ public class Planet{
         
         l.start("Dual Conversion");
             convertToDual();
-        l.end();
-
-        l.start("Set Tile Neighbors");
-            setTileNeighbors();
         l.end();
 
         l.start("Plate generation");
@@ -110,11 +106,11 @@ public class Planet{
         for (Vector3 p : points){
             p.nor().scl(scale);
         }
-        for(Tile tile : tiles) {
-            for(Vector3 p : tile.pts) {
-                p.nor().scl(scale);
-            }
-        }
+//        for(Tile tile : tiles) {
+//            for(Vector3 p : tile.pts) {
+//                p.nor().scl(scale);
+//            }
+//        }
         System.out.println("Faces:  " + faces.size);
         System.out.println("Tiles:  " + tiles.size);
         System.out.println("Plates: " + plates.size());
@@ -145,10 +141,10 @@ public class Planet{
                 int q1 = mid(p1, p2);
                 int q2 = mid(p2, p0);
 
-				Face f0 = new Face(p0, q0, q2, points);
-				Face f1 = new Face(p1, q1, q0, points);
-				Face f2 = new Face(p2, q2, q1, points);
-				Face f3 = new Face(q0, q1, q2, points);
+				Face f0 = new Face(p0, q0, q2, getCentroid(p0,q0,q2));
+				Face f1 = new Face(p1, q1, q0, getCentroid(p1,q1,q0));
+				Face f2 = new Face(p2, q2, q1, getCentroid(p2,q2,q1));
+				Face f3 = new Face(q0, q1, q2, getCentroid(p0,q1,q2));
 
 				if(i == degree-1) {
                     // for each face's edge, look up existence in map
@@ -177,24 +173,8 @@ public class Planet{
         }
     }
 
-    private void setTileNeighbors() {
-        Tile a;
-        Tile b;
-        for(int i = 0; i < tiles.size; i++) {
-            a = tiles.get(i);
-            for(int j = i+1; j < tiles.size; j++) {
-                b = tiles.get(j);
-                if(a.nbrs.size == 6) break;
-                if(a.testNeighbor(b)) {
-                    a.addNbr(b);
-                    b.addNbr(a);
-                }
-            }
-        }
-    }
-
     private void convertToDual() {
-        Array<Vector3> pts = new Array<Vector3>();  // Array for Tile points
+        Array<Integer> pts = new Array<Integer>();  // Array for Tile points
         Face curr;
         for(Face face : faces) {
             curr = face;
@@ -222,7 +202,12 @@ public class Planet{
                 }
             } while(curr != face);
             Tile t = new Tile(p1, pts);
-//            tileNbrCache(t, pts.get(0), pts.get(1));
+            int j;
+            for(int i = 0; i < t.pts.size; i++) {
+                if(i+1 == t.pts.size) j = 0;
+                else j = i+1;
+                tileNbrCache(t, pts.get(i), pts.get(j));
+            }
             tiles.add(t);
             pts.clear();                                 // clear points for next tile
         }
@@ -490,5 +475,16 @@ public class Planet{
         Long smallerIndex = (long)(firstIsSmaller ? p1 : p2);
         Long greaterIndex = (long)(firstIsSmaller ? p2 : p1);
         return (smallerIndex << 32) + greaterIndex;
+    }
+
+    private int getCentroid(int p0, int p1, int p2) {
+        Vector3 u = points.get(p0);
+        Vector3 v = points.get(p1);
+        Vector3 w = points.get(p2);
+        Vector3 c = new Vector3(
+                (u.x + v.x + w.x)/3,
+                (u.y + v.y + w.y)/3,
+                (u.z + v.z + w.z)/3).nor();
+        return addVertex(c);
     }
 }

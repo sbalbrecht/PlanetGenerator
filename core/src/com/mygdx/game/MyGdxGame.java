@@ -95,21 +95,21 @@ public class MyGdxGame extends ApplicationAdapter {
             int numPts = t.pts.size;
             if (numPts == 6) {
                 partBuilder.rect(
-                        t.pts.get(0),
-                        t.pts.get(1),
-                        t.pts.get(3),
-                        t.pts.get(4),
+                        planet.points.get(t.pts.get(0)),
+                        planet.points.get(t.pts.get(1)),
+                        planet.points.get(t.pts.get(3)),
+                        planet.points.get(t.pts.get(4)),
                         planet.points.get(t.centroid)
                 );
                 partBuilder.triangle(
-                        t.pts.get(4),
-                        t.pts.get(5),
-                        t.pts.get(0)
+                        planet.points.get(t.pts.get(4)),
+                        planet.points.get(t.pts.get(5)),
+                        planet.points.get(t.pts.get(0))
                 );
                 partBuilder.triangle(
-                        t.pts.get(1),
-                        t.pts.get(2),
-                        t.pts.get(3)
+                        planet.points.get(t.pts.get(1)),
+                        planet.points.get(t.pts.get(2)),
+                        planet.points.get(t.pts.get(3))
                 );
             } else {
                 for (int j = 0; j < numPts; j++) {
@@ -117,8 +117,8 @@ public class MyGdxGame extends ApplicationAdapter {
                     if (k == numPts) k = 0;
                     partBuilder.triangle(
                             planet.points.get(t.centroid),
-                            t.pts.get(j),
-                            t.pts.get(k));
+                            planet.points.get(t.pts.get(j)),
+                            planet.points.get(t.pts.get(k)));
                 }
             }
         }
