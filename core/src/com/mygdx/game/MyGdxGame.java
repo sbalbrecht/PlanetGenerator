@@ -16,6 +16,7 @@ import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.mygdx.game.util.Log;
 
 import java.util.Random;
 
@@ -61,8 +62,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	    // Subdivided icosahedron test
         long startTime = System.currentTimeMillis();
         Planet planet = new Planet();
-			  planet.generateIcosphere(new Vector3(0, 0, 0), 6371.0f, 5);
-        	//planet.randomizeTopography();
+			  planet.generateIcosphere(new Vector3(0, 0, 0), 6371.0f, 4);
 		
       
         long endTime = System.currentTimeMillis();
@@ -144,16 +144,19 @@ public class MyGdxGame extends ApplicationAdapter {
 		/* Render picked tile*/
 		Material lineColor = new Material(ColorAttribute.createDiffuse(Color.valueOf("ffffff")));
 		partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
-	
-		float k = -MathUtils.PI;
+		
+		float pi = MathUtils.PI;
 		Vector3 p1, p2;
-		for (int i = 0; i < 8; i++){
-			for (int j = 0; j < 8; j++){
-				p1 = planet.getNearestLatLong((i*(MathUtils.PI/4.0f))-MathUtils.PI, j*(MathUtils.PI/4.0f)-MathUtils.PI).centroid;
+		Log l = new Log();
+		l.start("Generate pickCircles");
+		for (int i = 0; i < 32; i++){
+			for (int j = 0; j < 4; j++){
+				p1 = planet.getNearestLatLong((i*(pi/16.0f))-pi, j*pi/4.0f).centroid;
 				p2 = p1.cpy().scl(1.5f);
 				partBuilder.line(p1, p2);
 			}
-		}
+			
+		}l.end();
 		
 //        Material lineColor = new Material(ColorAttribute.createDiffuse(Color.valueOf("202020")));
 //        partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);

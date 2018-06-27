@@ -5,10 +5,23 @@ import javafx.scene.PerspectiveCamera;
 public class CameraInterface{
 
 	private PerspectiveCamera cam;
+	float u, v;
+	
 	
 	public CameraInterface(PerspectiveCamera cam){
 		this.cam = cam;
+		
 	}
+	
+	public void update(){
+	
+	}
+	
+	public void input(){
+	
+	}
+	
+	
 	
 	
 	

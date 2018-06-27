@@ -62,7 +62,7 @@ public class TileMap{
 		int j = MathUtils.floor(k*(latitude+MathUtils.PI));
 		
 		
-		int matchlimit = 50;
+		int matchlimit = 2;
 		int matchcount = 0;
 		int counter = 0;
 		Tile[] matches = new Tile[matchlimit];
