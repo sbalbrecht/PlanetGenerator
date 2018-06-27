@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
@@ -66,7 +67,6 @@ public class MyGdxGame extends ApplicationAdapter {
         l.start("Generation time");
         Planet planet = new Planet();
 			  planet.generateIcosphere(new Vector3(0, 0, 0), planetRadius, 6);
-        	//planet.randomizeTopography();
 		l.end();
 
         
@@ -125,42 +125,23 @@ public class MyGdxGame extends ApplicationAdapter {
 		}
 
 
-        /* Render sun rays */
-//		Material lineColor = new Material(ColorAttribute.createDiffuse(Color.valueOf("ffffff")));
-//
-//		Vector3 p1;
-//		partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
-//        for(int i = 0; i < planet.tiles.size; i++) {
-//            if(i % tileLimit == 0){
-//                partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
-//            }
-//                p1 = planet.tiles.get(i).centroid;
-//				partBuilder.line(p1.scl(1.0f), p1.cpy().scl(1.0f + 0.00000000000000125f*planet.tiles.get(i).power.getValue()));
-//        }
-
-        /* Render wireframe */
-//        Material lineColor = new Material(ColorAttribute.createDiffuse(Color.valueOf("202020")));
-//        partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
-//        Vector3 p1;
-//        Vector3 p2;
-//        for(int i = 0; i < planet.tiles.size; i++) {
-//            if(i % tileLimit == 0){
-//                partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
-//            }
-//            int numPts = planet.tiles.get(i).pts.size;
-//            for (int j = 0; j < numPts; j++) {
-//                int k = j + 1;
-//                if (k == numPts) k = 0;
-//                p1 = planet.tiles.get(i).pts.get(j).cpy();
-//                p2 = planet.tiles.get(i).pts.get(k).cpy();
-//                if(planet.tiles.get(i).getNbr(p1, p2).drawn)
-//                    continue;
-//                else
-//                    partBuilder.line(p1.scl(1.000008f), p2.scl(1.000008f));
-//            }
-//            planet.tiles.get(i).drawn = true;
-//        }
-
+		/* Render picked tile spikes*/
+		Material lineColor = new Material(ColorAttribute.createDiffuse(Color.valueOf("ffffff")));
+		partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
+		
+		float pi = MathUtils.PI;
+		Vector3 p1, p2;
+		Log l = new Log();
+		l.start("Generate pickCircles");
+		for (int i = 0; i < 32; i++){
+			for (int j = 0; j < 4; j++){
+				p1 = planet.getNearestLatLong((i*(pi/16.0f))-pi, j*pi/4.0f).centroid;
+				p2 = p1.cpy().scl(1.5f);
+				partBuilder.line(p1, p2);
+			}
+			
+		}l.end();	
+    
         model = modelBuilder.end();
         instance = new ModelInstance(model, planet.position);
         l.end();
@@ -174,7 +155,6 @@ public class MyGdxGame extends ApplicationAdapter {
 		//layers.add(til);
 		
 	}
-
 
 	@Override
 	public void render () {

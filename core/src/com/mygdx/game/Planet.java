@@ -20,6 +20,11 @@ public class Planet{
     public Map<Long, Tile[]> tileNbrs = new HashMap<Long, Tile[]>();
     public Map<Integer, Plate> plates = new HashMap<Integer, Plate>();
     
+    public TileMap tileMap;
+    
+    public Array<Tile> tiles_latitude = new Array<Tile>();  //tiles by latitude
+    public Array<Tile> tiles_longitude = new Array<Tile>(); //tiles by longitude
+    
     private float scale;
     
     Vector3 position;
@@ -106,26 +111,19 @@ public class Planet{
         for (Vector3 p : points){
             p.nor().scl(scale);
         }
-//        for(Tile tile : tiles) {
-//            for(Vector3 p : tile.pts) {
-//                p.nor().scl(scale);
-//            }
-//        }
+    
+        l.start("Assemble tileMap");
+            tileMap = new TileMap(tiles);
+        l.end();
+    
         System.out.println("Faces:  " + faces.size);
         System.out.println("Tiles:  " + tiles.size);
         System.out.println("Plates: " + plates.size());
 	}
-
-    //BROKEN:
-	/*void randomizeTopography(){
-    	Face tempFc;
-    	for (int i = 0; i < faces.size; i++){
-			tempFc = faces.get(i);
-			for (int j = 0; j < tempFc.pts.length; j++){
-				tempFc.pts[j].scl(1.0f + 0.1f*(float)Math.random());
-			}
-		}
-	}*/
+    
+    public Tile getNearestLatLong(float latitude, float longitude){
+        return this.tileMap.getNearest(latitude, longitude);
+    }
 
     /* subdivides faces n times */
     private void subdivide(int degree) {
