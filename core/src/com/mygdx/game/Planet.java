@@ -106,11 +106,7 @@ public class Planet{
         for (Vector3 p : points){
             p.nor().scl(scale);
         }
-//        for(Tile tile : tiles) {
-//            for(Vector3 p : tile.pts) {
-//                p.nor().scl(scale);
-//            }
-//        }
+
         System.out.println("Faces:  " + faces.size);
         System.out.println("Tiles:  " + tiles.size);
         System.out.println("Plates: " + plates.size());
@@ -144,7 +140,7 @@ public class Planet{
 				Face f0 = new Face(p0, q0, q2, getCentroid(p0,q0,q2));
 				Face f1 = new Face(p1, q1, q0, getCentroid(p1,q1,q0));
 				Face f2 = new Face(p2, q2, q1, getCentroid(p2,q2,q1));
-				Face f3 = new Face(q0, q1, q2, getCentroid(p0,q1,q2));
+				Face f3 = new Face(q0, q1, q2, getCentroid(q0,q1,q2));
 
 				if(i == degree-1) {
                     // for each face's edge, look up existence in map
@@ -295,8 +291,7 @@ public class Planet{
             }
             Plate biggestNbr = plates.get(plateId);
 
-            // absorb that neighbor
-            // TODO: if their combined area < 25% of globe; keep track of 2nd longest for this
+            // absorb that neighbor if their combined area < 25% global area
             if((float)(longest.members.size + biggestNbr.members.size)/(float)tiles.size > 0.25) {
                 availPlates.remove(longest.id);
                 numOccurrences.clear();
@@ -313,8 +308,6 @@ public class Planet{
                 plates.remove(plateId);
                 longest.calibrateBorder();
                 numOccurrences.clear();
-//                System.out.println("BLOOD FOR THE BLOOD GOD: " + longest.members.size + " " + biggestNbr.members.size );
-
             }
         }
         // recreate borders
@@ -322,49 +315,64 @@ public class Planet{
             plate.border.clear();
             plate.createBorder();
         }
-        // Place minor and micro plates along the borders of the majors
-        while(newPlates.size() < PLATE_COUNT - plates.size()) {
-            Tile t;
-            id = r.nextInt(0xffffff);
-            if(plates.get(id) != null || newPlates.get(id) != null) continue;
-            // need random border tile from random major plate
-            keysArray = new ArrayList<Integer>(plates.keySet());
-            int rId = keysArray.get(r.nextInt(keysArray.size()));
-            Plate rPlate = plates.get(rId);
-            // random border tile
-            t = rPlate.border.get(r.nextInt(rPlate.border.size));
-            if(r.nextFloat() < 0.2) { // border tile with two different neighbor plates
-                Array<Integer> nbrPlates = new Array<Integer>();
-                for(Tile bdr : rPlate.border) {
-                    int count = 0;
-                    for(Tile nbr : bdr.nbrs) {
-                        if(nbr.plateId != bdr.plateId && !nbrPlates.contains(nbr.plateId, true)) {
-                            nbrPlates.add(nbr.plateId);
-                            count++;
-                        }
-                    }
-                    if(count == 2) {
-                        t = bdr;
-                        rPlate.members.removeValue(t, false);
-                        break;
-                    }
-                }
-            }
-            newPlates.put(id, new Plate(t, id, newPlates));
-
-        }
-        // flood fill new plates
-        keysArray = new ArrayList<Integer>(newPlates.keySet());
-        for(int i = 0; i < tiles.size*1.5; i++) {
-            newPlates.get(keysArray.get(r.nextInt(keysArray.size()))).grow(points, newPlates);
-        }
-        // add newPlates to plates
-        plates.putAll(newPlates);
-        newPlates.clear();
-        // recalibrate all plate borders
-        for (Plate plate : plates.values()) {
-            plate.calibrateBorder();
-        }
+//        // Place minor and micro plates along the borders of the majors
+//        while(newPlates.size() < PLATE_COUNT - plates.size()) {
+//            Tile t;
+//            id = r.nextInt(0xffffff);
+//            if(plates.get(id) != null || newPlates.get(id) != null) continue;
+//            // need random border tile from random major plate
+//            keysArray = new ArrayList<Integer>(plates.keySet());
+//            int rId = keysArray.get(r.nextInt(keysArray.size()));
+//            Plate rPlate = plates.get(rId);
+//            // random border tile
+//            t = rPlate.border.get(r.nextInt(rPlate.border.size));
+//            if(r.nextFloat() < 0.2) { // border tile with two different neighbor plates
+//                Array<Integer> nbrPlates = new Array<Integer>();
+//                for(Tile bdr : rPlate.border) {
+//                    int count = 0;
+//                    for(Tile nbr : bdr.nbrs) {
+//                        if(nbr.plateId != bdr.plateId && !nbrPlates.contains(nbr.plateId, false)
+//                                && newPlates.containsKey(nbr.plateId)) {
+//                            nbrPlates.add(nbr.plateId);
+//                            count++;
+//                        }
+//                    }
+//                    if(count == 2) {
+//                        t = bdr;
+//                        break;
+//                    }
+//                }
+//            }
+//            rPlate.members.removeValue(t, false);
+//            rPlate.border.removeValue(t, false);
+//            newPlates.put(id, new Plate(t, id, newPlates));
+//
+//        }
+//        // flood fill new plates
+//        keysArray = new ArrayList<Integer>(newPlates.keySet());
+//        float roll;
+//        for(int i = 0; i < tiles.size*.1; i++) {
+//            roll = r.nextInt(100);
+//            if(roll < 75) {
+//                newPlates.get(keysArray.get(r.nextInt(10))).grow(points, newPlates);
+//            }
+//            else {
+//                newPlates.get(keysArray.get(r.nextInt(keysArray.size()-10)+10)).grow(points, newPlates);
+//            }
+//        }
+//        // add newPlates to plates
+//        plates.putAll(newPlates);
+//        newPlates.clear();
+//        // recalibrate all plate borders
+//        for (Plate plate : plates.values()) {
+//            for(Tile mem : plate.members) {
+//                if(mem.plateId != plate.id) {
+//                    plate.members.removeValue(mem, false);
+//                }
+//            }
+//            plate.border.clear();
+//            plate.createBorder();
+//        }
     }
     
     private void addBaseAttributes(){

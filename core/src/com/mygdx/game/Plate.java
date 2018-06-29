@@ -85,11 +85,11 @@ public class Plate {
             }
         }
 
-        if(r.nextInt(100) < 20) ind=r.nextInt(front.size);
+        if(r.nextInt(100) < 20) ind = r.nextInt(front.size);
 
         if(plates.get(front.get(ind).plateId) != null) {// if tile is taken by newPlate,
             front.removeIndex(ind);                     //   remove it from fronts
-            grow(pts);                             // try again
+            grow(pts, plates);                             // try again
         } else {
             front.get(ind).plateId = id;               // set tile id
             members.add(front.get(ind));               // add tile to members
