@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.EllipseShapeBuilder;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
@@ -66,7 +67,6 @@ public class MyGdxGame extends ApplicationAdapter {
         l.start("Generation time");
         Planet planet = new Planet();
 			  planet.generateIcosphere(new Vector3(0, 0, 0), planetRadius, 6);
-        	//planet.randomizeTopography();
 		l.end();
 
         
@@ -211,20 +211,36 @@ public class MyGdxGame extends ApplicationAdapter {
 //        esb.build(partBuilder, acr*1.000010f, 480, new Vector3(0f,0f,ach),new Vector3(0f,0f,1f));
 //        esb.build(partBuilder, acr*1.000010f, 480, new Vector3(0f,0f,-ach),new Vector3(0f,0f,1f));
 
-        model = modelBuilder.end();
-        instance = new ModelInstance(model, planet.position);
-        l.end();
+		/* Render picked tile spikes*/
+		Material lineColor = new Material(ColorAttribute.createDiffuse(Color.valueOf("ffffff")));
+		partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
+		
+		float pi = MathUtils.PI;
+		Vector3 p1, p2;
+		Log l = new Log();
+		l.start("Generate pickCircles");
+		for (int i = 0; i < 32; i++){
+			for (int j = 0; j < 4; j++){
+				p1 = planet.getNearestLatLong((i*(pi/16.0f))-pi, j*pi/4.0f).centroid;
+				p2 = p1.cpy().scl(1.5f);
+				partBuilder.line(p1, p2);
+			}
+			
+		}l.end();	
+    
+    model = modelBuilder.end();
+    instance = new ModelInstance(model, planet.position);
+    l.end();
 
-        camController = new CameraInputController(cam);
-        Gdx.input.setInputProcessor(camController);
-        
-        //Set up our graphics layers
+    camController = new CameraInputController(cam);
+    Gdx.input.setInputProcessor(camController);
+
+    //Set up our graphics layers
 
 		layers.add(new FrameRateLayer());
 		//layers.add(til);
 		
 	}
-
 
 	@Override
 	public void render () {
