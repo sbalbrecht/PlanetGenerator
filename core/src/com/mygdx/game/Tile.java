@@ -40,7 +40,7 @@ public class Tile {
         for(Integer pt : points) {
             this.pts.add(pt);
         }
-        
+
         Vector3 temp = new Vector3(this.centroid);
         this.longitude.setValue(MathUtils.atan2(temp.y, temp.x));
         this.latitude.setValue(MathUtils.atan2((float)Math.sqrt(temp.x*temp.x + temp.y*temp.y), temp.z));

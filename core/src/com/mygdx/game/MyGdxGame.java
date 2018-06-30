@@ -214,7 +214,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		/* Render picked tile spikes*/
 		Material lineColor = new Material(ColorAttribute.createDiffuse(Color.valueOf("ffffff")));
 		partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
-		
+
 		float pi = MathUtils.PI;
 		Vector3 p1, p2;
 		Log l = new Log();
@@ -225,8 +225,8 @@ public class MyGdxGame extends ApplicationAdapter {
 				p2 = p1.cpy().scl(1.5f);
 				partBuilder.line(p1, p2);
 			}
-			
-		}l.end();	
+
+		}l.end();
     
     model = modelBuilder.end();
     instance = new ModelInstance(model, planet.position);
@@ -239,7 +239,7 @@ public class MyGdxGame extends ApplicationAdapter {
 
 		layers.add(new FrameRateLayer());
 		//layers.add(til);
-		
+
 	}
 
 	@Override

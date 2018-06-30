@@ -12,11 +12,16 @@ public class Plate {
     Tile root;          // root plate
     int id;
     Color color;
-    float percentArea;
     Random r = new Random();
+
     Array<Tile> border = new Array<Tile>();
     Array<Tile> members = new Array<Tile>();
     Array<Tile> front = new Array<Tile>();
+
+    Vector3 rotation;
+    float velocity;     // cm/year
+    float density;      // g/cm^3
+    boolean oceanic = true;
 
     Plate(Tile seed, int id) {
         this.root = seed;

@@ -13,12 +13,12 @@ public class Planet{
     public Array<Vector3> points = new Array<Vector3>();
     public Array<Face> faces = new Array<Face>();
     public Array<Tile> tiles = new Array<Tile>();
-//    public Array<Plate> plates = new Array<Plate>();
 
     public Map<Long, Integer> midpointCache = new HashMap<Long, Integer>();
     public Map<Long, Face[]> faceNbrs = new HashMap<Long, Face[]>();
     public Map<Long, Tile[]> tileNbrs = new HashMap<Long, Tile[]>();
     public Map<Integer, Plate> plates = new HashMap<Integer, Plate>();
+    public Map<Integer, Float> plateCollisions = new HashMap<Integer, Float>();
     
     public TileMap tileMap;
     
@@ -375,6 +375,55 @@ public class Planet{
 //            plate.border.clear();
 //            plate.createBorder();
 //        }
+
+        // Assign class of plate (oceanic/continental)
+        // Assign random axis of rotation and velocity to each plate
+        int continentalCount = plates.size()/2;
+        for(Plate plate : plates.values()) {
+            if(continentalCount > 0) {
+                plate.oceanic = false;
+                continentalCount--;
+            }
+            plate.velocity = r.nextFloat()*10;
+            plate.rotation = new Vector3(r.nextFloat(), r.nextFloat(), r.nextFloat()).nor().scl(scale);
+            if(plate.oceanic)
+                plate.density = (float)2.5 + r.nextFloat()/2;
+            else
+                plate.density = (float)2.0 + r.nextFloat()/2;
+        }
+
+        // Calculate collision data for every border tile, store in map
+        {
+        Tile t;
+        Long key;
+        int j;
+        Tile[] pair;
+        for (Plate plate : plates.values()) {
+            for (Tile bdr : plate.border) {
+                // for each edge, if it's a border edge, check existence
+                // if null, store collision info
+                for(int i = 0; i < bdr.pts.size; i++) {
+                    if(i + 1 < bdr.pts.size)
+                        j = i + 1;
+                    else
+                        j = 0;
+                    key = getKey(bdr.pts.get(i), bdr.pts.get(j));
+                    pair = tileNbrs.get(key);
+                    if(pair[0].equals(bdr))
+                        t = pair[1];
+                    else
+                        t = pair[0];
+                    if(t.plateId != bdr.plateId) {
+                        try {
+                            plateCollisions.get(key);
+                        } catch (NullPointerException e) {
+                            // TODO: calculate coll info and store
+                        }
+                    }
+                }
+            }
+        }
+        }
     }
     
     private void addBaseAttributes(){
@@ -478,6 +527,10 @@ public class Planet{
             tArr[0] = t;
             tileNbrs.put(key, tArr);
         }
+    }
+
+    private void plateColCache(Tile t, int p1, int p2) {
+
     }
 
     private long getKey(int p1, int p2) {
