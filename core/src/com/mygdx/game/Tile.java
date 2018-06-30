@@ -22,7 +22,7 @@ public class Tile {
     public boolean root = false;
     public int plateId = -1;
 
-    Tile(int centroid, Array<Integer> points) {
+    Tile(int centroid, Array<Integer> tilePts, Array<Vector3> allPoints) {
         this.centroid = centroid;
         pts = new Array<Integer>();
         nbrs = new Array<Tile>();
@@ -37,11 +37,11 @@ public class Tile {
             this.longitude = new TileAttribute("Longitude");
         attributes.addAll(temperature, elevation, area, power);
         
-        for(Integer pt : points) {
+        for(Integer pt : tilePts) {
             this.pts.add(pt);
         }
 
-        Vector3 temp = new Vector3(this.centroid);
+        Vector3 temp = new Vector3(allPoints.get(this.centroid));
         this.longitude.setValue(MathUtils.atan2(temp.y, temp.x));
         this.latitude.setValue(MathUtils.atan2((float)Math.sqrt(temp.x*temp.x + temp.y*temp.y), temp.z));
         

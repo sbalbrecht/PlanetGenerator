@@ -151,7 +151,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		}
 
         /* Render sun rays */
-//		Material lineColor = new Material(ColorAttribute.createDiffuse(Color.valueOf("ffffff")));
+		Material lineColor = new Material(ColorAttribute.createDiffuse(Color.valueOf("ffffff")));
 //
 //		Vector3 p1;
 //		partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
@@ -188,45 +188,53 @@ public class MyGdxGame extends ApplicationAdapter {
 //            planet.tiles.get(i).drawn = true;
 //        }
 
+        /* Axes */
+//        partBuilder = modelBuilder.part("axes", GL20.GL_LINES, VertexAttributes.Usage.Position, new Material());
+//        partBuilder.line(0,0,0,15f,0,0);
+//        partBuilder.setColor(Color.YELLOW);
+//        partBuilder.line(0,0,0, 0,20f,0);
+//        partBuilder.setColor(Color.BLUE);
+//        partBuilder.line(0,0,0,0,0,25f);
+
         /* Major Lines of Latitude */
-//        double toc = 23.5f*Math.PI/180;
-//        float toch = (float)Math.sin(toc)*planetRadius;
-//        float tocr = (float)Math.cos(toc)*planetRadius;
-//        double ac = 66.5f*Math.PI/180;
-//        float ach = (float)Math.sin(ac)*planetRadius;
-//        float acr = (float)Math.cos(ac)*planetRadius;
-//        EllipseShapeBuilder esb = new EllipseShapeBuilder();
-//        // Equator
-//        lineColor = new Material(ColorAttribute.createDiffuse(Color.RED));
-//        partBuilder = modelBuilder.part("graticule", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
-//        esb.build(partBuilder, planetRadius*1.000010f, 480, new Vector3(0f,0f,0f),new Vector3(0f,0f,1f));
-//        // Tropic of Cancer / Capricorn
-//        lineColor = new Material(ColorAttribute.createDiffuse(Color.ORANGE));
-//        partBuilder = modelBuilder.part("graticule", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
-//        esb.build(partBuilder, tocr*1.000010f, 480, new Vector3(0f,0f,toch),new Vector3(0f,0f,1f));
-//        esb.build(partBuilder, tocr*1.000010f, 480, new Vector3(0f,0f,-toch),new Vector3(0f,0f,1f));
-//        // Arctic / Antartic circles
-//        lineColor = new Material(ColorAttribute.createDiffuse(Color.CYAN));
-//        partBuilder = modelBuilder.part("graticule", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
-//        esb.build(partBuilder, acr*1.000010f, 480, new Vector3(0f,0f,ach),new Vector3(0f,0f,1f));
-//        esb.build(partBuilder, acr*1.000010f, 480, new Vector3(0f,0f,-ach),new Vector3(0f,0f,1f));
+        double toc = 23.5f*Math.PI/180;
+        float toch = (float)Math.sin(toc)*planetRadius;
+        float tocr = (float)Math.cos(toc)*planetRadius;
+        double ac = 66.5f*Math.PI/180;
+        float ach = (float)Math.sin(ac)*planetRadius;
+        float acr = (float)Math.cos(ac)*planetRadius;
+        EllipseShapeBuilder esb = new EllipseShapeBuilder();
+        // Equator
+        lineColor = new Material(ColorAttribute.createDiffuse(Color.RED));
+        partBuilder = modelBuilder.part("equator", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
+        esb.build(partBuilder, planetRadius*1.000010f, 480, new Vector3(0f,0f,0f),new Vector3(0f,1f,0f));
+        // Tropic of Cancer / Capricorn
+        lineColor = new Material(ColorAttribute.createDiffuse(Color.ORANGE));
+        partBuilder = modelBuilder.part("tropics", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
+        esb.build(partBuilder, tocr*1.000010f, 480, new Vector3(0f,toch, 0f),new Vector3(0f,1f,0f));
+        esb.build(partBuilder, tocr*1.000010f, 480, new Vector3(0f,-toch, 0f),new Vector3(0f,1f,0f));
+        // Arctic / Antartic circles
+        lineColor = new Material(ColorAttribute.createDiffuse(Color.CYAN));
+        partBuilder = modelBuilder.part("polarCircles", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
+        esb.build(partBuilder, acr*1.000010f, 480, new Vector3(0f, ach,0f),new Vector3(0f,1f,0f));
+        esb.build(partBuilder, acr*1.000010f, 480, new Vector3(0f, -ach, 0f),new Vector3(0f,1f,0f));
 
 		/* Render picked tile spikes*/
-		Material lineColor = new Material(ColorAttribute.createDiffuse(Color.valueOf("ffffff")));
-		partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
-
-		float pi = MathUtils.PI;
-		Vector3 p1, p2;
-		Log l = new Log();
-		l.start("Generate pickCircles");
-		for (int i = 0; i < 32; i++){
-			for (int j = 0; j < 4; j++){
-				p1 = planet.getNearestLatLong((i*(pi/16.0f))-pi, j*pi/4.0f).centroid;
-				p2 = p1.cpy().scl(1.5f);
-				partBuilder.line(p1, p2);
-			}
-
-		}l.end();
+//		lineColor = new Material(ColorAttribute.createDiffuse(Color.valueOf("ffffff")));
+//		partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
+//
+//		float pi = MathUtils.PI;
+//		Vector3 p1, p2;
+//		Log l2 = new Log();
+//		l2.start("Generate pickCircles");
+//		for (int i = 0; i < 32; i++){
+//			for (int j = 0; j < 4; j++){
+//				p1 = planet.points.get(planet.getNearestLatLong((i*(pi/16.0f))-pi, j*pi/4.0f).centroid);
+//				p2 = p1.cpy().scl(1.5f);
+//				partBuilder.line(p1, p2);
+//			}
+//
+//		}l2.end();
     
     model = modelBuilder.end();
     instance = new ModelInstance(model, planet.position);

@@ -6,6 +6,7 @@ import com.badlogic.gdx.utils.Array;
 
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Map;
 
 public class TileMap{
 	Array<Tile> tiles;
@@ -53,7 +54,7 @@ public class TileMap{
 
 	}
 
-	public Tile getNearest(float longitude, float latitude){
+	public Tile getNearest(float longitude, float latitude, Array<Vector3> points){
 
 		if(tiles_lat.size != tiles.size || tiles_lat.size != tiles_long.size){update();}
 
@@ -90,7 +91,7 @@ public class TileMap{
 		float d;
 		float dleast = 0.0f;
 		for (int l = 0; l < matches.length; l++){
-			temp2 = new Vector3(matches[l].centroid);
+			temp2 = new Vector3(points.get(matches[l].centroid));
 			d = temp2.nor().dot(temp);
 			if(d < 0) continue;
 			else if (d < dleast){

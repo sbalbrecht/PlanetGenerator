@@ -122,7 +122,7 @@ public class Planet{
 	}
     
     public Tile getNearestLatLong(float latitude, float longitude){
-        return this.tileMap.getNearest(latitude, longitude);
+        return this.tileMap.getNearest(latitude, longitude, points);
     }
 
     /* subdivides faces n times */
@@ -199,7 +199,7 @@ public class Planet{
                     }
                 }
             } while(curr != face);
-            Tile t = new Tile(p1, pts);
+            Tile t = new Tile(p1, pts, points);
             int j;
             for(int i = 0; i < t.pts.size; i++) {
                 if(i+1 == t.pts.size) j = 0;
@@ -527,10 +527,6 @@ public class Planet{
             tArr[0] = t;
             tileNbrs.put(key, tArr);
         }
-    }
-
-    private void plateColCache(Tile t, int p1, int p2) {
-
     }
 
     private long getKey(int p1, int p2) {
