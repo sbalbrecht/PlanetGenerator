@@ -9,18 +9,24 @@ import java.util.Comparator;
 import java.util.Map;
 
 public class TileMap{
+	
+	Planet P;
+	
+	
 	Array<Tile> tiles;
 	Array<Tile> tiles_long;
 	Array<Tile> tiles_lat;
 	//float[] u, v; // u is Longitude, v is latitude. Values from -pi to pi.
 
-	public TileMap(Array<Tile> tiles){
+	public TileMap(Array<Tile> tiles, Planet planet){
 		this.tiles = tiles;
 		tiles_lat = new Array<Tile>();
 		tiles_long = new Array<Tile>();
 		tiles_long.ensureCapacity(tiles.size);
 		tiles_lat.ensureCapacity(tiles.size);
 
+		P = planet;
+		
 		update();
 	}
 
@@ -54,7 +60,7 @@ public class TileMap{
 
 	}
 
-	public Tile getNearest(float longitude, float latitude, Array<Vector3> points){
+	public Tile getNearest(float longitude, float latitude){
 
 		if(tiles_lat.size != tiles.size || tiles_lat.size != tiles_long.size){update();}
 
@@ -91,7 +97,7 @@ public class TileMap{
 		float d;
 		float dleast = 0.0f;
 		for (int l = 0; l < matches.length; l++){
-			temp2 = new Vector3(points.get(matches[l].centroid));
+			temp2 = new Vector3(P.points.get(matches[l].centroid));
 			d = temp2.nor().dot(temp);
 			if(d < 0) continue;
 			else if (d < dleast){

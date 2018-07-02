@@ -21,7 +21,7 @@ import com.mygdx.game.util.Log;
 
 import java.util.Random;
 
-public class MyGdxGame extends ApplicationAdapter {
+public class Game extends ApplicationAdapter {
     private PerspectiveCamera cam;
     private CameraInputController camController;
     private Environment environment;
@@ -66,7 +66,7 @@ public class MyGdxGame extends ApplicationAdapter {
 
         l.start("Generation time");
         Planet planet = new Planet();
-			  planet.generateIcosphere(new Vector3(0, 0, 0), planetRadius, 9);
+			  planet.generateIcosphere(new Vector3(0, 0, 0), planetRadius, 5);
 		l.end();
 
         

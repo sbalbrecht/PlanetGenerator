@@ -6,6 +6,8 @@ import com.badlogic.gdx.utils.Array;
 
 public class Tile {
     public int centroid;
+    private Planet planet;
+    
     public Array<Integer> pts;
     public Array<Tile> nbrs;
     
@@ -22,7 +24,7 @@ public class Tile {
     public boolean root = false;
     public int plateId = -1;
 
-    Tile(int centroid, Array<Integer> tilePts, Array<Vector3> allPoints) {
+    Tile(int centroid, Array<Integer> tilePts, Planet planet) {
         this.centroid = centroid;
         pts = new Array<Integer>();
         nbrs = new Array<Tile>();
@@ -41,7 +43,7 @@ public class Tile {
             this.pts.add(pt);
         }
 
-        Vector3 temp = new Vector3(allPoints.get(this.centroid));
+        Vector3 temp = new Vector3(planet.points.get(this.centroid));
         this.longitude.setValue(MathUtils.atan2(temp.y, temp.x));
         this.latitude.setValue(MathUtils.atan2((float)Math.sqrt(temp.x*temp.x + temp.y*temp.y), temp.z));
         

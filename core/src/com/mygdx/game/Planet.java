@@ -113,7 +113,7 @@ public class Planet{
         }
     
         l.start("Assemble tileMap");
-            tileMap = new TileMap(tiles);
+            tileMap = new TileMap(tiles, this);
         l.end();
     
         System.out.println("Faces:  " + faces.size);
@@ -122,7 +122,7 @@ public class Planet{
 	}
     
     public Tile getNearestLatLong(float latitude, float longitude){
-        return this.tileMap.getNearest(latitude, longitude, points);
+        return this.tileMap.getNearest(latitude, longitude);
     }
 
     /* subdivides faces n times */
@@ -199,7 +199,7 @@ public class Planet{
                     }
                 }
             } while(curr != face);
-            Tile t = new Tile(p1, pts, points);
+            Tile t = new Tile(p1, pts, this);
             int j;
             for(int i = 0; i < t.pts.size; i++) {
                 if(i+1 == t.pts.size) j = 0;

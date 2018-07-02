@@ -5,7 +5,7 @@ import javafx.scene.PerspectiveCamera;
 public class CameraInterface{
 
 	private PerspectiveCamera cam;
-	float u, v;
+	float latitude, longitude;
 	
 	
 	public CameraInterface(PerspectiveCamera cam){
