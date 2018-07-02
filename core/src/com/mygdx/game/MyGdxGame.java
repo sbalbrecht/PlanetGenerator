@@ -66,7 +66,7 @@ public class MyGdxGame extends ApplicationAdapter {
 
         l.start("Generation time");
         Planet planet = new Planet();
-			  planet.generateIcosphere(new Vector3(0, 0, 0), planetRadius, 6);
+			  planet.generateIcosphere(new Vector3(0, 0, 0), planetRadius, 9);
 		l.end();
 
         
