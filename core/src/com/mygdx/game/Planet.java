@@ -472,11 +472,7 @@ public class Planet{
     }
 
     private int addVertex(Vector3 p) {
-//        float length = (float)Math.sqrt(p.x * p.x + p.y * p.y + p.z * p.z);
-//        points.add(new Vector3(p.x/length, p.y/length, p.z/length));
-
         points.add(new Vector3(p));
-
         return points.size - 1;
     }
 
@@ -544,6 +540,7 @@ public class Planet{
                 (u.x + v.x + w.x)/3,
                 (u.y + v.y + w.y)/3,
                 (u.z + v.z + w.z)/3).nor();
+        
         return addVertex(c);
     }
 }
