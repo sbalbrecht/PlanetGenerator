@@ -6,8 +6,7 @@ public class Log{
 	String label;
 	boolean logging;
 	int indent;
-	
-	
+
 	public Log(){
 		dt = 0;
 	}
@@ -17,15 +16,17 @@ public class Log{
 	}
 	
 	public void start(String label){
+		if(logging)
+		    end();
 		logging = true;
 		this.label = label;
 		dt = System.currentTimeMillis();
 	}
+
 	public void end(){
 		logging = false;
 		dt = System.currentTimeMillis()-dt;
 		if(label != null) log(String.format(label + ": %d ms", dt));
-		
 	}
 
 }

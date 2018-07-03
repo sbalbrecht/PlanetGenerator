@@ -7,44 +7,69 @@ import com.mygdx.game.util.VMath;
 
 import java.util.*;
 
-public class Planet{
+public class Planet {
     public int PLATE_COUNT = 72;
+    private float radius;
+    Vector3 position;
+    Vector3 NORTH = new Vector3(0, 1, 0);
 
     public Array<Vector3> points = new Array<Vector3>();
     public Array<Face> faces = new Array<Face>();
     public Array<Tile> tiles = new Array<Tile>();
+    public Array<Tile> tiles_latitude = new Array<Tile>();  //tiles by latitude
+    public Array<Tile> tiles_longitude = new Array<Tile>(); //tiles by longitude
 
-    public Map<Long, Integer> midpointCache = new HashMap<Long, Integer>();
-    public Map<Long, Face[]> faceNbrs = new HashMap<Long, Face[]>();
-    public Map<Long, Tile[]> tileNbrs = new HashMap<Long, Tile[]>();
+    private Map<Long, Integer> midpointCache = new HashMap<Long, Integer>();
+    private Map<Long, Face[]> faceNbrs = new HashMap<Long, Face[]>();
+    private Map<Long, Tile[]> tileNbrs = new HashMap<Long, Tile[]>();
     public Map<Integer, Plate> plates = new HashMap<Integer, Plate>();
     public Map<Integer, Float> plateCollisions = new HashMap<Integer, Float>();
     
     public TileMap tileMap;
-    
-    public Array<Tile> tiles_latitude = new Array<Tile>();  //tiles by latitude
-    public Array<Tile> tiles_longitude = new Array<Tile>(); //tiles by longitude
-    
-    private float scale;
-    
-    Vector3 position;
-    Vector3 NORTH;
-  
-    // create Planet constructor
 
-    Planet() {}
+    Planet(Vector3 position, float radius, int subdivisions) {
+        this.radius = radius;
+        this.position = position;
+        generateIcosphere(subdivisions);
+    }
 
-	void generateIcosphere(Vector3 position, float scale, int subdivisions){
-		//hardcoded ico shit
+	private void generateIcosphere(int subdivisions){
+        Log log = new Log();
 
-		float phi = (float)((1.0f + Math.sqrt(5.0f))/2.0f);
-		float u = 1.0f/(float)Math.sqrt(phi*phi + 1.0f);
-		float v = phi*u;
-
-		this.scale = scale;
-		this.position = position;
+        generateIcosahedron();
 		
-		NORTH = new Vector3(0, 0, 1);
+		log.start("Subdivision");
+		    subdivide(subdivisions);
+
+        log.start("Dual Conversion");
+            convertToTruncatedIcosphere();
+
+        log.start("Plate generation");
+            generatePlates();
+
+        log.start("Assign Attributes");
+            addBaseAttributes();
+            randomizeElevations();
+            randomizeTemperatures();
+            generateSolPower(new Sun(new Vector3( 150000000.0f, 0,  0),  3.8679289e20f));
+        
+        Log.log("Tile 0 attributes:\n" + tiles.get(0).getAttributes());
+
+        scalePoints(points, radius);
+    
+        log.start("Assemble tileMap");
+            tileMap = new TileMap(tiles);
+        log.end();
+    
+        System.out.println("Faces:  " + faces.size);
+        System.out.println("Tiles:  " + tiles.size);
+        System.out.println("Plates: " + plates.size());
+	}
+
+	private void generateIcosahedron() {
+        float phi = (float)((1.0f + Math.sqrt(5.0f))/2.0f);
+        float u = 1.0f/(float)Math.sqrt(phi*phi + 1.0f);
+        float v = phi*u;
 
         addVertex(new Vector3(0.0f,   +v,   +u));
         addVertex(new Vector3(0.0f,   +v,   -u));
@@ -58,68 +83,30 @@ public class Planet{
         addVertex(new Vector3(+v,     -u, 0.0f));
         addVertex(new Vector3(-v,     +u, 0.0f));
         addVertex(new Vector3(-v,     -u, 0.0f));
-		
-		//for (Vector3 p: points){ p.scl(scale);}
-		
-	    // 20 faces
-		faces.addAll(
-                new Face(0,  8,  1, getCentroid(0, 8, 1)),
-                new Face(0,  5,  4, getCentroid(0, 5, 4)),
-                new Face(0, 10,  5, getCentroid(0,10, 5)),
-                new Face(0,  4,  8, getCentroid(0, 4, 8)),
-                new Face(0,  1, 10, getCentroid(0, 1,10)),
-                new Face(1,  8,  6, getCentroid(1, 8, 6)),
-                new Face(1,  6,  7, getCentroid(1, 6, 7)),
-                new Face(1,  7, 10, getCentroid(1, 7,10)),
-                new Face(2, 11,  3, getCentroid(2,11, 3)),
-                new Face(2,  9,  4, getCentroid(2, 9, 4)),
-                new Face(2,  4,  5, getCentroid(2, 4, 5)),
-                new Face(2,  3,  9, getCentroid(2, 3, 9)),
-                new Face(2,  5, 11, getCentroid(2, 5,11)),
-                new Face(3,  7,  6, getCentroid(3, 7, 6)),
-                new Face(3, 11,  7, getCentroid(3,11, 7)),
-                new Face(3,  6,  9, getCentroid(3, 6, 9)),
-                new Face(4,  9,  8, getCentroid(4, 9, 8)),
-                new Face(5, 10, 11, getCentroid(5,10,11)),
-                new Face(6,  8,  9, getCentroid(6, 8, 9)),
-                new Face(7, 11, 10, getCentroid(7,11,10))
-		 );
-		
-		Log l = new Log();
-		
-		l.start("Subdivision time");
-		subdivide(subdivisions);
-        l.end();
-        
-        l.start("Dual Conversion");
-            convertToDual();
-        l.end();
 
-        l.start("Plate generation");
-            generatePlates();
-        l.end();
-
-        l.start("Assign Attributes");
-            addBaseAttributes();
-            randomizeElevations();
-            randomizeTemperatures();
-            generateSolPower(new Sun(new Vector3( 150000000.0f, 0,  0),  3.8679289e20f));
-        l.end();
-        
-        Log.log("Tile 0 attributes:\n" + tiles.get(0).getAttributes());
-
-        for (Vector3 p : points){
-            p.nor().scl(scale);
-        }
-    
-        l.start("Assemble tileMap");
-            tileMap = new TileMap(tiles);
-        l.end();
-    
-        System.out.println("Faces:  " + faces.size);
-        System.out.println("Tiles:  " + tiles.size);
-        System.out.println("Plates: " + plates.size());
-	}
+        faces.addAll(
+            new Face(0,  8,  1, getCentroid(0,  8,  1)),
+            new Face(0,  5,  4, getCentroid(0,  5,  4)),
+            new Face(0, 10,  5, getCentroid(0, 10,  5)),
+            new Face(0,  4,  8, getCentroid(0,  4,  8)),
+            new Face(0,  1, 10, getCentroid(0,  1, 10)),
+            new Face(1,  8,  6, getCentroid(1,  8,  6)),
+            new Face(1,  6,  7, getCentroid(1,  6,  7)),
+            new Face(1,  7, 10, getCentroid(1,  7, 10)),
+            new Face(2, 11,  3, getCentroid(2, 11,  3)),
+            new Face(2,  9,  4, getCentroid(2,  9,  4)),
+            new Face(2,  4,  5, getCentroid(2,  4,  5)),
+            new Face(2,  3,  9, getCentroid(2,  3,  9)),
+            new Face(2,  5, 11, getCentroid(2,  5, 11)),
+            new Face(3,  7,  6, getCentroid(3,  7,  6)),
+            new Face(3, 11,  7, getCentroid(3, 11,  7)),
+            new Face(3,  6,  9, getCentroid(3,  6,  9)),
+            new Face(4,  9,  8, getCentroid(4,  9,  8)),
+            new Face(5, 10, 11, getCentroid(5, 10, 11)),
+            new Face(6,  8,  9, getCentroid(6,  8,  9)),
+            new Face(7, 11, 10, getCentroid(7, 11, 10))
+        );
+    }
     
     public Tile getNearestLatLong(float latitude, float longitude){
         return this.tileMap.getNearest(latitude, longitude, points);
@@ -129,102 +116,81 @@ public class Planet{
     private void subdivide(int degree) {
         for(int i = 0; i < degree; i++) {
             Array<Face> newFaces = new Array<Face>();
-
             for(Face face : faces) {
-                int p0 = face.pts[0];
-                int p1 = face.pts[1];
-                int p2 = face.pts[2];
-                
-                int q0 = mid(p0, p1);
-                int q1 = mid(p1, p2);
-                int q2 = mid(p2, p0);
-
-				Face f0 = new Face(p0, q0, q2, getCentroid(p0,q0,q2));
-				Face f1 = new Face(p1, q1, q0, getCentroid(p1,q1,q0));
-				Face f2 = new Face(p2, q2, q1, getCentroid(p2,q2,q1));
-				Face f3 = new Face(q0, q1, q2, getCentroid(q0,q1,q2));
-
-				if(i == degree-1) {
-                    // for each face's edge, look up existence in map
-                    // if it doesn't exist, create it
-                    // if it does, add face to the array
-                    faceNbrCache(f0, f0.pts[0], f0.pts[1]);
-                    faceNbrCache(f0, f0.pts[1], f0.pts[2]);
-                    faceNbrCache(f0, f0.pts[2], f0.pts[0]);
-                    faceNbrCache(f1, f1.pts[0], f1.pts[1]);
-                    faceNbrCache(f1, f1.pts[1], f1.pts[2]);
-                    faceNbrCache(f1, f1.pts[2], f1.pts[0]);
-                    faceNbrCache(f2, f2.pts[0], f2.pts[1]);
-                    faceNbrCache(f2, f2.pts[1], f2.pts[2]);
-                    faceNbrCache(f2, f2.pts[2], f2.pts[0]);
-                    faceNbrCache(f3, f3.pts[0], f3.pts[1]);
-                    faceNbrCache(f3, f3.pts[1], f3.pts[2]);
-                    faceNbrCache(f3, f3.pts[2], f3.pts[0]);
+                Face[] subdividedFaces = subdivideFace(face);
+                if(i == degree - 1) {
+                    setFaceNeighbors(subdividedFaces);
                 }
-				newFaces.addAll(f0, f1, f2, f3);
-
+ 				newFaces.addAll(subdividedFaces);
             }
-            // set faces = newFaces
 			faces.clear();
             faces.ensureCapacity(newFaces.size);
             faces.addAll(newFaces);
         }
     }
 
-    private void convertToDual() {
-        Array<Integer> pts = new Array<Integer>();  // Array for Tile points
-        Face curr;
-        for(Face face : faces) {
-            curr = face;
-            int p1 = curr.pts[0];         // Tile centroid
-            if(face.ptsUsedAsTileCentroid.contains(p1, false))
-                p1 = curr.pts[1];
-            if(face.ptsUsedAsTileCentroid.contains(p1, false))
-                continue;
+    private Face[] subdivideFace(Face face) {
+        int p0 = face.pts[0];
+        int p1 = face.pts[1];
+        int p2 = face.pts[2];
 
-            do {
-                pts.add(curr.centroid);                     // add current centroid
-                int p2 = curr.pts[getCwPt(curr, p1)];       // CW point
-                for (Face nbr : curr.nbrs) {                // find CCW neighbor
-                    int count = 0;
-                    for(int i = 0; i < nbr.pts.length; i++) {
-                        if(nbr.pts[i] == p1 || nbr.pts[i] == p2) {
-                            count++;
-                        }
-                    }
-                    if(count == 2) {
-                        curr = nbr;
-                        curr.addPtUsedInTileCentroid(p1);
-                        break;
-                    }
-                }
-            } while(curr != face);
-            Tile t = new Tile(p1, pts, points);
-            int j;
-            for(int i = 0; i < t.pts.size; i++) {
-                if(i+1 == t.pts.size) j = 0;
-                else j = i+1;
-                tileNbrCache(t, pts.get(i), pts.get(j));
+        int m0 = getMidpoint(p0, p1);
+        int m1 = getMidpoint(p1, p2);
+        int m2 = getMidpoint(p2, p0);
+
+        return new Face[] {
+            new Face(p0, m0, m2, getCentroid(p0, m0, m2)),
+            new Face(p1, m1, m0, getCentroid(p1, m1, m0)),
+            new Face(p2, m2, m1, getCentroid(p2, m2, m1)),
+            new Face(m0, m1, m2, getCentroid(m0, m1, m2))
+        };
+    }
+
+    private void setFaceNeighbors(Face[] faces) {
+        for(Face f : faces) {
+            for(int j = 0; j < f.pts.length; j++) {
+                if(j + 1 == f.pts.length)
+                    addFaceEdgeToNbrCache(f, f.pts[j], f.pts[0]);
+                else
+                    addFaceEdgeToNbrCache(f, f.pts[j], f.pts[j + 1]);
             }
-            tiles.add(t);
-            pts.clear();                                 // clear points for next tile
         }
     }
 
-    private int getCwPt(Face face, int TileCentroid) {
-        // Find the index being used for the centroid
-        int index = 0;
-        for(int i = 0; i < face.pts.length; i++) {
-            if(face.pts[i] == TileCentroid) {
-                index = i;
-                break;
-            }
+    private void convertToTruncatedIcosphere() {
+        Map<Integer, Boolean> ptsUsedAsTileCentroid = new HashMap<Integer, Boolean>();
+        for(Face face : faces) {
+            int tileCentroid = face.pts[0];
+            if(ptsUsedAsTileCentroid.get(tileCentroid) != null)
+                tileCentroid = face.pts[1];
+            if(ptsUsedAsTileCentroid.get(tileCentroid) != null)
+                continue;
+
+            Tile t = getTileFromFace(face, tileCentroid);
+            ptsUsedAsTileCentroid.put(tileCentroid, true);
+            setTileNeighbors(t);
+            tiles.add(t);
         }
-        // Find the index of the next point CW from the centroid index
-        if(index + 2 >= face.pts.length) {
-            return index - 1;
-        } else
-            return index + 2;
+    }
+
+    private Tile getTileFromFace(Face initialFace, int tileCentroid) {
+        Array<Integer> newTilePts = new Array<Integer>();
+        Face currentFace = initialFace;
+        do {
+            newTilePts.add(currentFace.centroid);
+            int clockwisePt = currentFace.getClockwisePt(tileCentroid);
+            currentFace = getFaceNbr(currentFace, tileCentroid, clockwisePt);
+        } while(currentFace != initialFace);
+        return new Tile(tileCentroid, newTilePts, points);
+    }
+
+    private void setTileNeighbors(Tile t) {
+        for(int i = 0; i < t.pts.size; i++) {
+            if(i + 1 == t.pts.size)
+                addTileEdgeToNbrCache(t, t.pts.get(i), t.pts.get(0));
+            else
+                addTileEdgeToNbrCache(t, t.pts.get(i), t.pts.get(i + 1));
+        }
     }
 
     private void generatePlates() {
@@ -385,7 +351,7 @@ public class Planet{
                 continentalCount--;
             }
             plate.velocity = r.nextFloat()*10;
-            plate.rotation = new Vector3(r.nextFloat(), r.nextFloat(), r.nextFloat()).nor().scl(scale);
+            plate.rotation = new Vector3(r.nextFloat(), r.nextFloat(), r.nextFloat()).nor().scl(radius);
             if(plate.oceanic)
                 plate.density = (float)2.5 + r.nextFloat()/2;
             else
@@ -394,6 +360,7 @@ public class Planet{
 
         // Calculate collision data for every border tile, store in map
         {
+        Plate b;
         Tile t;
         Long key;
         int j;
@@ -407,13 +374,14 @@ public class Planet{
                         j = i + 1;
                     else
                         j = 0;
-                    key = getKey(bdr.pts.get(i), bdr.pts.get(j));
+                    key = getHashKey(bdr.pts.get(i), bdr.pts.get(j));
                     pair = tileNbrs.get(key);
                     if(pair[0].equals(bdr))
                         t = pair[1];
                     else
                         t = pair[0];
                     if(t.plateId != bdr.plateId) {
+                        b = plates.get(t.plateId);
                         try {
                             plateCollisions.get(key);
                         } catch (NullPointerException e) {
@@ -471,13 +439,21 @@ public class Planet{
         }
     }
 
+    private void scalePoints(Array<Vector3> points, float scale) {
+        for (Vector3 p : points){
+            p.nor().scl(scale);
+        }
+    }
+
     private int addVertex(Vector3 p) {
+//        float length = (float)Math.sqrt(p.x * p.x + p.y * p.y + p.z * p.z);
+//        points.add(new Vector3(p.x/length, p.y/length, p.z/length));
         points.add(new Vector3(p));
         return points.size - 1;
     }
 
-    private int mid(int p1, int p2) {
-        Long key = getKey(p1, p2);
+    private int getMidpoint(int p1, int p2) {
+        Long key = getHashKey(p1, p2);
         int i;
         try {
             i = midpointCache.get(key);
@@ -493,15 +469,13 @@ public class Planet{
 
     }
 
-    private void faceNbrCache(Face f, int p1, int p2) {
-        Long key = getKey(p1, p2);
+    private void addFaceEdgeToNbrCache(Face f, int p1, int p2) {
+        Long key = getHashKey(p1, p2);
         Face[] fArr;
         try {
             fArr = faceNbrs.get(key);
             fArr[1] = f;
             faceNbrs.put(key, fArr);
-            fArr[0].nbrs.add(f);
-            fArr[1].nbrs.add(fArr[0]);
         } catch (NullPointerException e) {
             fArr = new Face[2];
             fArr[0] = f;
@@ -509,8 +483,16 @@ public class Planet{
         }
     }
 
-    private void tileNbrCache(Tile t, int p1, int p2) {
-        Long key = getKey(p1, p2);
+    private Face getFaceNbr(Face f, int p1, int p2) {
+        Face[] nbrs = faceNbrs.get(getHashKey(p1, p2));
+        if(f == nbrs[0])
+            return nbrs[1];
+        else
+            return nbrs[0];
+    }
+
+    private void addTileEdgeToNbrCache(Tile t, int p1, int p2) {
+        Long key = getHashKey(p1, p2);
         Tile[] tArr;
         try {
             tArr = tileNbrs.get(key);
@@ -525,7 +507,7 @@ public class Planet{
         }
     }
 
-    private long getKey(int p1, int p2) {
+    private long getHashKey(int p1, int p2) {
         boolean firstIsSmaller = p1 < p2;
         Long smallerIndex = (long)(firstIsSmaller ? p1 : p2);
         Long greaterIndex = (long)(firstIsSmaller ? p2 : p1);
