@@ -24,6 +24,8 @@ import java.util.Random;
 public class Game extends ApplicationAdapter {
     private PerspectiveCamera cam;
     private CameraInputController camController;
+    private CameraInterface cameraInterface;
+    
     private Environment environment;
     private ModelBuilder modelBuilder;
     private MeshPartBuilder partBuilder;
@@ -53,13 +55,9 @@ public class Game extends ApplicationAdapter {
         // Camera
         float planetRadius = 10;
 
-	    cam = new PerspectiveCamera(50, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        viewport = new ScreenViewport(cam);
-	    cam.position.set(2*planetRadius,2*planetRadius,2*planetRadius);
-	    cam.lookAt(0f,0f,0f);
-	    cam.near = 0.1f;
-	    cam.far = 50000000.0f;
-	    cam.update();
+        
+        
+	    
 
 	    // Subdivided icosahedron test
         Log l = new Log();
@@ -68,7 +66,15 @@ public class Game extends ApplicationAdapter {
         Planet planet = new Planet();
 			  planet.generateIcosphere(new Vector3(0, 0, 0), planetRadius, 5);
 		l.end();
-
+		
+        cam = new PerspectiveCamera(50, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        cameraInterface = new CameraInterface(cam, planet);
+        viewport = new ScreenViewport(cam);
+        cam.position.set(2*planetRadius,2*planetRadius,2*planetRadius);
+        cam.lookAt(0f,0f,0f);
+        cam.near = 0.1f;
+        cam.far = 50000000.0f;
+        cam.update();
         
         modelBuilder = new ModelBuilder();
         modelBuilder.begin();
@@ -77,7 +83,6 @@ public class Game extends ApplicationAdapter {
         l.start("Build time");
         partBuilder = modelBuilder.part("tile", GL20.GL_TRIANGLES, VertexAttributes.Usage.Position |
                 VertexAttributes.Usage.Normal | VertexAttributes.Usage.ColorPacked, new Material());
-        int q = 0;
         int tileLimit = 1000;
 
         /* Render triangles */
@@ -112,7 +117,6 @@ public class Game extends ApplicationAdapter {
 				partBuilder = modelBuilder.part("tile" + i, GL20.GL_TRIANGLES,
                         VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal |
                                 VertexAttributes.Usage.ColorPacked, new Material());
-				q++;
 			}
 
 			int plateId = t.plateId;
@@ -253,7 +257,8 @@ public class Game extends ApplicationAdapter {
 	@Override
 	public void render () {
     	
-        camController.update();
+        //camController.update();
+        cameraInterface.update();
 
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);

@@ -76,15 +76,15 @@ public class TileMap{
 
 
 		while(matchcount < matchlimit){
-				for (int l = 0-counter; l <= counter; l++){
-					for (int m = 0-counter; m <= counter; m++){
-						if (tiles_long.get((i+l+tiles.size)%tiles.size) == tiles_lat.get((j+m+tiles.size)%tiles.size) && (matchcount < matchlimit)){
-							matches[matchcount] = tiles_lat.get((j+m+tiles.size)%tiles.size);
-							matchcount++;
-						}
+			for (int l = 0-counter; l <= counter; l++){
+				for (int m = 0-counter; m <= counter; m++){
+					if (tiles_long.get((i+l+tiles.size)%tiles.size) == tiles_lat.get((j+m+tiles.size)%tiles.size) && (matchcount < matchlimit)){
+						matches[matchcount] = tiles_lat.get((j+m+tiles.size)%tiles.size);
+						matchcount++;
 					}
 				}
-				counter++;
+			}
+			counter++;
 		}
 
 
