@@ -62,19 +62,16 @@ public class MyGdxGame extends ApplicationAdapter {
 	    cam.update();
 
 	    // Subdivided icosahedron test
-        Log l = new Log();
+        Log log = new Log();
 
-        l.start("Generation time");
-        Planet planet = new Planet();
-			  planet.generateIcosphere(new Vector3(0, 0, 0), planetRadius, 6);
-		l.end();
-
+        log.start("Generation time");
+        Planet planet = new Planet(new Vector3(0, 0, 0), planetRadius, 6);
         
         modelBuilder = new ModelBuilder();
         modelBuilder.begin();
 
         /* Render tiles */
-        l.start("Build time");
+        log.start("Build time");
         partBuilder = modelBuilder.part("tile", GL20.GL_TRIANGLES, VertexAttributes.Usage.Position |
                 VertexAttributes.Usage.Normal | VertexAttributes.Usage.ColorPacked, new Material());
         int q = 0;
@@ -110,8 +107,8 @@ public class MyGdxGame extends ApplicationAdapter {
 
 			if(i % tileLimit == 0){
 				partBuilder = modelBuilder.part("tile" + i, GL20.GL_TRIANGLES,
-                        VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal |
-                                VertexAttributes.Usage.ColorPacked, new Material());
+                VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal |
+                         VertexAttributes.Usage.ColorPacked, new Material());
 				q++;
 			}
 
@@ -120,12 +117,22 @@ public class MyGdxGame extends ApplicationAdapter {
 
             int numPts = t.pts.size;
             if (numPts == 6) {
-                partBuilder.rect(
+//                partBuilder.rect(
+//                        planet.points.get(t.pts.get(0)),
+//                        planet.points.get(t.pts.get(1)),
+//                        planet.points.get(t.pts.get(3)),
+//                        planet.points.get(t.pts.get(4)),
+//                        planet.points.get(t.centroid)
+//                );
+                partBuilder.triangle(
                         planet.points.get(t.pts.get(0)),
                         planet.points.get(t.pts.get(1)),
+                        planet.points.get(t.pts.get(3))
+                );
+                partBuilder.triangle(
                         planet.points.get(t.pts.get(3)),
                         planet.points.get(t.pts.get(4)),
-                        planet.points.get(t.centroid)
+                        planet.points.get(t.pts.get(0))
                 );
                 partBuilder.triangle(
                         planet.points.get(t.pts.get(4)),
@@ -238,7 +245,7 @@ public class MyGdxGame extends ApplicationAdapter {
     
     model = modelBuilder.end();
     instance = new ModelInstance(model, planet.position);
-    l.end();
+    log.end();
 
     camController = new CameraInputController(cam);
     Gdx.input.setInputProcessor(camController);

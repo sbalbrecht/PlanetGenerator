@@ -28,22 +28,22 @@ public class Tile {
         nbrs = new Array<Tile>();
         
         attributes = new Array<TileAttribute>();
-            this.temperature = new TileAttribute("Temperature");
-            this.elevation = new TileAttribute("Elevation");
-            this.area = new TileAttribute("Area");
-            this.power = new TileAttribute("Solar Power");
-            this.density = new TileAttribute("Density");
-            this.latitude = new TileAttribute("Latitude");
-            this.longitude = new TileAttribute("Longitude");
+            temperature = new TileAttribute("Temperature");
+            elevation = new TileAttribute("Elevation");
+            area = new TileAttribute("Area");
+            power = new TileAttribute("Solar Power");
+            density = new TileAttribute("Density");
+            latitude = new TileAttribute("Latitude");
+            longitude = new TileAttribute("Longitude");
         attributes.addAll(temperature, elevation, area, power);
         
         for(Integer pt : tilePts) {
-            this.pts.add(pt);
+            pts.add(pt);
         }
 
         Vector3 temp = new Vector3(allPoints.get(this.centroid));
-        this.longitude.setValue(MathUtils.atan2(temp.y, temp.x));
-        this.latitude.setValue(MathUtils.atan2((float)Math.sqrt(temp.x*temp.x + temp.y*temp.y), temp.z));
+        longitude.setValue(MathUtils.atan2(temp.y, temp.x));
+        latitude.setValue(MathUtils.atan2((float)Math.sqrt(temp.x*temp.x + temp.y*temp.y), temp.z));
         
     }
 
