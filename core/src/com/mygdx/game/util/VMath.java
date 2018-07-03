@@ -4,14 +4,15 @@ import com.badlogic.gdx.math.Vector3;
 
 public final class VMath{
 
-    /* gets the middle point b/w two vectors*/
-    public static Vector3 mid(Vector3 u, Vector3 v) {
-        // need to check if point already exists --> need storage for midpoints?
-        // only need to store midpoints if it would be faster to search for them
-        //  than to calculate them again
-
-        Vector3 w = u.cpy().add(v).scl(0.5f);
-        return w;
+    public static Vector3 centroid(Vector3 [] points){
+        //Average position of all the points provided
+        Vector3     sum = new Vector3();
+    
+        for (int i = 0; i < points.length; i++){
+            sum.add(points[i]);
+        }
+        sum.scl(1f/(float)points.length);
+        return new Vector3();
     }
     
 }

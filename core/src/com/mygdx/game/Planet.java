@@ -425,7 +425,7 @@ public class Planet {
 
 
         for (Tile t : tiles){
-            t.area.setValue((float)Math.PI*4.0f*radius/tiles.size);
+            t.area.setValue((float)Math.PI*4.0f*(scale*scale)/tiles.size);
 
             r1 = points.get(t.centroid).sub(this.position).nor();
             r2 = new Vector3(S.position).sub(this.position).nor();
@@ -522,6 +522,7 @@ public class Planet {
                 (u.x + v.x + w.x)/3,
                 (u.y + v.y + w.y)/3,
                 (u.z + v.z + w.z)/3).nor();
+        
         return addVertex(c);
     }
 }
