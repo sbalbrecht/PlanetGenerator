@@ -47,9 +47,9 @@ public class Tile {
         
     }
 
-    public void addNbr(Tile tile) {
-        nbrs.add(tile);
-    }
+//    public void addNbr(Tile tile) {
+//        nbrs.add(tile);
+//    }
 
     public Tile getNbr(int p1, int p2) {
         for(Tile nbr : nbrs) {

@@ -127,6 +127,7 @@ public class Planet {
             faces.ensureCapacity(newFaces.size);
             faces.addAll(newFaces);
         }
+        midpointCache = null;
     }
 
     private Face[] subdivideFace(Face face) {
@@ -194,156 +195,124 @@ public class Planet {
     }
 
     private void generatePlates() {
-        Random r = new Random();
-        int id;
-        int tileInd;
-        Map<Integer, Integer> numOccurrences = new HashMap<Integer, Integer>();
-        Map<Integer, Plate> newPlates = new HashMap<Integer, Plate>();
+        placePlateRoots();
+        floodFillPlates();
+        updatePlateBorders();
+        removeLongestPlates(8);
+        updatePlateBorders();
+        // TODO: Place minor and micro plates along the borders of the majors
+        assignPlateAttributes();
+        calculatePlateCollisions();
+    }
 
-        // generate 72 random plates
+    private void placePlateRoots() {
+        Random r = new Random();
+        int newPlateId;
+        int tileIndex;
         while(plates.size() < PLATE_COUNT) {
-            id = r.nextInt(0xffffff);
-            tileInd = r.nextInt(tiles.size);
-            if(tiles.get(tileInd).plateId != -1 || plates.get(id) != null) continue;
-            else plates.put(id, new Plate(tiles.get(tileInd), id));
+            newPlateId = r.nextInt(0xffffff);
+            tileIndex = r.nextInt(tiles.size);
+            if (tiles.get(tileIndex).plateId == -1 && plates.get(newPlateId) == null)
+                plates.put(newPlateId, new Plate(tiles.get(tileIndex), newPlateId));
         }
-        // flood fill randoms
+    }
+
+    private void floodFillPlates() {
+        Random r = new Random();
         List<Integer> keysArray = new ArrayList<Integer>(plates.keySet());
         for(int i = 0; i < tiles.size*1.6; i++) {
             plates.get(keysArray.get(r.nextInt(keysArray.size()))).grow(points);
         }
-        // establish borders
-        for (Plate plate : plates.values()) {
-            plate.createBorder();
-        }
+    }
 
-        // Eliminate longest plates until 8 remain
-        Map<Integer, Plate> availPlates = new HashMap<Integer, Plate>(plates);
-        while(plates.size() > 8) {
-            if(availPlates.size() == 0) break;
-            // find plate with greatest border / area ratio
-            keysArray = new ArrayList<Integer>(availPlates.keySet());
-            Plate longest = availPlates.get(keysArray.get(0));
-            float longestRatio = (float)longest.border.size / (float)longest.members.size;
-            float newRatio;
-            Plate p;
-            for (Integer key : availPlates.keySet()) {
-                p = availPlates.get(key);
-                newRatio = (float)p.border.size / (float)p.members.size;
-                if (newRatio > longestRatio) {
-                    longest = p;
-                    longestRatio = newRatio;
-                }
-            }
-            // find the neighbor which takes up most of its border
-            for(Tile t : longest.border) {
-                for(Tile nbr : t.nbrs) {
-                    if(nbr.plateId != longest.id) {
-                        try {
-                            numOccurrences.put(nbr.plateId, numOccurrences.get(nbr.plateId)+1);
-                        } catch (NullPointerException e) {
-                            numOccurrences.put(nbr.plateId, 1);
-                        }
-                    }
-                }
-            }
-            int plateId = longest.id;
-            int bigNbrOccurrences = 0;
-            for (Map.Entry<Integer, Integer> entry : numOccurrences.entrySet()) {
-                Integer key = entry.getKey();
-                Integer value = entry.getValue();
-                if(value > bigNbrOccurrences) {
-                    bigNbrOccurrences = value;
-                    plateId = key;
-                }
-            }
-            Plate biggestNbr = plates.get(plateId);
-
-            // absorb that neighbor if their combined area < 25% global area
-            if((float)(longest.members.size + biggestNbr.members.size)/(float)tiles.size > 0.25) {
-                availPlates.remove(longest.id);
-                numOccurrences.clear();
-            } else {
-                for (Tile t : biggestNbr.members) {
-                    t.plateId = longest.id;
-                }
-                biggestNbr.root.root = false;
-                longest.members.ensureCapacity(biggestNbr.members.size);
-                longest.members.addAll(biggestNbr.members);
-                longest.border.ensureCapacity(biggestNbr.border.size);
-                longest.border.addAll(biggestNbr.border);
-                availPlates.remove(plateId);
-                plates.remove(plateId);
-                longest.calibrateBorder();
-                numOccurrences.clear();
-            }
-        }
-        // recreate borders
+    private void updatePlateBorders() {
         for (Plate plate : plates.values()) {
             plate.border.clear();
             plate.createBorder();
         }
-//        // Place minor and micro plates along the borders of the majors
-//        while(newPlates.size() < PLATE_COUNT - plates.size()) {
-//            Tile t;
-//            id = r.nextInt(0xffffff);
-//            if(plates.get(id) != null || newPlates.get(id) != null) continue;
-//            // need random border tile from random major plate
-//            keysArray = new ArrayList<Integer>(plates.keySet());
-//            int rId = keysArray.get(r.nextInt(keysArray.size()));
-//            Plate rPlate = plates.get(rId);
-//            // random border tile
-//            t = rPlate.border.get(r.nextInt(rPlate.border.size));
-//            if(r.nextFloat() < 0.2) { // border tile with two different neighbor plates
-//                Array<Integer> nbrPlates = new Array<Integer>();
-//                for(Tile bdr : rPlate.border) {
-//                    int count = 0;
-//                    for(Tile nbr : bdr.nbrs) {
-//                        if(nbr.plateId != bdr.plateId && !nbrPlates.contains(nbr.plateId, false)
-//                                && newPlates.containsKey(nbr.plateId)) {
-//                            nbrPlates.add(nbr.plateId);
-//                            count++;
-//                        }
-//                    }
-//                    if(count == 2) {
-//                        t = bdr;
-//                        break;
-//                    }
-//                }
-//            }
-//            rPlate.members.removeValue(t, false);
-//            rPlate.border.removeValue(t, false);
-//            newPlates.put(id, new Plate(t, id, newPlates));
-//
-//        }
-//        // flood fill new plates
-//        keysArray = new ArrayList<Integer>(newPlates.keySet());
-//        float roll;
-//        for(int i = 0; i < tiles.size*.1; i++) {
-//            roll = r.nextInt(100);
-//            if(roll < 75) {
-//                newPlates.get(keysArray.get(r.nextInt(10))).grow(points, newPlates);
-//            }
-//            else {
-//                newPlates.get(keysArray.get(r.nextInt(keysArray.size()-10)+10)).grow(points, newPlates);
-//            }
-//        }
-//        // add newPlates to plates
-//        plates.putAll(newPlates);
-//        newPlates.clear();
-//        // recalibrate all plate borders
-//        for (Plate plate : plates.values()) {
-//            for(Tile mem : plate.members) {
-//                if(mem.plateId != plate.id) {
-//                    plate.members.removeValue(mem, false);
-//                }
-//            }
-//            plate.border.clear();
-//            plate.createBorder();
-//        }
+    }
 
+    private void removeLongestPlates(int minPlates) {
+        Map<Integer, Plate> availPlates = new HashMap<Integer, Plate>(plates);
+        while(plates.size() > minPlates) {
+            if(availPlates.size() == 0) break;
+            Plate longest = getLongestPlate(availPlates);
+            Plate biggestNbr = getBiggestNbrPlate(longest);
+            // absorb that neighbor if their combined area < 25% global area
+            if(mergePlates(longest, biggestNbr))
+                availPlates.remove(biggestNbr.id);
+            else
+                availPlates.remove(longest.id);
+        }
+    }
+
+    private Plate getLongestPlate(Map<Integer, Plate> availPlates) {
+        ArrayList<Integer> keysArray = new ArrayList<Integer>(availPlates.keySet());
+        Plate longest = availPlates.get(keysArray.get(0));
+        float longestRatio = (float)longest.border.size / (float)longest.members.size;
+        float newRatio;
+        Plate newPlate;
+        for (Integer key : availPlates.keySet()) {
+            newPlate = availPlates.get(key);
+            newRatio = (float)newPlate.border.size / (float)newPlate.members.size;
+            if (newRatio > longestRatio) {
+                longest = newPlate;
+                longestRatio = newRatio;
+            }
+        }
+        return longest;
+    }
+
+    private Plate getBiggestNbrPlate(Plate sourcePlate) {
+        Map<Integer, Integer> numOccurrences = new HashMap<Integer, Integer>();
+        for(Tile bdr : sourcePlate.border) {
+            for(Tile nbr : bdr.nbrs) {
+                if(nbr.plateId != sourcePlate.id) {
+                    try {
+                        numOccurrences.put(nbr.plateId, numOccurrences.get(nbr.plateId)+1);
+                    } catch (NullPointerException e) {
+                        numOccurrences.put(nbr.plateId, 1);
+                    }
+                }
+            }
+        }
+        int plateId = sourcePlate.id;
+        int bigNbrOccurrences = 0;
+        for (Map.Entry<Integer, Integer> entry : numOccurrences.entrySet()) {
+            Integer key = entry.getKey();
+            Integer value = entry.getValue();
+            if(value > bigNbrOccurrences) {
+                bigNbrOccurrences = value;
+                plateId = key;
+            }
+        }
+        return plates.get(plateId);
+    }
+
+    private boolean mergePlates(Plate primary, Plate secondary) {
+        if(primary == secondary) return false;
+        float percentArea = (float)(primary.members.size + secondary.members.size)/(float)tiles.size;
+        if(percentArea <= 0.25) {
+            for (Tile t : secondary.members) {
+                t.plateId = primary.id;
+            }
+            secondary.root.root = false;
+            plates.remove(secondary.id);
+            primary.members.ensureCapacity(secondary.members.size);
+            primary.members.addAll(secondary.members);
+            primary.border.ensureCapacity(secondary.border.size);
+            primary.border.addAll(secondary.border);
+            primary.calibrateBorder();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private void assignPlateAttributes() {
         // Assign class of plate (oceanic/continental)
         // Assign random axis of rotation and velocity to each plate
+        Random r = new Random();
         int continentalCount = plates.size()/2;
         for(Plate plate : plates.values()) {
             if(continentalCount > 0) {
@@ -351,19 +320,18 @@ public class Planet {
                 continentalCount--;
             }
             plate.velocity = r.nextFloat()*10;
-            plate.rotation = new Vector3(r.nextFloat(), r.nextFloat(), r.nextFloat()).nor().scl(radius);
+            plate.axisOfRotation = new Vector3(r.nextFloat(), r.nextFloat(), r.nextFloat()).nor().scl(radius);
             if(plate.oceanic)
                 plate.density = (float)2.5 + r.nextFloat()/2;
             else
                 plate.density = (float)2.0 + r.nextFloat()/2;
         }
+    }
 
-        // Calculate collision data for every border tile, store in map
-        {
+    private void calculatePlateCollisions() {
         Plate b;
         Tile t;
         Long key;
-        int j;
         Tile[] pair;
         for (Plate plate : plates.values()) {
             for (Tile bdr : plate.border) {
@@ -371,10 +339,9 @@ public class Planet {
                 // if null, store collision info
                 for(int i = 0; i < bdr.pts.size; i++) {
                     if(i + 1 < bdr.pts.size)
-                        j = i + 1;
+                        key = getHashKey(bdr.pts.get(i), bdr.pts.get(i + 1));
                     else
-                        j = 0;
-                    key = getHashKey(bdr.pts.get(i), bdr.pts.get(j));
+                        key = getHashKey(bdr.pts.get(i), bdr.pts.get(0));
                     pair = tileNbrs.get(key);
                     if(pair[0].equals(bdr))
                         t = pair[1];
@@ -390,7 +357,6 @@ public class Planet {
                     }
                 }
             }
-        }
         }
     }
     
@@ -423,9 +389,8 @@ public class Planet {
 
         float km_m = 1.0f/1000.0f;
 
-
         for (Tile t : tiles){
-            t.area.setValue((float)Math.PI*4.0f*(scale*scale)/tiles.size);
+            t.area.setValue((float)Math.PI*4.0f*(radius*radius)/tiles.size);
 
             r1 = points.get(t.centroid).sub(this.position).nor();
             r2 = new Vector3(S.position).sub(this.position).nor();
@@ -471,15 +436,15 @@ public class Planet {
 
     private void addFaceEdgeToNbrCache(Face f, int p1, int p2) {
         Long key = getHashKey(p1, p2);
-        Face[] fArr;
+        Face[] nbrs;
         try {
-            fArr = faceNbrs.get(key);
-            fArr[1] = f;
-            faceNbrs.put(key, fArr);
+            nbrs = faceNbrs.get(key);
+            nbrs[1] = f;
+            faceNbrs.put(key, nbrs);
         } catch (NullPointerException e) {
-            fArr = new Face[2];
-            fArr[0] = f;
-            faceNbrs.put(key, fArr);
+            nbrs = new Face[2];
+            nbrs[0] = f;
+            faceNbrs.put(key, nbrs);
         }
     }
 
@@ -491,19 +456,27 @@ public class Planet {
             return nbrs[0];
     }
 
+    private Tile getTileNbr(Tile t, int p1, int p2) {
+        Tile[] pair = tileNbrs.get(getHashKey(p1, p2));
+        if(pair[0].equals(t))
+            return pair[1];
+        else
+            return pair[0];
+    }
+
     private void addTileEdgeToNbrCache(Tile t, int p1, int p2) {
         Long key = getHashKey(p1, p2);
-        Tile[] tArr;
+        Tile[] nbrs;
         try {
-            tArr = tileNbrs.get(key);
-            tArr[1] = t;
-            tileNbrs.put(key, tArr);
-            tArr[0].nbrs.add(t);
-            tArr[1].nbrs.add(tArr[0]);
+            nbrs = tileNbrs.get(key);
+            nbrs[1] = t;
+            tileNbrs.put(key, nbrs);
+            nbrs[0].nbrs.add(t);
+            nbrs[1].nbrs.add(nbrs[0]);
         } catch (NullPointerException e) {
-            tArr = new Tile[2];
-            tArr[0] = t;
-            tileNbrs.put(key, tArr);
+            nbrs = new Tile[2];
+            nbrs[0] = t;
+            tileNbrs.put(key, nbrs);
         }
     }
 
