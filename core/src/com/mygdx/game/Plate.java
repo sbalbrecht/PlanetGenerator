@@ -4,7 +4,6 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
@@ -18,7 +17,7 @@ public class Plate {
     Array<Tile> members = new Array<Tile>();
     Array<Tile> front = new Array<Tile>();
 
-    Vector3 rotation;
+    Vector3 axisOfRotation;
     float velocity;     // cm/year
     float density;      // g/cm^3
     boolean oceanic = true;
@@ -53,7 +52,7 @@ public class Plate {
 
     public void grow(Array<Vector3> pts) {
         if(front.size == 0) return;                    // plate full
-        int ind = 0;                                       // closest front tile
+        int ind = r.nextInt(front.size);;              // closest front tile
         float tmp, currMin = pts.get(root.centroid).dst(pts.get(front.get(0).centroid));
         for(int i = 0; i < front.size; i++) {
             tmp = pts.get(root.centroid).dst(pts.get(front.get(i).centroid));
