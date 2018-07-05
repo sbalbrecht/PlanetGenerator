@@ -22,6 +22,7 @@ public class TileMap{
 		tiles_lat.ensureCapacity(tiles.size);
 
 		update();
+		
 	}
 
 	public void update(){

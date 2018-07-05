@@ -12,14 +12,30 @@ public class Plate {
     int id;
     Color color;
     Random r = new Random();
-
+    
+    //TODO
     Array<Tile> border = new Array<Tile>();
     Array<Tile> members = new Array<Tile>();
-    Array<Tile> front = new Array<Tile>();
+    private Array<Tile> front = new Array<Tile>();
 
     Vector3 axisOfRotation;
-    float velocity;     // cm/year
-    float density;      // g/cm^3
+    
+    float speed_cm_yr;
+    float density_gm_cm3;
+    float thickness_km;
+    float area_km2;
+    float mass_Mg;              //Megagrams == Metric_tons
+    float angularSpeed_rad_yr;
+    float momentum_cmMg_yr;
+    
+    Vector3 tangentialVelocity;
+    Vector3 tangentialMomentum;
+    Vector3 angularMomentum;
+    Vector3 angularVelocity;
+
+    Vector3 centerOfMass;
+    
+    
     boolean oceanic = true;
 
     Plate(Tile seed, int id) {

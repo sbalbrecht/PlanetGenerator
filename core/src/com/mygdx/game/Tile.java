@@ -17,6 +17,7 @@ public class Tile {
     public TileAttribute density;
     public TileAttribute latitude;
     public TileAttribute longitude;
+    public TileAttribute thickness;
 
     public boolean drawn = false;
     public boolean root = false;
@@ -35,6 +36,7 @@ public class Tile {
             density = new TileAttribute("Density");
             latitude = new TileAttribute("Latitude");
             longitude = new TileAttribute("Longitude");
+            //thickness_km = new TileAttribute("Thickness");
         attributes.addAll(temperature, elevation, area, power);
         
         for(Integer pt : tilePts) {
@@ -71,6 +73,10 @@ public class Tile {
     public void setElevation(float e){
         if(elevation == null) elevation = new TileAttribute("Elevation", e);
         else elevation.setValue(e);
+    }
+    
+    public void setArea(float a){
+        this.area.setValue(a);
     }
     
     public String getAttributes(){

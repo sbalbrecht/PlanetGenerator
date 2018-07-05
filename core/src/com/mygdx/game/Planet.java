@@ -1,9 +1,10 @@
 package com.mygdx.game;
 
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.mygdx.game.util.Log;
-import com.mygdx.game.util.VMath;
+import com.mygdx.game.util.Units;
 
 import java.util.*;
 
@@ -311,20 +312,67 @@ public class Planet {
 
     private void assignPlateAttributes() {
         // Assign class of plate (oceanic/continental)
-        // Assign random axis of rotation and velocity to each plate
+        // Assign random axis of rotation and velocity$cm_year to each plate
+        
         Random r = new Random();
+        Vector3 tmp1 = new Vector3();
+        
+        float massConversionConstant = (float)Math.pow(Units.KM_TO_CM, 3.0f) * Units.G_TO_MTONS;
+        
         int continentalCount = plates.size()/2;
         for(Plate plate : plates.values()) {
             if(continentalCount > 0) {
                 plate.oceanic = false;
                 continentalCount--;
             }
-            plate.velocity = r.nextFloat()*10;
-            plate.axisOfRotation = new Vector3(r.nextFloat(), r.nextFloat(), r.nextFloat()).nor().scl(radius);
-            if(plate.oceanic)
-                plate.density = (float)2.5 + r.nextFloat()/2;
-            else
-                plate.density = (float)2.0 + r.nextFloat()/2;
+    
+            plate.centerOfMass = new Vector3();
+            for (Tile t: plate.members){
+                plate.centerOfMass.add(points.get(t.centroid));
+            }
+            plate.centerOfMass.scl(plate.members.size);
+            
+            plate.speed_cm_yr = r.nextFloat()*10f;
+            plate.angularSpeed_rad_yr = plate.speed_cm_yr / radius; //TINY
+            
+            plate.axisOfRotation = new Vector3().setToRandomDirection().scl(radius);
+            plate.angularVelocity = new Vector3(plate.axisOfRotation).scl(plate.angularSpeed_rad_yr);
+            
+            plate.tangentialVelocity = new Vector3();
+            
+            plate.angularVelocity = new Vector3();
+            
+            //plate.tangentialVelocity.add(plate.centerOfMass).scl(MathUtils.cos(plate.angularSpeed_rad_yr));
+            //plate.tangentialVelocity.add(new Vector3(plate.axisOfRotation).crs(plate.centerOfMass).scl(MathUtils.sin(plate.angularSpeed_rad_yr)));
+            //plate.tangentialVelocity.add(new Vector3(plate.centerOfMass).scl());
+            
+            
+            if(plate.oceanic){
+                plate.density_gm_cm3 = (float)2.5 + r.nextFloat()/2;
+                plate.thickness_km = 3.0f + r.nextFloat()*8.0f;
+            }
+            else{
+                plate.density_gm_cm3 = (float)2.0 + r.nextFloat()/2;
+                plate.thickness_km = 5.0f + r.nextFloat()*70.0f;
+            }
+            
+            plate.area_km2 =
+                    plate.members.size
+                    * (MathUtils.PI*4.0f*(radius*radius)/tiles.size);
+            
+            plate.mass_Mg =
+                    plate.density_gm_cm3
+                    * plate.thickness_km
+                    * plate.area_km2
+                    * massConversionConstant;
+            
+            
+            
+            //TODO
+            //plate.momentum_cmMg_yr = plate.mass_Mg * plate.speed_cm_yr;
+            
+            
+            
         }
     }
 
@@ -362,6 +410,7 @@ public class Planet {
     
     private void addBaseAttributes(){
         for (Tile t : tiles){
+            t.setArea((MathUtils.PI*4.0f*(radius*radius)/tiles.size));
             t.setElevation(0.0f);   //0m above sea level
             t.setTemperature(0.0f); //0K
         }
@@ -390,8 +439,6 @@ public class Planet {
         float km_m = 1.0f/1000.0f;
 
         for (Tile t : tiles){
-            t.area.setValue((float)Math.PI*4.0f*(radius*radius)/tiles.size);
-
             r1 = points.get(t.centroid).sub(this.position).nor();
             r2 = new Vector3(S.position).sub(this.position).nor();
             r3 = new Vector3(S.position).sub(t.centroid).nor();
