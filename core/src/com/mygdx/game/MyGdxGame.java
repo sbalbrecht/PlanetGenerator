@@ -84,7 +84,8 @@ public class MyGdxGame extends ApplicationAdapter {
 //        buildWireframe(planet);
 //        buildAxes();
         buildMajorLatLines(planet);
-        buildLatLongSpikes(planet);
+//        buildLatLongSpikes(planet);
+        buildPlateDirectionArrows(planet);
     
         model = modelBuilder.end();
         instance = new ModelInstance(model, planet.position);
@@ -309,5 +310,19 @@ public class MyGdxGame extends ApplicationAdapter {
             }
 
         }l2.end();
+    }
+    private void buildPlateDirectionArrows(Planet planet) {
+        int i = 0;
+        Material lineColor = new Material(ColorAttribute.createDiffuse(Color.valueOf("ffffff")));
+        partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
+        for(Plate plate : planet.plates.values()) {
+            for(Tile tile : plate.members) {
+                if(i % TILE_LIMIT == 0){
+                    partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
+                }
+                partBuilder.line(planet.points.get(tile.centroid), planet.points.get(tile.centroid).cpy().add(tile.tangentialVelocity.cpy().scl(12000f)));
+                i++;
+            }
+        }
     }
 }
