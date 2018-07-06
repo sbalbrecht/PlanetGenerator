@@ -51,10 +51,9 @@ public class Planet {
             generatePlates();
 
         log.start("Assign Attributes");
-            addBaseAttributes();
-            randomizeElevations();
-            randomizeTemperatures();
-            generateSolPower(new Sun(new Vector3( 150000000.0f, 0,  0),  3.8679289e20f));
+         assignAttributes();
+
+        Log.log("Tile 0 attributes:\n" + tiles.get(0).getAttributes());
 
         scalePoints(points, radius);
     
@@ -108,10 +107,6 @@ public class Planet {
             new Face(7, 11, 10, getCentroidFromIndices(7, 11, 10))
         );
     }
-    
-    public Tile getNearestLatLong(float latitude, float longitude){
-        return this.tileMap.getNearest(latitude, longitude, points);
-    }
 
     /* subdivides faces n times */
     private void subdivide(int degree) {
@@ -129,6 +124,24 @@ public class Planet {
             faces.addAll(newFaces);
         }
         midpointCache = null;
+    }
+
+    private void generatePlates() {
+        placePlateRoots();
+        floodFillPlates();
+        updatePlateBorders();
+        removeLongestPlates(8);
+        updatePlateBorders();
+        // TODO: Place minor and micro plates along the borders of the majors
+        assignPlateAttributes();
+        calculatePlateCollisions();
+    }
+
+    private void assignAttributes() {
+        addBaseTileAttributes();
+        randomizeTileElevations();
+        randomizeTileTemperatures();
+        generateSolPower(new Sun(new Vector3( 150000000.0f, 0,  0),  3.8679289e20f));
     }
 
     private Face[] subdivideFace(Face face) {
@@ -193,17 +206,6 @@ public class Planet {
             else
                 addTileEdgeToNbrCache(t, t.pts.get(i), t.pts.get(i + 1));
         }
-    }
-
-    private void generatePlates() {
-        placePlateRoots();
-        floodFillPlates();
-        updatePlateBorders();
-        removeLongestPlates(8);
-        updatePlateBorders();
-        // TODO: Place minor and micro plates along the borders of the majors
-        assignPlateAttributes();
-        calculatePlateCollisions();
     }
 
     private void placePlateRoots() {
@@ -399,7 +401,7 @@ public class Planet {
         }
     }
     
-    private void addBaseAttributes(){
+    private void addBaseTileAttributes(){
         for (Tile t : tiles){
             t.setArea((MathUtils.PI*4.0f*(radius*radius)/tiles.size));
             t.setElevation(0.0f);   //0m above sea level
@@ -407,12 +409,12 @@ public class Planet {
         }
     }
     
-    private void randomizeElevations(){
+    private void randomizeTileElevations(){
         for (Tile t : tiles){
             t.setElevation((0.5f - (float)Math.random())*100.0f);
         }
     }
-    private void randomizeTemperatures(){
+    private void randomizeTileTemperatures(){
         for (Tile t : tiles){
             t.setTemperature((float)Math.random()*300.0f);
         }
@@ -440,6 +442,10 @@ public class Planet {
             p = (k/r3.len2())*area_fractional*km_m*km_m;
             t.setPower(p);
         }
+    }
+
+    public Tile getNearestLatLong(float latitude, float longitude){
+        return this.tileMap.getNearest(latitude, longitude, points);
     }
 
     private void scalePoints(Array<Vector3> points, float scale) {
