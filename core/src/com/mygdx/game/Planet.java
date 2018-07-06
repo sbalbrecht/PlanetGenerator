@@ -269,9 +269,9 @@ public class Planet {
         for(Tile bdr : sourcePlate.border) {
             for(Tile nbr : bdr.nbrs) {
                 if(nbr.plateId != sourcePlate.id) {
-                    try {
+                    if(numOccurrences.get(nbr.plateId) != null) {
                         numOccurrences.put(nbr.plateId, numOccurrences.get(nbr.plateId)+1);
-                    } catch (NullPointerException e) {
+                    } else {
                         numOccurrences.put(nbr.plateId, 1);
                     }
                 }
@@ -310,6 +310,23 @@ public class Planet {
         }
     }
 
+    private Plate[] sortPlatesBySize() {
+        Plate[] sortedPlates = new Plate[plates.size()];
+        int i = 0;
+        for (Plate plate : plates.values()) {
+            sortedPlates[i] = plate;
+            i++;
+        }
+        Arrays.sort(sortedPlates, new Comparator<Plate>(){
+            @Override public int compare(Plate a, Plate b){
+                if(a.members.size < b.members.size) return -1;
+                if(a.members.size > b.members.size) return 1;
+                else return 0;
+            }
+        });
+        return sortedPlates;
+    }
+
     private void assignPlateAttributes() {
         // Assign class of plate (oceanic/continental)
         // Assign random axis of rotation and velocity$cm_year to each plate
@@ -321,10 +338,6 @@ public class Planet {
         
         int continentalCount = plates.size()/2;
         for(Plate plate : plates.values()) {
-            if(continentalCount > 0) {
-                plate.oceanic = false;
-                continentalCount--;
-            }
     
             plate.centerOfMass = new Vector3();
             for (Tile t: plate.members){
@@ -373,6 +386,7 @@ public class Planet {
         Tile bdrNbr;
         Long edgeKey;
         int edgeP1, edgeP2;
+        float intensity;
         for (Plate plate : plates.values()) {
             for (Tile bdr : plate.border) {
                 // for each edge, if it's a border edge, check existence
@@ -388,15 +402,20 @@ public class Planet {
                     bdrNbr = getTileNbr(bdr, edgeP1, edgeP2);
                     if(bdrNbr.plateId != bdr.plateId) {
                         nbrPlate = plates.get(bdrNbr.plateId);
-                        try {
-                            plateCollisions.get(edgeKey);
-                        } catch (NullPointerException e) {
-                            // TODO: calculate coll info and store
+                        if(plateCollisions.get(edgeKey) != null) {
+                            intensity = plateCollisions.get(edgeKey);
+                        } else {
+                            intensity = getCollisionIntensity(bdr, bdrNbr);
+                            plateCollisions.put(edgeKey, intensity);
                         }
                     }
                 }
             }
         }
+    }
+
+    private float getCollisionIntensity(Tile a, Tile b) {
+        return 1f;
     }
     
     private void addBaseTileAttributes(){
@@ -462,9 +481,9 @@ public class Planet {
     private int getMidpointFromIndices(int p1, int p2) {
         Long key = getHashKeyFromIndices(p1, p2);
         int i;
-        try {
+        if(midpointCache.get(key) != null) {
             i = midpointCache.get(key);
-        } catch (NullPointerException e) {
+        } else {
             Vector3 u = points.get(p1);
             Vector3 v = points.get(p2);
             Vector3 w = u.cpy().add(v).scl(0.5f);
@@ -478,10 +497,10 @@ public class Planet {
     private void addFaceEdgeToNbrCache(Face f, int p1, int p2) {
         Long key = getHashKeyFromIndices(p1, p2);
         Face[] nbrs;
-        try {
+        if(faceNbrs.get(key) != null) {
             nbrs = faceNbrs.get(key);
             nbrs[1] = f;
-        } catch (NullPointerException e) {
+        } else {
             nbrs = new Face[2];
             nbrs[0] = f;
         }
@@ -507,13 +526,13 @@ public class Planet {
     private void addTileEdgeToNbrCache(Tile t, int p1, int p2) {
         Long key = getHashKeyFromIndices(p1, p2);
         Tile[] nbrs;
-        try {
+        if(tileNbrs.get(key) != null) {
             nbrs = tileNbrs.get(key);
             nbrs[1] = t;
             tileNbrs.put(key, nbrs);
             nbrs[0].nbrs.add(t);
             nbrs[1].nbrs.add(nbrs[0]);
-        } catch (NullPointerException e) {
+        } else {
             nbrs = new Tile[2];
             nbrs[0] = t;
             tileNbrs.put(key, nbrs);
