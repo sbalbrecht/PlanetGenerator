@@ -38,7 +38,9 @@ public class TileMap{
 
 		Arrays.sort(temp, new Comparator<Tile>(){
 			@Override public int compare(Tile a, Tile b){
-				return a.longitude.compareTo(b.longitude);
+				if(a.longitude < b.longitude) return -1;
+				if(a.longitude > b.longitude) return 1;
+				else return 0;
 			}
 		});
 		tiles_long.addAll(temp);
@@ -48,7 +50,9 @@ public class TileMap{
 		}
 		Arrays.sort(temp, new Comparator<Tile>(){
 			@Override public int compare(Tile a, Tile b){
-				return a.latitude.compareTo(b.latitude);
+				if(a.latitude < b.latitude) return -1;
+				if(a.latitude > b.latitude) return 1;
+				else return 0;
 			}
 		});
 		tiles_lat.addAll(temp);
@@ -71,18 +75,17 @@ public class TileMap{
 
 
 		while(matchcount < matchlimit){
-				for (int l = 0-counter; l <= counter; l++){
-					for (int m = 0-counter; m <= counter; m++){
-						if (tiles_long.get((i+l+tiles.size)%tiles.size) == tiles_lat.get((j+m+tiles.size)%tiles.size) && (matchcount < matchlimit)){
-							matches[matchcount] = tiles_lat.get((j+m+tiles.size)%tiles.size);
-							matchcount++;
-						}
+			for (int l = 0-counter; l <= counter; l++){
+				for (int m = 0-counter; m <= counter; m++){
+					if (tiles_long.get((i+l+tiles.size)%tiles.size) == tiles_lat.get((j+m+tiles.size)%tiles.size) && (matchcount < matchlimit)){
+						matches[matchcount] = tiles_lat.get((j+m+tiles.size)%tiles.size);
+						matchcount++;
 					}
 				}
-				counter++;
+			}
+			counter++;
 		}
-
-
+		
 		Vector3 temp = new Vector3(
 				MathUtils.sin(latitude)*MathUtils.cos(longitude),
 				MathUtils.sin(latitude)*MathUtils.sin(longitude),
