@@ -24,7 +24,7 @@ public class Planet {
     private Map<Long, Face[]> faceNbrs = new HashMap<Long, Face[]>();
     private Map<Long, Tile[]> tileNbrs = new HashMap<Long, Tile[]>();
     public Map<Integer, Plate> plates = new HashMap<Integer, Plate>();
-    public Map<Integer, Float> plateCollisions = new HashMap<Integer, Float>();
+    public Map<Long, Float> plateCollisions = new HashMap<Long, Float>();
     
     public TileMap tileMap;
 
@@ -86,26 +86,26 @@ public class Planet {
         addVertex(new Vector3(-v,     -u, 0.0f));
 
         faces.addAll(
-            new Face(0,  8,  1, getCentroid(0,  8,  1)),
-            new Face(0,  5,  4, getCentroid(0,  5,  4)),
-            new Face(0, 10,  5, getCentroid(0, 10,  5)),
-            new Face(0,  4,  8, getCentroid(0,  4,  8)),
-            new Face(0,  1, 10, getCentroid(0,  1, 10)),
-            new Face(1,  8,  6, getCentroid(1,  8,  6)),
-            new Face(1,  6,  7, getCentroid(1,  6,  7)),
-            new Face(1,  7, 10, getCentroid(1,  7, 10)),
-            new Face(2, 11,  3, getCentroid(2, 11,  3)),
-            new Face(2,  9,  4, getCentroid(2,  9,  4)),
-            new Face(2,  4,  5, getCentroid(2,  4,  5)),
-            new Face(2,  3,  9, getCentroid(2,  3,  9)),
-            new Face(2,  5, 11, getCentroid(2,  5, 11)),
-            new Face(3,  7,  6, getCentroid(3,  7,  6)),
-            new Face(3, 11,  7, getCentroid(3, 11,  7)),
-            new Face(3,  6,  9, getCentroid(3,  6,  9)),
-            new Face(4,  9,  8, getCentroid(4,  9,  8)),
-            new Face(5, 10, 11, getCentroid(5, 10, 11)),
-            new Face(6,  8,  9, getCentroid(6,  8,  9)),
-            new Face(7, 11, 10, getCentroid(7, 11, 10))
+            new Face(0,  8,  1, getCentroidFromIndices(0,  8,  1)),
+            new Face(0,  5,  4, getCentroidFromIndices(0,  5,  4)),
+            new Face(0, 10,  5, getCentroidFromIndices(0, 10,  5)),
+            new Face(0,  4,  8, getCentroidFromIndices(0,  4,  8)),
+            new Face(0,  1, 10, getCentroidFromIndices(0,  1, 10)),
+            new Face(1,  8,  6, getCentroidFromIndices(1,  8,  6)),
+            new Face(1,  6,  7, getCentroidFromIndices(1,  6,  7)),
+            new Face(1,  7, 10, getCentroidFromIndices(1,  7, 10)),
+            new Face(2, 11,  3, getCentroidFromIndices(2, 11,  3)),
+            new Face(2,  9,  4, getCentroidFromIndices(2,  9,  4)),
+            new Face(2,  4,  5, getCentroidFromIndices(2,  4,  5)),
+            new Face(2,  3,  9, getCentroidFromIndices(2,  3,  9)),
+            new Face(2,  5, 11, getCentroidFromIndices(2,  5, 11)),
+            new Face(3,  7,  6, getCentroidFromIndices(3,  7,  6)),
+            new Face(3, 11,  7, getCentroidFromIndices(3, 11,  7)),
+            new Face(3,  6,  9, getCentroidFromIndices(3,  6,  9)),
+            new Face(4,  9,  8, getCentroidFromIndices(4,  9,  8)),
+            new Face(5, 10, 11, getCentroidFromIndices(5, 10, 11)),
+            new Face(6,  8,  9, getCentroidFromIndices(6,  8,  9)),
+            new Face(7, 11, 10, getCentroidFromIndices(7, 11, 10))
         );
     }
     
@@ -136,15 +136,15 @@ public class Planet {
         int p1 = face.pts[1];
         int p2 = face.pts[2];
 
-        int m0 = getMidpoint(p0, p1);
-        int m1 = getMidpoint(p1, p2);
-        int m2 = getMidpoint(p2, p0);
+        int m0 = getMidpointFromIndices(p0, p1);
+        int m1 = getMidpointFromIndices(p1, p2);
+        int m2 = getMidpointFromIndices(p2, p0);
 
         return new Face[] {
-            new Face(p0, m0, m2, getCentroid(p0, m0, m2)),
-            new Face(p1, m1, m0, getCentroid(p1, m1, m0)),
-            new Face(p2, m2, m1, getCentroid(p2, m2, m1)),
-            new Face(m0, m1, m2, getCentroid(m0, m1, m2))
+            new Face(p0, m0, m2, getCentroidFromIndices(p0, m0, m2)),
+            new Face(p1, m1, m0, getCentroidFromIndices(p1, m1, m0)),
+            new Face(p2, m2, m1, getCentroidFromIndices(p2, m2, m1)),
+            new Face(m0, m1, m2, getCentroidFromIndices(m0, m1, m2))
         };
     }
 
@@ -377,28 +377,27 @@ public class Planet {
     }
 
     private void calculatePlateCollisions() {
-        Plate b;
-        Tile t;
-        Long key;
-        Tile[] pair;
+        Plate nbrPlate;
+        Tile bdrNbr;
+        Long edgeKey;
+        int edgeP1, edgeP2;
         for (Plate plate : plates.values()) {
             for (Tile bdr : plate.border) {
                 // for each edge, if it's a border edge, check existence
                 // if null, store collision info
                 for(int i = 0; i < bdr.pts.size; i++) {
-                    if(i + 1 < bdr.pts.size)
-                        key = getHashKey(bdr.pts.get(i), bdr.pts.get(i + 1));
-                    else
-                        key = getHashKey(bdr.pts.get(i), bdr.pts.get(0));
-                    pair = tileNbrs.get(key);
-                    if(pair[0].equals(bdr))
-                        t = pair[1];
-                    else
-                        t = pair[0];
-                    if(t.plateId != bdr.plateId) {
-                        b = plates.get(t.plateId);
+                    edgeP1 = bdr.pts.get(i);
+                    if(i + 1 < bdr.pts.size) {
+                        edgeP2 = bdr.pts.get(i + 1);
+                    } else {
+                        edgeP2 = bdr.pts.get(0);
+                    }
+                    edgeKey = getHashKeyFromIndices(edgeP1, edgeP2);
+                    bdrNbr = getTileNbr(bdr, edgeP1, edgeP2);
+                    if(bdrNbr.plateId != bdr.plateId) {
+                        nbrPlate = plates.get(bdrNbr.plateId);
                         try {
-                            plateCollisions.get(key);
+                            plateCollisions.get(edgeKey);
                         } catch (NullPointerException e) {
                             // TODO: calculate coll info and store
                         }
@@ -464,8 +463,8 @@ public class Planet {
         return points.size - 1;
     }
 
-    private int getMidpoint(int p1, int p2) {
-        Long key = getHashKey(p1, p2);
+    private int getMidpointFromIndices(int p1, int p2) {
+        Long key = getHashKeyFromIndices(p1, p2);
         int i;
         try {
             i = midpointCache.get(key);
@@ -477,26 +476,24 @@ public class Planet {
             i = addVertex(w);
             midpointCache.put(key, i);
         }
-        return i;  
-
+        return i;
     }
 
     private void addFaceEdgeToNbrCache(Face f, int p1, int p2) {
-        Long key = getHashKey(p1, p2);
+        Long key = getHashKeyFromIndices(p1, p2);
         Face[] nbrs;
         try {
             nbrs = faceNbrs.get(key);
             nbrs[1] = f;
-            faceNbrs.put(key, nbrs);
         } catch (NullPointerException e) {
             nbrs = new Face[2];
             nbrs[0] = f;
-            faceNbrs.put(key, nbrs);
         }
+        faceNbrs.put(key, nbrs);
     }
 
     private Face getFaceNbr(Face f, int p1, int p2) {
-        Face[] nbrs = faceNbrs.get(getHashKey(p1, p2));
+        Face[] nbrs = faceNbrs.get(getHashKeyFromIndices(p1, p2));
         if(f == nbrs[0])
             return nbrs[1];
         else
@@ -504,7 +501,7 @@ public class Planet {
     }
 
     private Tile getTileNbr(Tile t, int p1, int p2) {
-        Tile[] pair = tileNbrs.get(getHashKey(p1, p2));
+        Tile[] pair = tileNbrs.get(getHashKeyFromIndices(p1, p2));
         if(pair[0].equals(t))
             return pair[1];
         else
@@ -512,7 +509,7 @@ public class Planet {
     }
 
     private void addTileEdgeToNbrCache(Tile t, int p1, int p2) {
-        Long key = getHashKey(p1, p2);
+        Long key = getHashKeyFromIndices(p1, p2);
         Tile[] nbrs;
         try {
             nbrs = tileNbrs.get(key);
@@ -527,14 +524,14 @@ public class Planet {
         }
     }
 
-    private long getHashKey(int p1, int p2) {
+    private long getHashKeyFromIndices(int p1, int p2) {
         boolean firstIsSmaller = p1 < p2;
         Long smallerIndex = (long)(firstIsSmaller ? p1 : p2);
         Long greaterIndex = (long)(firstIsSmaller ? p2 : p1);
         return (smallerIndex << 32) + greaterIndex;
     }
 
-    private int getCentroid(int p0, int p1, int p2) {
+    private int getCentroidFromIndices(int p0, int p1, int p2) {
         Vector3 u = points.get(p0);
         Vector3 v = points.get(p1);
         Vector3 w = points.get(p2);

@@ -37,8 +37,8 @@ public class MyGdxGame extends ApplicationAdapter {
     
     public Array<Layer> layers;
 
-    int TILE_LIMIT = 1000;
-    float PLANET_RADIUS = 10;
+    private int TILE_LIMIT = 1000;
+    private float PLANET_RADIUS = 10;
 
     @Override
 	public void create () {
@@ -71,7 +71,7 @@ public class MyGdxGame extends ApplicationAdapter {
         modelBuilder = new ModelBuilder();
         modelBuilder.begin();
 
-        /* Render tiles */
+        /* Build model */
         log.start("Build time");
         partBuilder = modelBuilder.part("tile", GL20.GL_TRIANGLES,
                 VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal |
@@ -163,7 +163,6 @@ public class MyGdxGame extends ApplicationAdapter {
                     planet.points.get(f.pts[0]),
                     planet.points.get(f.pts[1]),
                     planet.points.get(f.pts[2]));
-
         }
     }
 
