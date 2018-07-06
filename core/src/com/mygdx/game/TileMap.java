@@ -38,8 +38,8 @@ public class TileMap{
 
 		Arrays.sort(temp, new Comparator<Tile>(){
 			@Override public int compare(Tile a, Tile b){
-				if(a.longitude < b.longitude) return -1;
-				if(a.longitude > b.longitude) return 1;
+				if(a.getLongitude() < b.getLongitude()) return -1;
+				if(a.getLongitude() > b.getLongitude()) return 1;
 				else return 0;
 			}
 		});
@@ -50,8 +50,8 @@ public class TileMap{
 		}
 		Arrays.sort(temp, new Comparator<Tile>(){
 			@Override public int compare(Tile a, Tile b){
-				if(a.latitude < b.latitude) return -1;
-				if(a.latitude > b.latitude) return 1;
+				if(a.getLatitude() < b.getLatitude()) return -1;
+				if(a.getLatitude() > b.getLatitude()) return 1;
 				else return 0;
 			}
 		});

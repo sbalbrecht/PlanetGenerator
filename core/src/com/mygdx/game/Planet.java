@@ -362,7 +362,7 @@ public class Planet {
             plate.momentum_cmMg_yr = plate.speed_cm_yr * plate.mass_Mg;
     
             for (Tile t: plate.members){
-                t.tangentialVelocity.set(new Vector3(plate.angularVelocity).crs(points.get(t.centroid)));
+                t.tangentialVelocity = new Vector3(plate.angularVelocity).crs(points.get(t.centroid));
             }
             
         }
@@ -434,11 +434,11 @@ public class Planet {
             r2 = new Vector3(S.position).sub(this.position).nor();
             r3 = new Vector3(S.position).sub(t.centroid).nor();
 
-            area_fractional = t.area*(r1.dot(r2));
+            area_fractional = t.getArea()*(r1.dot(r2));
 
             area_fractional = (area_fractional < 0.0f) ? 0.0f : area_fractional;
             p = (k/r3.len2())*area_fractional*km_m*km_m;
-            t.power = p;
+            t.setPower(p);
         }
     }
 
