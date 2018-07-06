@@ -366,7 +366,7 @@ public class Planet {
                             * massConversionConstant;
             
             plate.speed_cm_yr = r.nextFloat()*10f;
-            plate.angularSpeed_rad_yr = plate.speed_cm_yr / radius*KM_TO_CM; //TINY
+            plate.angularSpeed_rad_yr = plate.speed_cm_yr / (radius*KM_TO_CM); //TINY
             
             plate.axisOfRotation = new Vector3().setToRandomDirection();
             
