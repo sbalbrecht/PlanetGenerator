@@ -366,7 +366,7 @@ public class Planet {
                             * massConversionConstant;
             
             plate.speed_cm_yr = r.nextFloat()*10f;
-            plate.angularSpeed_rad_yr = plate.speed_cm_yr / radius*KM_TO_CM; //TINY
+            plate.angularSpeed_rad_yr = plate.speed_cm_yr / (radius*KM_TO_CM); //TINY
             
             plate.axisOfRotation = new Vector3().setToRandomDirection();
             
@@ -415,7 +415,15 @@ public class Planet {
     }
 
     private float getCollisionIntensity(Tile a, Tile b) {
-        return 1f;
+        Vector3 v2dir = new Vector3(b.tangentialVelocity).nor();
+        float k = v2dir.dot(a.tangentialVelocity);
+        k *= a.tangentialVelocity.dot(
+                new Vector3(points.get(b.centroid))
+                        .sub(points.get(a.centroid))
+                        .nor()
+        );
+        
+        return k;
     }
     
     private void addBaseTileAttributes(){
