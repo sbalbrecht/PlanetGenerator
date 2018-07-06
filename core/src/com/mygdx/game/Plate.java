@@ -28,13 +28,9 @@ public class Plate {
     float angularSpeed_rad_yr;
     float momentum_cmMg_yr;
     
-    Vector3 tangentialVelocity;
-    Vector3 tangentialMomentum;
-    Vector3 angularMomentum;
     Vector3 angularVelocity;
-
+    Vector3 tangentialVelocity;
     Vector3 centerOfMass;
-    
     
     boolean oceanic = true;
 

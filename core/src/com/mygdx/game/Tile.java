@@ -18,6 +18,8 @@ public class Tile {
     public TileAttribute latitude;
     public TileAttribute longitude;
     public TileAttribute thickness;
+    
+    public Vector3 tangentialVelocity;
 
     public boolean drawn = false;
     public boolean root = false;
