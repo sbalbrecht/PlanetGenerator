@@ -53,8 +53,6 @@ public class Planet {
         log.start("Assign Attributes");
          assignAttributes();
 
-        Log.log("Tile 0 attributes:\n" + tiles.get(0).getAttributes());
-
         scalePoints(points, radius);
     
         log.start("Assemble tileMap");
