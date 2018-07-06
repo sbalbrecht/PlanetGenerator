@@ -10,14 +10,67 @@ public class Tile {
     public Array<Tile> nbrs;
     
     public Array<TileAttribute> attributes;
-    public TileAttribute temperature;
-    public TileAttribute elevation;
-    public TileAttribute area;
-    public TileAttribute power;
-    public TileAttribute density;
-    public TileAttribute latitude;
-    public TileAttribute longitude;
-    public TileAttribute thickness;
+    private float temperature;
+    private float elevation;
+    private float area;
+    private float power;
+    private float density;
+    private float latitude;
+    private float longitude;
+    
+    public float getTemperature(){
+        return temperature;
+    }
+    
+    public float getElevation(){
+        return elevation;
+    }
+    
+    public float getArea(){
+        return area;
+    }
+    
+    public float getPower(){
+        return power;
+    }
+    
+    public void setPower(float power){
+        this.power = power;
+    }
+    
+    public float getDensity(){
+        return density;
+    }
+    
+    public void setDensity(float density){
+        this.density = density;
+    }
+    
+    public float getLatitude(){
+        return latitude;
+    }
+    
+    public void setLatitude(float latitude){
+        this.latitude = latitude;
+    }
+    
+    public float getLongitude(){
+        return longitude;
+    }
+    
+    public void setLongitude(float longitude){
+        this.longitude = longitude;
+    }
+    
+    public float getThickness(){
+        return thickness;
+    }
+    
+    public void setThickness(float thickness){
+        this.thickness = thickness;
+    }
+    
+    public float thickness;
     
     public Vector3 tangentialVelocity;
 
@@ -29,25 +82,15 @@ public class Tile {
         this.centroid = centroid;
         pts = new Array<Integer>();
         nbrs = new Array<Tile>();
-        
-        attributes = new Array<TileAttribute>();
-            temperature = new TileAttribute("Temperature");
-            elevation = new TileAttribute("Elevation");
-            area = new TileAttribute("Area");
-            power = new TileAttribute("Solar Power");
-            density = new TileAttribute("Density");
-            latitude = new TileAttribute("Latitude");
-            longitude = new TileAttribute("Longitude");
-            //thickness_km = new TileAttribute("Thickness");
-        attributes.addAll(temperature, elevation, area, power);
+
         
         for(Integer pt : tilePts) {
             pts.add(pt);
         }
 
         Vector3 temp = new Vector3(allPoints.get(this.centroid));
-        longitude.setValue(MathUtils.atan2(temp.y, temp.x));
-        latitude.setValue(MathUtils.atan2((float)Math.sqrt(temp.x*temp.x + temp.y*temp.y), temp.z));
+        longitude = MathUtils.atan2(temp.z, temp.x);
+        latitude = MathUtils.atan2((float)Math.sqrt(temp.x*temp.x + temp.z*temp.z), temp.y);
         
     }
 
@@ -66,27 +109,17 @@ public class Tile {
     public void addAttribute(TileAttribute a){
         attributes.add(a);
     }
-
+    
     public void setTemperature(float t){
-        if(temperature == null) {temperature = new TileAttribute("Temperature", t);attributes.add(temperature);}
-        else temperature.setValue(t);
-        
+       this.temperature = t;
     }
+    
     public void setElevation(float e){
-        if(elevation == null) elevation = new TileAttribute("Elevation", e);
-        else elevation.setValue(e);
+        this.elevation = e;
     }
     
     public void setArea(float a){
-        this.area.setValue(a);
-    }
-    
-    public String getAttributes(){
-        String out = "";
-        for (TileAttribute a : attributes){
-            out += a.toString() + "\n";
-        }
-        return out;
+        this.area = a;
     }
     
     

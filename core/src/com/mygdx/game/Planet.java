@@ -51,7 +51,7 @@ public class Planet {
             generatePlates();
 
         log.start("Assign Attributes");
-            assignAttributes();
+         assignAttributes();
 
         Log.log("Tile 0 attributes:\n" + tiles.get(0).getAttributes());
 
@@ -436,11 +436,11 @@ public class Planet {
             r2 = new Vector3(S.position).sub(this.position).nor();
             r3 = new Vector3(S.position).sub(t.centroid).nor();
 
-            area_fractional = t.area.getValue()*(r1.dot(r2));
+            area_fractional = t.getArea()*(r1.dot(r2));
 
             area_fractional = (area_fractional < 0.0f) ? 0.0f : area_fractional;
             p = (k/r3.len2())*area_fractional*km_m*km_m;
-            t.power.setValue(p);
+            t.setPower(p);
         }
     }
 

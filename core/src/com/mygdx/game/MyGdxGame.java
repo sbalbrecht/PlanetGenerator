@@ -232,7 +232,7 @@ public class MyGdxGame extends ApplicationAdapter {
                 partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
             }
                 p1 = planet.points.get(planet.tiles.get(i).centroid);
-				partBuilder.line(p1.scl(1.0f), p1.cpy().scl(1.0f + 0.00000000000000125f*planet.tiles.get(i).power.getValue()));
+				partBuilder.line(p1.scl(1.0f), p1.cpy().scl(1.0f + 0.00000000000000125f*planet.tiles.get(i).getPower()));
         }
     }
 
