@@ -5,7 +5,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
-import com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
@@ -20,6 +19,8 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.util.Log;
 
 import java.util.Random;
+
+import static com.mygdx.game.util.ColorUtils.getComplementary;
 
 public class MyGdxGame extends ApplicationAdapter {
     private PerspectiveCamera cam;
@@ -49,9 +50,9 @@ public class MyGdxGame extends ApplicationAdapter {
 		
         // Lighting
         environment = new Environment();
-//        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 1f, 1f, 1f, 1f));
-        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.2f, 0.2f, 0.2f, 0.2f));
-        environment.add(new DirectionalLight().set(0.95f, 0.95f, 0.95f, -1, 0, 0));
+        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 1f, 1f, 1f, 1f));
+//        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.2f, 0.2f, 0.2f, 0.2f));
+//        environment.add(new DirectionalLight().set(0.95f, 0.95f, 0.95f, -1, 0, 0));
 
         // Camera
 	    cam = new PerspectiveCamera(50, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -83,9 +84,9 @@ public class MyGdxGame extends ApplicationAdapter {
 //        buildSunRays(planet);
 //        buildWireframe(planet);
 //        buildAxes();
+        buildPlateDirectionArrows(planet);
         buildMajorLatLines(planet);
 //        buildLatLongSpikes(planet);
-        buildPlateDirectionArrows(planet);
     
         model = modelBuilder.end();
         instance = new ModelInstance(model, planet.position);
@@ -213,12 +214,10 @@ public class MyGdxGame extends ApplicationAdapter {
                 );
             } else {
                 for (int j = 0; j < numPts; j++) {
-                    int k = j + 1;
-                    if (k == numPts) k = 0;
                     partBuilder.triangle(
                             planet.points.get(t.centroid),
                             planet.points.get(t.pts.get(j)),
-                            planet.points.get(t.pts.get(k)));
+                            planet.points.get(t.pts.get((j + 1) % numPts)));
                 }
             }
         }
@@ -250,8 +249,7 @@ public class MyGdxGame extends ApplicationAdapter {
             t = planet.tiles.get(i);
             int numPts = t.pts.size;
             for (int j = 0; j < numPts; j++) {
-                int k = j + 1;
-                if (k == numPts) k = 0;
+                int k = (j + 1) % numPts;
                 p1 = planet.points.get(t.pts.get(j)).cpy();
                 p2 = planet.points.get(t.pts.get(k)).cpy();
                 if(!t.getNbr(t.pts.get(j), t.pts.get(k)).drawn)
@@ -270,28 +268,26 @@ public class MyGdxGame extends ApplicationAdapter {
     
     private void buildMajorLatLines(Planet planet) {
         Material lineColor;
-        double toc = 23.5f*Math.PI/180;
-        float toch = (float)Math.sin(toc)*PLANET_RADIUS;
-        float tocr = (float)Math.cos(toc)*PLANET_RADIUS;
-        double ac = 66.5f*Math.PI/180;
-        float ach = (float)Math.sin(ac)*PLANET_RADIUS;
-        float acr = (float)Math.cos(ac)*PLANET_RADIUS;
-        EllipseShapeBuilder esb = new EllipseShapeBuilder();
-        // Equator
+        double tropicLatitude_rad = 23.5*Math.PI/180;
+        float tropicHeight = (float)Math.sin(tropicLatitude_rad)*PLANET_RADIUS;
+        float tropicRadius = (float)Math.cos(tropicLatitude_rad)*PLANET_RADIUS;
+        double arcticLatitude_rad = 66.5*Math.PI/180;
+        float arcticHeight = (float)Math.sin(arcticLatitude_rad)*PLANET_RADIUS;
+        float arcticRadius = (float)Math.cos(arcticLatitude_rad)*PLANET_RADIUS;
+
         lineColor = new Material(ColorAttribute.createDiffuse(Color.RED));
         partBuilder = modelBuilder.part("equator", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
-        esb.build(partBuilder, PLANET_RADIUS*1.000010f, 480, new Vector3(0f,0f,0f),new Vector3(0f,1f,0f));
-        // Tropic of Cancer / Capricorn
+        EllipseShapeBuilder.build(partBuilder, PLANET_RADIUS*1.000010f, 480, new Vector3(0f,0f,0f),new Vector3(0f,1f,0f));
+
         lineColor = new Material(ColorAttribute.createDiffuse(Color.ORANGE));
         partBuilder = modelBuilder.part("tropics", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
-        esb.build(partBuilder, tocr*1.000010f, 480, new Vector3(0f,toch, 0f),new Vector3(0f,1f,0f));
-        esb.build(partBuilder, tocr*1.000010f, 480, new Vector3(0f,-toch, 0f),new Vector3(0f,1f,0f));
-        // Arctic / Antartic circles
+        EllipseShapeBuilder.build(partBuilder, tropicRadius*1.000010f, 480, new Vector3(0f,tropicHeight, 0f),new Vector3(0f,1f,0f));
+        EllipseShapeBuilder.build(partBuilder, tropicRadius*1.000010f, 480, new Vector3(0f,-tropicHeight, 0f),new Vector3(0f,1f,0f));
+
         lineColor = new Material(ColorAttribute.createDiffuse(Color.CYAN));
         partBuilder = modelBuilder.part("polarCircles", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
-        esb.build(partBuilder, acr*1.000010f, 480, new Vector3(0f, ach,0f),new Vector3(0f,1f,0f));
-        esb.build(partBuilder, acr*1.000010f, 480, new Vector3(0f, -ach, 0f),new Vector3(0f,1f,0f));
-
+        EllipseShapeBuilder.build(partBuilder, arcticRadius*1.000010f, 480, new Vector3(0f, arcticHeight,0f),new Vector3(0f,1f,0f));
+        EllipseShapeBuilder.build(partBuilder, arcticRadius*1.000010f, 480, new Vector3(0f, -arcticHeight, 0f),new Vector3(0f,1f,0f));
     }
 
     private void buildLatLongSpikes(Planet planet) {
@@ -313,16 +309,42 @@ public class MyGdxGame extends ApplicationAdapter {
     }
     private void buildPlateDirectionArrows(Planet planet) {
         int i = 0;
-        Material lineColor = new Material(ColorAttribute.createDiffuse(Color.valueOf("ffffff")));
-        partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
         for(Plate plate : planet.plates.values()) {
+            partBuilder = modelBuilder.part("arrow" + i, GL20.GL_TRIANGLES,
+                    VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal |
+                            VertexAttributes.Usage.ColorPacked, new Material());
+            partBuilder.setColor(getComplementary(plate.color));
             for(Tile tile : plate.members) {
+                Vector3[] arrowVertices = getArrowVertices(planet, tile, tile.tangentialVelocity);
                 if(i % TILE_LIMIT == 0){
-                    partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
+                    partBuilder = modelBuilder.part("arrow" + i, GL20.GL_TRIANGLES,
+                            VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal |
+                                    VertexAttributes.Usage.ColorPacked, new Material());
+                    partBuilder.setColor(getComplementary(plate.color));
                 }
-                partBuilder.line(planet.points.get(tile.centroid), planet.points.get(tile.centroid).cpy().add(tile.tangentialVelocity.cpy().scl(12000f)));
+                partBuilder.triangle(
+                        arrowVertices[0],
+                        arrowVertices[1],
+                        arrowVertices[2]);
                 i++;
             }
         }
+    }
+
+    private Vector3[] getArrowVertices(Planet planet, Tile t, Vector3 direction) {
+        final float HEIGHT_SCALE = (float)(764428*Math.exp(-0.653*planet.subdivisions));
+        float baseWidthHalf;
+        if(t.pts.size == 6) {
+            baseWidthHalf = planet.points.get(t.pts.get(0)).dst(planet.points.get(t.pts.get(3)))*0.1f;
+        } else {
+            Vector3 u = planet.points.get(t.pts.get(2));
+            Vector3 v = planet.points.get(t.pts.get(3));
+            Vector3 w = u.cpy().add(v).scl(0.5f);
+            baseWidthHalf = planet.points.get(t.pts.get(0)).dst(w)*0.1f;
+        }
+        Vector3 base1 = planet.points.get(t.centroid).cpy().add(direction.cpy().crs(planet.points.get(t.centroid)).nor().scl(-baseWidthHalf));
+        Vector3 base2 = planet.points.get(t.centroid).cpy().add(direction.cpy().crs(planet.points.get(t.centroid)).nor().scl( baseWidthHalf));
+        Vector3 heigt = planet.points.get(t.centroid).cpy().add(direction.cpy().scl(HEIGHT_SCALE));
+        return new Vector3[] {base1, base2, heigt};
     }
 }

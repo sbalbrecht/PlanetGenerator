@@ -12,6 +12,7 @@ import static com.mygdx.game.util.Units.KM_TO_CM;
 
 public class Planet {
     public int PLATE_COUNT = 72;
+    public int subdivisions;
     private float radius;
     Vector3 position;
     Vector3 NORTH = new Vector3(0, 1, 0);
@@ -33,6 +34,7 @@ public class Planet {
     Planet(Vector3 position, float radius, int subdivisions) {
         this.radius = radius;
         this.position = position;
+        this.subdivisions = subdivisions;
         generateIcosphere(subdivisions);
     }
 
@@ -51,7 +53,7 @@ public class Planet {
             generatePlates();
 
         log.start("Assign Attributes");
-         assignAttributes();
+            assignAttributes();
 
         scalePoints(points, radius);
     
@@ -59,7 +61,7 @@ public class Planet {
             tileMap = new TileMap(tiles);
         log.end();
     
-        System.out.println("Faces:  " + faces.size);
+//        System.out.println("Faces:  " + faces.size);
         System.out.println("Tiles:  " + tiles.size);
         System.out.println("Plates: " + plates.size());
 	}
@@ -161,11 +163,8 @@ public class Planet {
 
     private void setFaceNeighbors(Face[] faces) {
         for(Face f : faces) {
-            for(int j = 0; j < f.pts.length; j++) {
-                if(j + 1 == f.pts.length)
-                    addFaceEdgeToNbrCache(f, f.pts[j], f.pts[0]);
-                else
-                    addFaceEdgeToNbrCache(f, f.pts[j], f.pts[j + 1]);
+            for(int i = 0; i < f.pts.length; i++) {
+                addFaceEdgeToNbrCache(f, f.pts[i], f.pts[(i + 1) % f.pts.length]);
             }
         }
     }
@@ -184,6 +183,7 @@ public class Planet {
             setTileNeighbors(t);
             tiles.add(t);
         }
+        faces = null;
     }
 
     private Tile getTileFromFace(Face initialFace, int tileCentroid) {
@@ -199,10 +199,7 @@ public class Planet {
 
     private void setTileNeighbors(Tile t) {
         for(int i = 0; i < t.pts.size; i++) {
-            if(i + 1 == t.pts.size)
-                addTileEdgeToNbrCache(t, t.pts.get(i), t.pts.get(0));
-            else
-                addTileEdgeToNbrCache(t, t.pts.get(i), t.pts.get(i + 1));
+            addTileEdgeToNbrCache(t, t.pts.get(i), t.pts.get((i + 1) % t.pts.size));
         }
     }
 
@@ -336,7 +333,12 @@ public class Planet {
         
         float massConversionConstant = (float)Math.pow(KM_TO_CM, 3.0f) * Units.G_TO_MTONS;
         
-        int continentalCount = plates.size()/2;
+        int continentalCount = (int)(plates.size()*.65);
+        Plate[] sortedPlates = sortPlatesBySize();
+        for(int i = 0; i < continentalCount; i++) {
+            sortedPlates[i].oceanic = false;
+        }
+
         for(Plate plate : plates.values()) {
     
             plate.centerOfMass = new Vector3();
@@ -393,11 +395,7 @@ public class Planet {
                 // if null, store collision info
                 for(int i = 0; i < bdr.pts.size; i++) {
                     edgeP1 = bdr.pts.get(i);
-                    if(i + 1 < bdr.pts.size) {
-                        edgeP2 = bdr.pts.get(i + 1);
-                    } else {
-                        edgeP2 = bdr.pts.get(0);
-                    }
+                    edgeP2 = bdr.pts.get((i + 1) % bdr.pts.size);
                     edgeKey = getHashKeyFromIndices(edgeP1, edgeP2);
                     bdrNbr = getTileNbr(bdr, edgeP1, edgeP2);
                     if(bdrNbr.plateId != bdr.plateId) {
