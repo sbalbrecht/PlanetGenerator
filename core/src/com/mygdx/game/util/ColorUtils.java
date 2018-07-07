@@ -15,10 +15,9 @@ public final class ColorUtils {
 
         if(hsv[1] < .6 && hsv[2] > .6)
             hsv[2] -= .4;
+        else if(hsv[2] < .5)
             hsv[2] += .4;
 
-        Color invertedColor = new Color().fromHsv(hsv);
-
-        return invertedColor;
+        return new Color().fromHsv(hsv);
     }
 }
