@@ -24,9 +24,6 @@ public class Face{
             }
         }
         // Find the index of the point CW from the given point
-        if(index + 2 >= pts.length)
-            return pts[index - 1];
-        else
-            return pts[index + 2];
+        return pts[(index + 1) % pts.length];
     }
 }

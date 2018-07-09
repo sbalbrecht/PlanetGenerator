@@ -60,7 +60,7 @@ public class Planet {
         log.start("Assemble tileMap");
             tileMap = new TileMap(tiles);
         log.end();
-    
+
 //        System.out.println("Faces:  " + faces.size);
         System.out.println("Tiles:  " + tiles.size);
         System.out.println("Plates: " + plates.size());
@@ -183,7 +183,8 @@ public class Planet {
             setTileNeighbors(t);
             tiles.add(t);
         }
-        faces = null;
+//        faces = null;
+//        faceNbrs = null;
     }
 
     private Tile getTileFromFace(Face initialFace, int tileCentroid) {
