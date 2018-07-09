@@ -68,50 +68,87 @@ public class MyGdxGame extends ApplicationAdapter {
 
         Log log = new Log();
         log.start("Generation time");
-        Planet planet = new Planet(new Vector3(0, 0, 0), PLANET_RADIUS, 5);
+        Planet planet = new Planet(new Vector3(0, 0, 0), PLANET_RADIUS, 0);
 
         log.start("Build time");
-        int numberOfFaces = planet.tiles.size;
+//        int numberOfFaces = planet.tiles.size;
 
-        int numberOfVertices = 6 * numberOfFaces;
-        mesh = new Mesh(true, numberOfVertices, numberOfFaces*12,
+//        int numberOfVertices = 6 * numberOfFaces;
+//        mesh = new Mesh(true, numberOfVertices, numberOfFaces*12,
+//                VertexAttribute.Position(), VertexAttribute.ColorUnpacked());
+//
+//        int vertexPositionValue = 3;
+//        int vertexColorValue = 4;
+//        Random rnd = new Random(0);
+//        int valuesPerVertex = vertexPositionValue + vertexColorValue;
+//
+//        short[] vertexIndices = new short[numberOfFaces*12];
+//        float[] verticesWithColor = new float[numberOfVertices * valuesPerVertex];
+//
+//        for (int i = 0; i < numberOfFaces; i++) {
+//            Tile t = planet.tiles.get(i);
+//
+//            Color tileColor = planet.plates.get(t.plateId).color;
+//
+//            if(t.pts.size == 6) { //only hexagons for now
+//                int tileOffsetInArray = i * valuesPerVertex * 6;
+//
+//                for(int j = 0; j < t.pts.size; j++) {
+//                    Vector3 vert = planet.points.get(t.pts.get(j));
+//                    setValuesInArrayForVertex(verticesWithColor, tileColor,
+//                            vert, tileOffsetInArray, j);
+//                }
+//
+//                vertexIndices[i * 12 + 0] = (short) (i * 6 + 0);
+//                vertexIndices[i * 12 + 1] = (short) (i * 6 + 2);
+//                vertexIndices[i * 12 + 2] = (short) (i * 6 + 1);
+//                vertexIndices[i * 12 + 3] = (short) (i * 6 + 2);
+//                vertexIndices[i * 12 + 4] = (short) (i * 6 + 0);
+//                vertexIndices[i * 12 + 5] = (short) (i * 6 + 3);
+//                vertexIndices[i * 12 + 6] = (short) (i * 6 + 3);
+//                vertexIndices[i * 12 + 7] = (short) (i * 6 + 0);
+//                vertexIndices[i * 12 + 8] = (short) (i * 6 + 5);
+//                vertexIndices[i * 12 + 9] = (short) (i * 6 + 5);
+//                vertexIndices[i * 12 +10] = (short) (i * 6 + 4);
+//                vertexIndices[i * 12 +11] = (short) (i * 6 + 3);
+//            }
+//        }
+
+        int numberOfFaces = planet.faces.size;
+
+        int numberOfVertices = 3 * numberOfFaces;
+        mesh = new Mesh(true, numberOfVertices, numberOfFaces*3,
                 VertexAttribute.Position(), VertexAttribute.ColorUnpacked());
 
         int vertexPositionValue = 3;
         int vertexColorValue = 4;
         Random rnd = new Random(0);
+
         int valuesPerVertex = vertexPositionValue + vertexColorValue;
 
-        short[] vertexIndices = new short[numberOfFaces*12];
+        short[] vertexIndices = new short[numberOfFaces*3];
         float[] verticesWithColor = new float[numberOfVertices * valuesPerVertex];
 
         for (int i = 0; i < numberOfFaces; i++) {
-            Tile t = planet.tiles.get(i);
+            float r = rnd.nextFloat();
+            float g = rnd.nextFloat();
+            float b = rnd.nextFloat();
 
-            Color tileColor = planet.plates.get(t.plateId).color;
+            Face f = planet.faces.get(i);
 
-            if(t.pts.size == 6) { //only hexagons for now
-                int tileOffsetInArray = i * valuesPerVertex * 6;
+            Color tileColor = new Color(r, g, b, 1f);
 
-                for(int j = 0; j < t.pts.size; j++) {
-                    Vector3 vert = planet.points.get(t.pts.get(j));
-                    setValuesInArrayForVertex(verticesWithColor, tileColor,
-                            vert.x, vert.y, vert.z, tileOffsetInArray, j);
-                }
-    
-                vertexIndices[i * 12 + 0] = (short) (i * 6 + 0);
-                vertexIndices[i * 12 + 1] = (short) (i * 6 + 2);
-                vertexIndices[i * 12 + 2] = (short) (i * 6 + 1);
-                vertexIndices[i * 12 + 3] = (short) (i * 6 + 2);
-                vertexIndices[i * 12 + 4] = (short) (i * 6 + 0);
-                vertexIndices[i * 12 + 5] = (short) (i * 6 + 3);
-                vertexIndices[i * 12 + 6] = (short) (i * 6 + 3);
-                vertexIndices[i * 12 + 7] = (short) (i * 6 + 0);
-                vertexIndices[i * 12 + 8] = (short) (i * 6 + 5);
-                vertexIndices[i * 12 + 9] = (short) (i * 6 + 5);
-                vertexIndices[i * 12 +10] = (short) (i * 6 + 4);
-                vertexIndices[i * 12 +11] = (short) (i * 6 + 3);
+            int tileOffsetInArray = i * valuesPerVertex * 3;
+
+            for(int j = 0; j < f.pts.length; j++) {
+                Vector3 vert = planet.points.get(f.pts[j]);
+                setValuesInArrayForVertex(verticesWithColor, tileColor,
+                        vert, tileOffsetInArray, j);
             }
+
+            vertexIndices[i * 3 + 0] = (short) (i * 3 + 0);
+            vertexIndices[i * 3 + 1] = (short) (i * 3 + 1);
+            vertexIndices[i * 3 + 2] = (short) (i * 3 + 2);
         }
 
         mesh.setVertices(verticesWithColor);
@@ -121,19 +158,19 @@ public class MyGdxGame extends ApplicationAdapter {
         String vertexShader = "attribute vec4 a_position;    \n" +
                 "attribute vec4 a_color;\n" +
                 "uniform mat4 matViewProj;\n" +
-                "varying vec4 v_color;" +
+//                "varying vec4 v_color;" +
                 "void main()                  \n" +
                 "{                            \n" +
-                "   v_color = a_color; \n" +
-                "   gl_Position =  matViewProj * a_position;  \n"      +
+//                "   v_color = a_color; \n" +
+                "   gl_Position = matViewProj * a_position;  \n"      +
                 "}                            \n" ;
         String fragmentShader = "#ifdef GL_ES\n" +
                 "precision mediump float;\n" +
                 "#endif\n" +
-                "varying vec4 v_color;\n" +
+//                "varying vec4 v_color;\n" +
                 "void main()                                  \n" +
                 "{                                            \n" +
-                "  gl_FragColor = v_color;\n" +
+                "  gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);\n" +
                 "}";
 
         shaderProgram = new ShaderProgram(vertexShader, fragmentShader);
@@ -144,17 +181,16 @@ public class MyGdxGame extends ApplicationAdapter {
         layers.add(new FrameRateLayer());
 	}
 
-    private void setValuesInArrayForVertex(float[] verticesWithColor, Color color,
-                                           float x, float y, float z,
+    private void setValuesInArrayForVertex(float[] verticesWithColor, Color color, Vector3 vert,
                                            int tileOffsetInArray, int vertexNumberInRect) {
         int vertexOffsetInArray = tileOffsetInArray + vertexNumberInRect * 7;
         try {
             // x position
-            verticesWithColor[vertexOffsetInArray + 0] = x;
+            verticesWithColor[vertexOffsetInArray + 0] = vert.x;
             // y position
-            verticesWithColor[vertexOffsetInArray + 1] = y;
+            verticesWithColor[vertexOffsetInArray + 1] = vert.y;
             // z position (screen coordinates)
-            verticesWithColor[vertexOffsetInArray + 2] = z;
+            verticesWithColor[vertexOffsetInArray + 2] = vert.z;
             // red value
             verticesWithColor[vertexOffsetInArray + 3] = color.r;
             // green value
@@ -166,14 +202,6 @@ public class MyGdxGame extends ApplicationAdapter {
         } catch (IndexOutOfBoundsException e) {
             System.out.println(e);
         }
-    }
-
-    private float generateNumberBetweenNegativeOneAndPointNine(Random rnd) {
-        return rnd.nextFloat() * 1.9f - 1f;
-    }
-
-    private float generateNumberBetweenZeroAndOne(Random rnd) {
-        return rnd.nextFloat();
     }
 
 	@Override
@@ -199,11 +227,17 @@ public class MyGdxGame extends ApplicationAdapter {
 
         camController.update();
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
+        // Enable depth test
+        Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
+        // Accept fragment if it closer to the camera than the former one
+        Gdx.gl.glDepthFunc(GL20.GL_LESS);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
         modelBatch.begin(cam);
         shaderProgram.begin();
         shaderProgram.setUniformMatrix("matViewProj", cam.combined);
+        modelBatch.render(environment);
         mesh.render(shaderProgram, GL20.GL_TRIANGLES);
 
         for (int i = 0; i < layers.size; i++){

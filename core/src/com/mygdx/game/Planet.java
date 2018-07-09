@@ -46,24 +46,24 @@ public class Planet {
 		log.start("Subdivision");
 		    subdivide(subdivisions);
 
-        log.start("Dual Conversion");
-            convertToTruncatedIcosphere();
-
-        log.start("Plate generation");
-            generatePlates();
-
-        log.start("Assign Attributes");
-            assignAttributes();
+//        log.start("Dual Conversion");
+//            convertToTruncatedIcosphere();
+//
+//        log.start("Plate generation");
+//            generatePlates();
+//
+//        log.start("Assign Attributes");
+//            assignAttributes();
 
         scalePoints(points, radius);
     
-        log.start("Assemble tileMap");
-            tileMap = new TileMap(tiles);
-        log.end();
-
-//        System.out.println("Faces:  " + faces.size);
-        System.out.println("Tiles:  " + tiles.size);
-        System.out.println("Plates: " + plates.size());
+//        log.start("Assemble tileMap");
+//            tileMap = new TileMap(tiles);
+//        log.end();
+//
+////        System.out.println("Faces:  " + faces.size);
+//        System.out.println("Tiles:  " + tiles.size);
+//        System.out.println("Plates: " + plates.size());
 	}
 
 	private void generateIcosahedron() {
