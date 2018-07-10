@@ -155,22 +155,25 @@ public class MyGdxGame extends ApplicationAdapter {
         mesh.setIndices(vertexIndices);
         log.end();
 
-        String vertexShader = "attribute vec4 a_position;    \n" +
-                "attribute vec4 a_color;\n" +
-                "uniform mat4 matViewProj;\n" +
-//                "varying vec4 v_color;" +
-                "void main()                  \n" +
-                "{                            \n" +
-//                "   v_color = a_color; \n" +
-                "   gl_Position = matViewProj * a_position;  \n"      +
-                "}                            \n" ;
-        String fragmentShader = "#ifdef GL_ES\n" +
-                "precision mediump float;\n" +
-                "#endif\n" +
-//                "varying vec4 v_color;\n" +
-                "void main()                                  \n" +
-                "{                                            \n" +
-                "  gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);\n" +
+        String vertexShader =
+                "attribute vec3 a_position;     \n" +
+                "attribute vec3 a_normal;       \n" +
+                "attribute vec4 a_color;        \n" +
+                "uniform mat4 u_projViewTrans;      \n" +
+                "varying vec4 v_color;          \n" +
+                "void main()                    \n" +
+                "{                              \n" +
+                "   v_color = a_color;          \n" +
+                "   gl_Position = u_projViewTrans * vec4(a_position, 1.0);  \n" +
+                "}                              \n" ;
+        String fragmentShader =
+                "#ifdef GL_ES                   \n" +
+                "precision mediump float;       \n" +
+                "#endif                         \n" +
+                "varying vec4 v_color;          \n" +
+                "void main()                    \n" +
+                "{                              \n" +
+                "  gl_FragColor = v_color;      \n" +
                 "}";
 
         shaderProgram = new ShaderProgram(vertexShader, fragmentShader);
@@ -185,19 +188,12 @@ public class MyGdxGame extends ApplicationAdapter {
                                            int tileOffsetInArray, int vertexNumberInRect) {
         int vertexOffsetInArray = tileOffsetInArray + vertexNumberInRect * 7;
         try {
-            // x position
             verticesWithColor[vertexOffsetInArray + 0] = vert.x;
-            // y position
             verticesWithColor[vertexOffsetInArray + 1] = vert.y;
-            // z position (screen coordinates)
             verticesWithColor[vertexOffsetInArray + 2] = vert.z;
-            // red value
             verticesWithColor[vertexOffsetInArray + 3] = color.r;
-            // green value
             verticesWithColor[vertexOffsetInArray + 4] = color.g;
-            // blue value
             verticesWithColor[vertexOffsetInArray + 5] = color.b;
-            // alpha value
             verticesWithColor[vertexOffsetInArray + 6] = 1f;
         } catch (IndexOutOfBoundsException e) {
             System.out.println(e);
@@ -227,17 +223,13 @@ public class MyGdxGame extends ApplicationAdapter {
 
         camController.update();
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-
-        // Enable depth test
         Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
-        // Accept fragment if it closer to the camera than the former one
-        Gdx.gl.glDepthFunc(GL20.GL_LESS);
+        Gdx.gl.glDepthFunc(GL20.GL_LESS);         // Accept fragment if it closer to the camera than the former one
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
         modelBatch.begin(cam);
         shaderProgram.begin();
-        shaderProgram.setUniformMatrix("matViewProj", cam.combined);
-        modelBatch.render(environment);
+        shaderProgram.setUniformMatrix("u_projViewTrans", cam.combined);
         mesh.render(shaderProgram, GL20.GL_TRIANGLES);
 
         for (int i = 0; i < layers.size; i++){
