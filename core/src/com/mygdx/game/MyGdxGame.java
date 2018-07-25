@@ -370,7 +370,7 @@ public class MyGdxGame extends ApplicationAdapter {
                         VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal |
                                 VertexAttributes.Usage.ColorPacked, new Material());
             }
-            partBuilder.setColor(getCollisionColor(entry.getValue()));
+            partBuilder.setColor(getCollisionColor(planet, entry.getValue()));
             partBuilder.rect(
                     rectangleVertices[0],
                     rectangleVertices[1],
@@ -394,11 +394,14 @@ public class MyGdxGame extends ApplicationAdapter {
         return vertices;
     }
 
-    private Color getCollisionColor(float intensity) {
+    private Color getCollisionColor(Planet planet, float intensity) {
+        System.out.printf("%12.5e%n", Math.abs(intensity)/planet.max_collision_intensity);
         if(intensity > 0) {
-
+            //return new Color(1-intensity/planet.max_collision_intensity, 1, 1, 1);
+            return new Color(1, 0, 0, 1);
         } else {
-
+            //return new Color(1, 1-intensity/planet.max_collision_intensity, 1, 1);
+            return new Color(0, 1, 0, 1);
         }
     }
 }

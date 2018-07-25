@@ -14,6 +14,7 @@ public class Planet {
     public int PLATE_COUNT = 72;
     public int subdivisions;
     private float radius;
+    float max_collision_intensity;
     Vector3 position;
     Vector3 NORTH = new Vector3(0, 1, 0);
 
@@ -51,9 +52,7 @@ public class Planet {
 
         log.start("Plate generation");
             generatePlates();
-
-        log.start("Assign Attributes");
-            assignAttributes();
+        log.end();
 
         scalePoints(points, radius);
     
@@ -134,10 +133,11 @@ public class Planet {
         updatePlateBorders();
         // TODO: Place minor and micro plates along the borders of the majors
         assignPlateAttributes();
+        assignTileAttributes();
         calculatePlateCollisions();
     }
 
-    private void assignAttributes() {
+    private void assignTileAttributes() {
         addBaseTileAttributes();
         randomizeTileElevations();
         randomizeTileTemperatures();
@@ -392,6 +392,8 @@ public class Planet {
         Long edgeKey;
         int edgeP1, edgeP2;
         float intensity;
+        max_collision_intensity = 10f * 2.0f *(75.0f * 3.0f * 4.0f * (MathUtils.PI * radius * radius)/(float)tiles.size);
+        max_collision_intensity = (float)(1*(Math.pow(10.0, -9.0)));
         for (Plate plate : plates.values()) {
             for (Tile bdr : plate.border) {
                 // for each edge, if it's a border edge, check existence
@@ -413,34 +415,32 @@ public class Planet {
                 }
             }
         }
-        
-        
-        
-        
     }
 
     private float getCollisionIntensity(Tile a, Tile b) {
         Vector3 v2dir = new Vector3(b.tangentialVelocity).nor();
         float k = v2dir.dot(a.tangentialVelocity);
         k *= -1.0f * a.tangentialVelocity.dot(
-
                 new Vector3(points.get(b.centroid))
                         .sub(points.get(a.centroid))
                         .nor()
         );
+
         k *= a.getThickness()*a.getArea()*a.getDensity()
              + b.getThickness()*b.getArea()*b.getDensity();
-        
-        
-        
+
         return k;
     }
     
     private void addBaseTileAttributes(){
+        Plate parent;
         for (Tile t : tiles){
+            parent = plates.get(t.plateId);
             t.setArea((MathUtils.PI*4.0f*(radius*radius)/tiles.size));
             t.setElevation(0.0f);   //0m above sea level
             t.setTemperature(0.0f); //0K
+            t.setDensity(parent.density_gm_cm3);
+            t.setThickness(parent.thickness_km);
         }
     }
     
