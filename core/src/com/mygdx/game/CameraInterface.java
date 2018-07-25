@@ -6,6 +6,7 @@ import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 
 public class CameraInterface implements InputProcessor{
@@ -18,7 +19,7 @@ public class CameraInterface implements InputProcessor{
 	boolean up, down, left, right;
 	
 	float radius;
-	//float
+	float orbitSpeed = 5.0f;
 	
 	public CameraInterface(PerspectiveCamera cam){
 		this.cam = cam;
@@ -27,8 +28,11 @@ public class CameraInterface implements InputProcessor{
 	
 	public void update(float dt){
 		this.cam.rotateAround(center, cam.up, u*dt);
+		this.cam.rotateAround(center, cam.up.cpy().crs(cam.direction), v*dt);
+		cam.up.set(Vector3.Y);
 		cam.lookAt(center);
 		cam.update();
+		
 	}
 	
 	@Override
@@ -36,19 +40,19 @@ public class CameraInterface implements InputProcessor{
 		
 		switch(keycode){
 			case Input.Keys.W:
-				v = 1.0f;
+				v = 1.0f * orbitSpeed;
 				up = true;
 				break;
 			case Input.Keys.S:
-				v = -1.0f;
+				v = -1.0f * orbitSpeed;
 				down = true;
 				break;
 			case Input.Keys.A:
-				u = -1.0f;
+				u = -1.0f * orbitSpeed;
 				left = true;
 				break;
 			case Input.Keys.D:
-				u = 1.0f;
+				u = 1.0f * orbitSpeed;
 				right = true;
 				break;
 			default: return false;
@@ -60,19 +64,19 @@ public class CameraInterface implements InputProcessor{
 	public boolean keyUp(int keycode){
 		switch(keycode){
 			case Input.Keys.W:
-				v = down ? -1.0f : 0.0f;
+				v = down ? -1.0f * orbitSpeed : 0.0f;
 				up = false;
 				break;
 			case Input.Keys.S:
-				v = up ? 1.0f : 0.0f;
+				v = up ? 1.0f * orbitSpeed : 0.0f;
 				down = false;
 				break;
 			case Input.Keys.A:
-				u = right ? 1.0f : 0.0f;
+				u = right ? 1.0f * orbitSpeed : 0.0f;
 				left = false;
 				break;
 			case Input.Keys.D:
-				u = left ? -1.0f : 0.0f;
+				u = left ? -1.0f * orbitSpeed : 0.0f;
 				right = false;
 				break;
 			default: return false;
@@ -109,6 +113,9 @@ public class CameraInterface implements InputProcessor{
 	
 	@Override
 	public boolean scrolled(int amount){
+		
+		cam.position.add((center.x - cam.position.x)*amount*0.0125f,(center.y - cam.position.y)*amount*0.0125f, (center.z - cam.position.z)*amount*0.0125f);
+		
 		return false;
 	}
 }
