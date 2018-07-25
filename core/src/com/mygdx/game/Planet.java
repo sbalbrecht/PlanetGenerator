@@ -410,18 +410,25 @@ public class Planet {
                 }
             }
         }
+        
+        
+        
+        
     }
 
     private float getCollisionIntensity(Tile a, Tile b) {
-        Vector3 b_direction = new Vector3(b.tangentialVelocity).nor();
-        float intensityScalar = b_direction.dot(a.tangentialVelocity);
-        intensityScalar *= -1*a.tangentialVelocity.dot(
+        Vector3 v2dir = new Vector3(b.tangentialVelocity).nor();
+        float k = v2dir.dot(a.tangentialVelocity);
+        k *= -1.0f * a.tangentialVelocity.dot(
+
                 new Vector3(points.get(b.centroid))
                         .sub(points.get(a.centroid))
                         .nor()
         );
+        k *= a.getThickness()*a.getArea()*a.getDensity()
+             + b.getThickness()*b.getArea()*b.getDensity();
         
-        return intensityScalar;
+        return k;
     }
     
     private void addBaseTileAttributes(){
