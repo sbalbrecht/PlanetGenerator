@@ -356,6 +356,9 @@ public class Planet {
                 plate.density_gm_cm3 = 2.0f + r.nextFloat()/2.0f;
                 plate.thickness_km = 5.0f + r.nextFloat()*70.0f;
             }
+            for (Tile t: plate.members){
+                t.setThickness(plate.thickness_km);
+            }
     
             plate.area_km2 =
                     plate.members.size
@@ -427,6 +430,8 @@ public class Planet {
         );
         k *= a.getThickness()*a.getArea()*a.getDensity()
              + b.getThickness()*b.getArea()*b.getDensity();
+        
+        
         
         return k;
     }
