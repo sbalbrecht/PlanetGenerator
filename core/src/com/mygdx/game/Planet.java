@@ -420,11 +420,11 @@ public class Planet {
         Vector3 v2dir = new Vector3(b.tangentialVelocity).nor();
         float k = v2dir.dot(a.tangentialVelocity);
         k *= -1.0f * a.tangentialVelocity.dot(
+
                 new Vector3(points.get(b.centroid))
                         .sub(points.get(a.centroid))
                         .nor()
         );
-        
         k *= a.getThickness()*a.getArea()*a.getDensity()
              + b.getThickness()*b.getArea()*b.getDensity();
         
@@ -557,6 +557,13 @@ public class Planet {
         Long smallerIndex = (long)(firstIsSmaller ? p1 : p2);
         Long greaterIndex = (long)(firstIsSmaller ? p2 : p1);
         return (smallerIndex << 32) + greaterIndex;
+    }
+
+    public int[] getIndicesFromHashkey(Long key) {
+        int[] edge = new int[2];
+        edge[1] = (int)(key & 0x00000000FFFFFFFF);
+        edge[0] = (int)(key >> 32);
+        return edge;
     }
 
     private int getCentroidFromIndices(int p0, int p1, int p2) {

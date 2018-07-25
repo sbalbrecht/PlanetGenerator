@@ -18,6 +18,7 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.util.Log;
 
+import java.util.Map;
 import java.util.Random;
 
 import static com.mygdx.game.util.ColorUtils.getComplementary;
@@ -86,6 +87,7 @@ public class MyGdxGame extends ApplicationAdapter {
 //        buildAxes();
         buildPlateDirectionArrows(planet);
         buildMajorLatLines(planet);
+        buildPlateCollisions(planet);
 //        buildLatLongSpikes(planet);
     
         model = modelBuilder.end();
@@ -342,9 +344,59 @@ public class MyGdxGame extends ApplicationAdapter {
             Vector3 w = u.cpy().add(v).scl(0.5f);
             baseWidthHalf = planet.points.get(t.pts.get(0)).dst(w)*0.1f;
         }
-        Vector3 base1 = planet.points.get(t.centroid).cpy().add(direction.cpy().crs(planet.points.get(t.centroid)).nor().scl(-baseWidthHalf));
-        Vector3 base2 = planet.points.get(t.centroid).cpy().add(direction.cpy().crs(planet.points.get(t.centroid)).nor().scl( baseWidthHalf));
-        Vector3 heigt = planet.points.get(t.centroid).cpy().add(direction.cpy().scl(HEIGHT_SCALE));
-        return new Vector3[] {base1, base2, heigt};
+        Vector3 tileCentroid = planet.points.get(t.centroid);
+        Vector3 base1 = tileCentroid.cpy().add(direction.cpy().crs(tileCentroid).nor().scl(-baseWidthHalf));
+        Vector3 base2 = tileCentroid.cpy().add(direction.cpy().crs(tileCentroid).nor().scl( baseWidthHalf));
+        Vector3 height = tileCentroid.cpy().add(direction.cpy().scl(HEIGHT_SCALE));
+        return new Vector3[] {base1, base2, height};
+    }
+
+    private void buildPlateCollisions(Planet planet) {
+        Long key;
+        int[] edge;
+        Vector3[] rectangleVertices = new Vector3[5];
+        int i = 0;
+        partBuilder = modelBuilder.part("edge" + i++, GL20.GL_TRIANGLES,
+                VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal |
+                        VertexAttributes.Usage.ColorPacked, new Material());
+        for(Map.Entry<Long, Float> entry : planet.plateCollisions.entrySet()) {
+            key = entry.getKey();
+            edge = planet.getIndicesFromHashkey(key);
+            rectangleVertices = getCollisionRectangleVertices(planet, edge);
+            if(i % TILE_LIMIT == 0){
+                partBuilder = modelBuilder.part("edge" + i++, GL20.GL_TRIANGLES,
+                        VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal |
+                                VertexAttributes.Usage.ColorPacked, new Material());
+            }
+            partBuilder.setColor(getCollisionColor(entry.getValue()));
+            partBuilder.rect(
+                    rectangleVertices[0],
+                    rectangleVertices[1],
+                    rectangleVertices[2],
+                    rectangleVertices[3],
+                    rectangleVertices[4]);
+            i++;
+        }
+    }
+
+    private Vector3[] getCollisionRectangleVertices(Planet planet, int[] edge) {
+        Vector3[] vertices = new Vector3[5];
+        Vector3 p1 = planet.points.get(edge[0]), p2 = planet.points.get(edge[1]);
+        float baseWidthHalf = 0.01f;
+        Vector3 offset = p1.cpy().crs(p2).nor().scl(baseWidthHalf);
+        vertices[0] = p1.cpy().add(offset);
+        vertices[1] = p1.cpy().add(offset.scl(-1));
+        vertices[2] = p2.cpy().add(offset);
+        vertices[3] = p2.cpy().add(offset.scl(-1));
+        vertices[4] = p1.cpy().add(p2).scl(0.5f).nor(); // midpoint for normal
+        return vertices;
+    }
+
+    private Color getCollisionColor(float intensity) {
+        if(intensity > 0) {
+
+        } else {
+
+        }
     }
 }
