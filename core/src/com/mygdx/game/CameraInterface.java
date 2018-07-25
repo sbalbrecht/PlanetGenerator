@@ -9,6 +9,8 @@ import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 
+import static java.lang.Math.log;
+
 public class CameraInterface implements InputProcessor{
 
 	private PerspectiveCamera cam;
@@ -19,7 +21,7 @@ public class CameraInterface implements InputProcessor{
 	boolean up, down, left, right;
 	
 	float radius;
-	float orbitSpeed = 5.0f;
+	float orbitSpeed = 40.0f; // should be faster farther away
 	
 	public CameraInterface(PerspectiveCamera cam){
 		this.cam = cam;
@@ -113,8 +115,10 @@ public class CameraInterface implements InputProcessor{
 	
 	@Override
 	public boolean scrolled(int amount){
-		
-		cam.position.add((center.x - cam.position.x)*amount*0.0125f,(center.y - cam.position.y)*amount*0.0125f, (center.z - cam.position.z)*amount*0.0125f);
+		float amountMultiplier = 0.0125f; // should be faster farther away? to a limit (starting distance)
+		cam.position.add((center.x - cam.position.x)*-amount*amountMultiplier,
+				         (center.y - cam.position.y)*-amount*amountMultiplier,
+                         (center.z - cam.position.z)*-amount*amountMultiplier);
 		
 		return false;
 	}
