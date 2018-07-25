@@ -379,6 +379,29 @@ public class MyGdxGame extends ApplicationAdapter {
                     rectangleVertices[4]);
             i++;
         }
+        buildPlateCollisionLines(planet);
+    }
+
+    private void buildPlateCollisionLines(Planet planet) {
+        Long key;
+        int[] edge;
+        Vector3[] rectangleVertices = new Vector3[5];
+        int i = 0;
+        Material lineColor = new Material(ColorAttribute.createDiffuse(Color.valueOf("101010")));
+        partBuilder = modelBuilder.part("edgeLine" + i++, GL20.GL_LINES,
+                VertexAttributes.Usage.Position, lineColor);
+        for(Map.Entry<Long, Float> entry : planet.plateCollisions.entrySet()) {
+            key = entry.getKey();
+            edge = planet.getIndicesFromHashkey(key);
+            rectangleVertices = getCollisionRectangleVertices(planet, edge);
+            if(i % TILE_LIMIT == 0){
+                partBuilder = modelBuilder.part("edgeLine" + i++, GL20.GL_LINES,
+                        VertexAttributes.Usage.Position, lineColor);
+            }
+            partBuilder.line(rectangleVertices[1], rectangleVertices[2]);
+            partBuilder.line(rectangleVertices[0], rectangleVertices[3]);
+            i++;
+        }
     }
 
     private Vector3[] getCollisionRectangleVertices(Planet planet, int[] edge) {
@@ -395,13 +418,11 @@ public class MyGdxGame extends ApplicationAdapter {
     }
 
     private Color getCollisionColor(Planet planet, float intensity) {
-        System.out.printf("%12.5e%n", Math.abs(intensity)/planet.max_collision_intensity);
+        float relativeIntensity = (float)(Math.log(Math.abs(intensity)/planet.max_collision_intensity)+8)/8f;
         if(intensity > 0) {
-            //return new Color(1-intensity/planet.max_collision_intensity, 1, 1, 1);
-            return new Color(1, 0, 0, 1);
+            return new Color(1, 1-relativeIntensity, 1-relativeIntensity, 1);
         } else {
-            //return new Color(1, 1-intensity/planet.max_collision_intensity, 1, 1);
-            return new Color(0, 1, 0, 1);
+            return new Color(1-relativeIntensity, 1, 1-relativeIntensity, 1);
         }
     }
 }

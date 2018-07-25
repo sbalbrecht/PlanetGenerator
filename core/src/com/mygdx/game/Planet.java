@@ -14,7 +14,7 @@ public class Planet {
     public int PLATE_COUNT = 72;
     public int subdivisions;
     private float radius;
-    float max_collision_intensity;
+    float max_collision_intensity = 0f;
     Vector3 position;
     Vector3 NORTH = new Vector3(0, 1, 0);
 
@@ -392,8 +392,7 @@ public class Planet {
         Long edgeKey;
         int edgeP1, edgeP2;
         float intensity;
-        max_collision_intensity = 10f * 2.0f *(75.0f * 3.0f * 4.0f * (MathUtils.PI * radius * radius)/(float)tiles.size);
-        max_collision_intensity = (float)(1*(Math.pow(10.0, -9.0)));
+//        max_collision_intensity = 10f * 2.0f *(75.0f * 3.0f * 4.0f * (MathUtils.PI * radius * radius)/(float)tiles.size);
         for (Plate plate : plates.values()) {
             for (Tile bdr : plate.border) {
                 // for each edge, if it's a border edge, check existence
@@ -409,6 +408,7 @@ public class Planet {
                             intensity = plateCollisions.get(edgeKey);
                         } else {
                             intensity = getCollisionIntensity(bdr, bdrNbr);
+                            logMaxIntensity(intensity);
                             plateCollisions.put(edgeKey, intensity);
                         }
                     }
@@ -430,6 +430,12 @@ public class Planet {
              + b.getThickness()*b.getArea()*b.getDensity();
 
         return k;
+    }
+
+    private void logMaxIntensity(float intensity) {
+        if(Math.abs(intensity) > max_collision_intensity) {
+            max_collision_intensity = intensity;
+        }
     }
     
     private void addBaseTileAttributes(){
