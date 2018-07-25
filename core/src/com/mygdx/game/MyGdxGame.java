@@ -24,7 +24,7 @@ import static com.mygdx.game.util.ColorUtils.getComplementary;
 
 public class MyGdxGame extends ApplicationAdapter {
     private PerspectiveCamera cam;
-    private CameraInputController camController;
+    private CameraInterface cameraInterface;
     private Environment environment;
     private ModelBuilder modelBuilder;
     private MeshPartBuilder partBuilder;
@@ -63,6 +63,8 @@ public class MyGdxGame extends ApplicationAdapter {
 	    cam.far = 50000000.0f;
 	    cam.update();
 
+	    
+	    
 	    // Subdivided icosahedron test
         Log log = new Log();
 
@@ -71,6 +73,9 @@ public class MyGdxGame extends ApplicationAdapter {
         
         modelBuilder = new ModelBuilder();
         modelBuilder.begin();
+    
+        cameraInterface = new CameraInterface(cam);
+        cameraInterface.center = planet.position;
 
         /* Build model */
         log.start("Build time");
@@ -92,9 +97,6 @@ public class MyGdxGame extends ApplicationAdapter {
         instance = new ModelInstance(model, planet.position);
         log.end();
 
-        camController = new CameraInputController(cam);
-        Gdx.input.setInputProcessor(camController);
-
 		layers.add(new FrameRateLayer());
 		//layers.add(til);
 
@@ -103,7 +105,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	@Override
 	public void render () {
     	
-        camController.update();
+        cameraInterface.update(Gdx.graphics.getDeltaTime());
 
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
