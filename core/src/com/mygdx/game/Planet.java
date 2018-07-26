@@ -28,8 +28,9 @@ public class Planet {
     private Map<Long, Face[]> faceNbrs = new HashMap<Long, Face[]>();
     private Map<Long, Tile[]> tileNbrs = new HashMap<Long, Tile[]>();
     public Map<Integer, Plate> plates = new HashMap<Integer, Plate>();
-    public Map<Long, Float> plateCollisions = new HashMap<Long, Float>();
-    
+    public Map<Long, Float> tileCollisions = new HashMap<Long, Float>();
+    public Map<Long, Integer> plateCollisions = new HashMap<Long, Integer>();
+
     public TileMap tileMap;
 
     Planet(Vector3 position, float radius, int subdivisions) {
@@ -208,7 +209,7 @@ public class Planet {
         int newPlateId;
         int tileIndex;
         while(plates.size() < PLATE_COUNT) {
-            newPlateId = r.nextInt(0xffffff);
+            newPlateId = (int)r.nextInt(0x7fff);
             tileIndex = r.nextInt(tiles.size);
             if (tiles.get(tileIndex).plateId == -1 && plates.get(newPlateId) == null)
                 plates.put(newPlateId, new Plate(tiles.get(tileIndex), newPlateId));
@@ -276,15 +277,18 @@ public class Planet {
         }
         int plateId = sourcePlate.id;
         int bigNbrOccurrences = 0;
+        Integer key;
+        Integer value;
         for (Map.Entry<Integer, Integer> entry : numOccurrences.entrySet()) {
-            Integer key = entry.getKey();
-            Integer value = entry.getValue();
+            key = entry.getKey();
+            value = entry.getValue();
             if(value > bigNbrOccurrences) {
                 bigNbrOccurrences = value;
                 plateId = key;
             }
         }
-        return plates.get(plateId);
+        Plate returnPlate = plates.get(plateId);
+        return returnPlate;
     }
 
     private boolean mergePlates(Plate primary, Plate secondary) {
@@ -404,17 +408,33 @@ public class Planet {
                     bdrNbr = getTileNbr(bdr, edgeP1, edgeP2);
                     if(bdrNbr.plateId != bdr.plateId) {
                         nbrPlate = plates.get(bdrNbr.plateId);
-                        if(plateCollisions.get(edgeKey) != null) {
-                            intensity = plateCollisions.get(edgeKey);
+                        if(tileCollisions.get(edgeKey) != null) {
+                            intensity = tileCollisions.get(edgeKey);
                         } else {
                             intensity = getCollisionIntensity(bdr, bdrNbr);
                             logMaxIntensity(intensity);
-                            plateCollisions.put(edgeKey, intensity);
+                            tileCollisions.put(edgeKey, intensity);
+                            plateCollisions.put(edgeKey, getHashKeyFromPlateIDs(plate.id, nbrPlate.id));
                         }
                     }
                 }
             }
         }
+    }
+
+    private void simulateCollisions(){
+        for(long edgeKey : plateCollisions.keySet()){
+            float intensity = tileCollisions.get(edgeKey);
+            int[] plateIDs = getPlateIDsFromHashKey(plateCollisions.get(edgeKey));
+            Plate[] borderPlates = {plates.get(plateIDs[0]), plates.get(plateIDs[1])};
+            //border : the two plates of which edgeKey designates two members
+            //intensity : the logged intensity map
+//            adjustHeightmap(borderPlates, intensity);
+        }
+    }
+
+    private void adjustHeightmap(short border, float intensity){
+        // use the border to access members of the moving plates in an orderly fashion radiating away from border in direction of motion
     }
 
     private float getCollisionIntensity(Tile a, Tile b) {
@@ -574,6 +594,20 @@ public class Planet {
         int[] edge = new int[2];
         edge[1] = (int)(key & 0x00000000FFFFFFFF);
         edge[0] = (int)(key >> 32);
+        return edge;
+    }
+
+    private int getHashKeyFromPlateIDs(int id1, int id2) {
+        boolean firstIsSmaller = id1 < id2;
+        Integer smallerIndex = (int)(firstIsSmaller ? id1 : id2);
+        Integer greaterIndex = (int)(firstIsSmaller ? id2 : id1);
+        return (smallerIndex << 16) + greaterIndex;
+    }
+
+    public int[] getPlateIDsFromHashKey(Integer key) {
+        int[] edge = new int[2];
+        edge[1] = (int)(key & 0x0000FFFF);
+        edge[0] = (int)(key >> 16);
         return edge;
     }
 
