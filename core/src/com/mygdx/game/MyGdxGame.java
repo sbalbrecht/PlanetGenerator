@@ -5,8 +5,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
-import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
-import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.EllipseShapeBuilder;
@@ -70,7 +68,7 @@ public class MyGdxGame extends ApplicationAdapter {
         Log log = new Log();
 
         log.start("Generation time");
-        Planet planet = new Planet(new Vector3(0, 0, 0), PLANET_RADIUS, 6);
+        Planet planet = new Planet(new Vector3(0, 0, 0), PLANET_RADIUS, 8);
         
         modelBuilder = new ModelBuilder();
         modelBuilder.begin();
@@ -361,7 +359,7 @@ public class MyGdxGame extends ApplicationAdapter {
         partBuilder = modelBuilder.part("edge" + i++, GL20.GL_TRIANGLES,
                 VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal |
                         VertexAttributes.Usage.ColorPacked, new Material());
-        for(Map.Entry<Long, Float> entry : planet.plateCollisions.entrySet()) {
+        for(Map.Entry<Long, Float> entry : planet.tileCollisions.entrySet()) {
             key = entry.getKey();
             edge = planet.getIndicesFromHashkey(key);
             rectangleVertices = getCollisionRectangleVertices(planet, edge);
@@ -390,7 +388,7 @@ public class MyGdxGame extends ApplicationAdapter {
         Material lineColor = new Material(ColorAttribute.createDiffuse(Color.valueOf("101010")));
         partBuilder = modelBuilder.part("edgeLine" + i++, GL20.GL_LINES,
                 VertexAttributes.Usage.Position, lineColor);
-        for(Map.Entry<Long, Float> entry : planet.plateCollisions.entrySet()) {
+        for(Map.Entry<Long, Float> entry : planet.tileCollisions.entrySet()) {
             key = entry.getKey();
             edge = planet.getIndicesFromHashkey(key);
             rectangleVertices = getCollisionRectangleVertices(planet, edge);
@@ -407,7 +405,9 @@ public class MyGdxGame extends ApplicationAdapter {
     private Vector3[] getCollisionRectangleVertices(Planet planet, int[] edge) {
         Vector3[] vertices = new Vector3[5];
         Vector3 p1 = planet.points.get(edge[0]), p2 = planet.points.get(edge[1]);
-        float baseWidthHalf = 0.01f;
+        int subdivisions = planet.subdivisions;
+        // polynomial eqn sets width of edge based on level of subdivision
+        float baseWidthHalf = (float)(0.0263*Math.pow(subdivisions, 2.0) - 0.2994*subdivisions + 0.8775);
         Vector3 offset = p1.cpy().crs(p2).nor().scl(baseWidthHalf);
         vertices[0] = p1.cpy().add(offset);
         vertices[1] = p1.cpy().add(offset.scl(-1));
