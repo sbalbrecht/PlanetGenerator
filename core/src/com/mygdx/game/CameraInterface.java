@@ -115,10 +115,14 @@ public class CameraInterface implements InputProcessor{
 	
 	@Override
 	public boolean scrolled(int amount){
-		float amountMultiplier = 0.0125f; // should be faster farther away? to a limit (starting distance)
-		cam.position.add((center.x - cam.position.x)*-amount*amountMultiplier,
-				         (center.y - cam.position.y)*-amount*amountMultiplier,
-                         (center.z - cam.position.z)*-amount*amountMultiplier);
+		float scaledAmount = -amount*0.0125f; // should be faster farther away? to a limit (starting distance)
+        Vector3 translation = new Vector3((center.x - cam.position.x)*scaledAmount,
+                                          (center.y - cam.position.y)*scaledAmount,
+                                          (center.z - cam.position.z)*scaledAmount);
+        float newDistanceFromCenter = cam.position.cpy().add(translation).dst(center);
+        if(newDistanceFromCenter < 10.1f || newDistanceFromCenter > 36f)
+            translation = new Vector3(0,0,0);
+		cam.position.add(translation);
 		
 		return false;
 	}

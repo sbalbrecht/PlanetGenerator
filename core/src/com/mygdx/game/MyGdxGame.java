@@ -68,7 +68,7 @@ public class MyGdxGame extends ApplicationAdapter {
         Log log = new Log();
 
         log.start("Generation time");
-        Planet planet = new Planet(new Vector3(0, 0, 0), PLANET_RADIUS, 8);
+        Planet planet = new Planet(new Vector3(0, 0, 0), PLANET_RADIUS, 4);
         
         modelBuilder = new ModelBuilder();
         modelBuilder.begin();
@@ -352,6 +352,11 @@ public class MyGdxGame extends ApplicationAdapter {
     }
 
     private void buildPlateCollisions(Planet planet) {
+        buildPlateCollisionGradient(planet);
+        buildPlateCollisionLines(planet);
+    }
+
+    private void buildPlateCollisionGradient(Planet planet) {
         Long key;
         int[] edge;
         Vector3[] rectangleVertices = new Vector3[5];
@@ -367,6 +372,7 @@ public class MyGdxGame extends ApplicationAdapter {
                 partBuilder = modelBuilder.part("edge" + i++, GL20.GL_TRIANGLES,
                         VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal |
                                 VertexAttributes.Usage.ColorPacked, new Material());
+
             }
             partBuilder.setColor(getCollisionColor(planet, entry.getValue()));
             partBuilder.rect(
@@ -377,7 +383,6 @@ public class MyGdxGame extends ApplicationAdapter {
                     rectangleVertices[4]);
             i++;
         }
-        buildPlateCollisionLines(planet);
     }
 
     private void buildPlateCollisionLines(Planet planet) {
@@ -407,7 +412,7 @@ public class MyGdxGame extends ApplicationAdapter {
         Vector3 p1 = planet.points.get(edge[0]), p2 = planet.points.get(edge[1]);
         int subdivisions = planet.subdivisions;
         // polynomial eqn sets width of edge based on level of subdivision
-        float baseWidthHalf = (float)(0.0263*Math.pow(subdivisions, 2.0) - 0.2994*subdivisions + 0.8775);
+        float baseWidthHalf = (float)(0.0009*Math.pow(subdivisions, 2.0)-0.0248*subdivisions+0.125);
         Vector3 offset = p1.cpy().crs(p2).nor().scl(baseWidthHalf);
         vertices[0] = p1.cpy().add(offset);
         vertices[1] = p1.cpy().add(offset.scl(-1));
