@@ -135,7 +135,7 @@ public class Planet {
         // TODO: Place minor and micro plates along the borders of the majors
         assignPlateAttributes();
         assignTileAttributes();
-        calculatePlateCollisions();
+        calculatePlateCollisionIntensities();
     }
 
     private void assignTileAttributes() {
@@ -294,7 +294,7 @@ public class Planet {
     private boolean mergePlates(Plate primary, Plate secondary) {
         if(primary == secondary) return false;
         float percentArea = (float)(primary.members.size + secondary.members.size)/(float)tiles.size;
-        if(percentArea <= 0.25) {
+        if(percentArea <= 0.20) {
             for (Tile t : secondary.members) {
                 t.plateId = primary.id;
             }
@@ -390,7 +390,7 @@ public class Planet {
         }
     }
 
-    private void calculatePlateCollisions() {
+    private void calculatePlateCollisionIntensities() {
         Plate nbrPlate;
         Tile bdrNbr;
         Long edgeKey;
