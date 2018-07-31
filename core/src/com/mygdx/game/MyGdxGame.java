@@ -181,7 +181,8 @@ public class MyGdxGame extends ApplicationAdapter {
             }
 
             int plateId = t.plateId;
-            partBuilder.setColor(planet.plates.get(plateId).color);
+            //partBuilder.setColor(planet.plates.get(plateId).color);           // color by plate
+            partBuilder.setColor(getElevationColor(planet, t.getElevation()));  // color by relative elevation
 
             int numPts = t.pts.size;
             if (numPts == 6) {
@@ -428,6 +429,15 @@ public class MyGdxGame extends ApplicationAdapter {
             return new Color(1, 1-relativeIntensity, 1-relativeIntensity, 1);
         } else {
             return new Color(1-relativeIntensity, 1, 1-relativeIntensity, 1);
+        }
+    }
+
+    private Color getElevationColor(Planet planet, float elevation) {
+        float relativeElevation = (float)(Math.log(Math.abs(elevation)/planet.max_elevation)+8)/8f;
+        if(elevation > 0) {
+            return new Color(1, 1-relativeElevation, 1-relativeElevation, 1);
+        } else {
+            return new Color(1-relativeElevation, 1, 1-relativeElevation, 1);
         }
     }
 }
