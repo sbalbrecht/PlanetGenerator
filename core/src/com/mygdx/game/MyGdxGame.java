@@ -56,19 +56,17 @@ public class MyGdxGame extends ApplicationAdapter {
         // Camera
 	    cam = new PerspectiveCamera(50, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         viewport = new ScreenViewport(cam);
-	    cam.position.set(2*PLANET_RADIUS,2*PLANET_RADIUS,2*PLANET_RADIUS);
+        float camPosMultiplier = 1.6f;
+	    cam.position.set(camPosMultiplier*PLANET_RADIUS,camPosMultiplier*PLANET_RADIUS,camPosMultiplier*PLANET_RADIUS);
 	    cam.lookAt(0f,0f,0f);
 	    cam.near = 0.1f;
 	    cam.far = 50000000.0f;
 	    cam.update();
 
-	    
-	    
-	    // Subdivided icosahedron test
         Log log = new Log();
 
         log.start("Generation time");
-        Planet planet = new Planet(new Vector3(0, 0, 0), PLANET_RADIUS, 4);
+        Planet planet = new Planet(new Vector3(0, 0, 0), PLANET_RADIUS, 6);
         
         modelBuilder = new ModelBuilder();
         modelBuilder.begin();
@@ -334,7 +332,8 @@ public class MyGdxGame extends ApplicationAdapter {
     }
 
     private Vector3[] getArrowVertices(Planet planet, Tile t, Vector3 direction) {
-        final float HEIGHT_SCALE = (float)(764428*Math.exp(-0.653*planet.subdivisions));
+        //TODO: Height scale is dependent on plate speed. Need to link them instead of hardcoding the coefficient
+        final float HEIGHT_SCALE = (float)(1.52885*Math.exp(-0.653*planet.subdivisions));
         float baseWidthHalf;
         if(t.pts.size == 6) {
             baseWidthHalf = planet.points.get(t.pts.get(0)).dst(planet.points.get(t.pts.get(3)))*0.1f;
@@ -412,7 +411,8 @@ public class MyGdxGame extends ApplicationAdapter {
         Vector3 p1 = planet.points.get(edge[0]), p2 = planet.points.get(edge[1]);
         int subdivisions = planet.subdivisions;
         // polynomial eqn sets width of edge based on level of subdivision
-        float baseWidthHalf = (float)(0.0009*Math.pow(subdivisions, 2.0)-0.0248*subdivisions+0.125);
+        float baseWidthHalf = (float)(0.0027*Math.pow(subdivisions, 2.0)-0.0416*subdivisions+0.161);
+        if(subdivisions > 6) baseWidthHalf *= 2;
         Vector3 offset = p1.cpy().crs(p2).nor().scl(baseWidthHalf);
         vertices[0] = p1.cpy().add(offset);
         vertices[1] = p1.cpy().add(offset.scl(-1));

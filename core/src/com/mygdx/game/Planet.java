@@ -5,6 +5,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.mygdx.game.util.Log;
 import com.mygdx.game.util.Units;
+import com.mygdx.game.util.VMath;
 
 import java.util.*;
 
@@ -136,6 +137,7 @@ public class Planet {
         assignPlateAttributes();
         assignTileAttributes();
         calculatePlateCollisionIntensities();
+        //simulateCollisions();
     }
 
     private void assignTileAttributes() {
@@ -311,7 +313,7 @@ public class Planet {
         }
     }
 
-    private Plate[] sortPlatesBySize() {
+    private Plate[] sortPlatesByArea() {
         Plate[] sortedPlates = new Plate[plates.size()];
         int i = 0;
         for (Plate plate : plates.values()) {
@@ -338,7 +340,7 @@ public class Planet {
         float massConversionConstant = (float)Math.pow(KM_TO_CM, 3.0f) * Units.G_TO_MTONS;
         
         int continentalCount = (int)(plates.size()*.65);
-        Plate[] sortedPlates = sortPlatesBySize();
+        Plate[] sortedPlates = sortPlatesByArea();
         for(int i = 0; i < continentalCount; i++) {
             sortedPlates[i].oceanic = false;
         }
@@ -367,21 +369,21 @@ public class Planet {
             plate.area_km2 =
                     plate.members.size
                             * (MathUtils.PI*4.0f*(radius*radius)/tiles.size);
-    
+
             plate.mass_Mg =
                     plate.density_gm_cm3
                             * plate.thickness_km
                             * plate.area_km2
                             * massConversionConstant;
             
-            plate.speed_cm_yr = r.nextFloat()*10f;
-            plate.angularSpeed_rad_yr = plate.speed_cm_yr / (radius*KM_TO_CM); //TINY
+            plate.speed_m_Ma = r.nextFloat()*10f*10000*50; // 10000 = 50,000,000 years / 100 meters
+            plate.angularSpeed_rad_yr = plate.speed_m_Ma / (radius*KM_TO_CM); //TINY
             
             plate.axisOfRotation = new Vector3().setToRandomDirection();
             
             plate.angularVelocity = new Vector3(plate.axisOfRotation).scl(plate.angularSpeed_rad_yr);
             plate.tangentialVelocity = new Vector3(plate.angularVelocity).crs(plate.centerOfMass);
-            plate.momentum_cmMg_yr = plate.speed_cm_yr * plate.mass_Mg;
+            plate.momentum_cmMg_yr = plate.speed_m_Ma * plate.mass_Mg;
     
             for (Tile t: plate.members){
                 t.tangentialVelocity = new Vector3(plate.angularVelocity).crs(points.get(t.centroid));
@@ -399,8 +401,6 @@ public class Planet {
 //        max_collision_intensity = 10f * 2.0f *(75.0f * 3.0f * 4.0f * (MathUtils.PI * radius * radius)/(float)tiles.size);
         for (Plate plate : plates.values()) {
             for (Tile bdr : plate.border) {
-                // for each edge, if it's a border edge, check existence
-                // if null, store collision info
                 for(int i = 0; i < bdr.pts.size; i++) {
                     edgeP1 = bdr.pts.get(i);
                     edgeP2 = bdr.pts.get((i + 1) % bdr.pts.size);
@@ -414,7 +414,8 @@ public class Planet {
                             intensity = getCollisionIntensity(bdr, bdrNbr);
                             logMaxIntensity(intensity);
                             tileCollisions.put(edgeKey, intensity);
-                            plateCollisions.put(edgeKey, getHashKeyFromPlateIDs(plate.id, nbrPlate.id));
+                            // TODO: determine type of collision with plateCollision map
+//                            plateCollisions.put(edgeKey, getHashKeyFromPlateIDs(plate.id, nbrPlate.id));
                         }
                     }
                 }
@@ -422,19 +423,56 @@ public class Planet {
         }
     }
 
-    private void simulateCollisions(){
-        for(long edgeKey : plateCollisions.keySet()){
-            float intensity = tileCollisions.get(edgeKey);
-            int[] plateIDs = getPlateIDsFromHashKey(plateCollisions.get(edgeKey));
-            Plate[] borderPlates = {plates.get(plateIDs[0]), plates.get(plateIDs[1])};
-            //border : the two plates of which edgeKey designates two members
-            //intensity : the logged intensity map
-//            adjustHeightmap(borderPlates, intensity);
+    private void simulateCollisions() {
+        for (Plate plate : plates.values()) {
+            for (Tile bdr : plate.border) {
+                // sum the intensities acting on the tile
+                float totalCollisionIntensity = sumIntensities(bdr);
+                Vector3 epicenter = getCentroidOfCollision(bdr);
+                adjustElevation(bdr, totalCollisionIntensity, epicenter, new Array<Tile>());
+            }
         }
     }
 
-    private void adjustHeightmap(short border, float intensity){
-        // use the border to access members of the moving plates in an orderly fashion radiating away from border in direction of motion
+    private float sumIntensities(Tile t) {
+        float sum = 0;
+        for(int i = 0; i < t.pts.size; i++) {
+            Long key = getHashKeyFromIndices(t.pts.get(i), t.pts.get((i + 1) % t.pts.size));
+            if(tileCollisions.get(key) != null) {
+                sum += tileCollisions.get(key);
+            }
+        }
+        return sum;
+    }
+
+    private Vector3 getCentroidOfCollision(Tile t) {
+        Long key;
+        Array<Vector3> edgePoints = new Array<Vector3>();
+        for(int i = 0; i < t.pts.size; i++) {
+            key = getHashKeyFromIndices(t.pts.get(i), t.pts.get(i % t.pts.size));
+            if(tileCollisions.get(key) != null) {
+                edgePoints.addAll(points.get(t.pts.get(i)), points.get(t.pts.get((i + 1) % t.pts.size)));
+            }
+        }
+        return VMath.centroid(edgePoints);
+    }
+
+    private Array<Tile> adjustElevation(Tile origin, float intensity, Vector3 epicenter,
+                                        Array<Tile> tilesAlreadyAffected){
+        // implement distance limit based on subdivision... how...
+        float distanceFromEpicenter = points.get(origin.centroid).dst(epicenter);
+        float elevationChange = intensity * (float)Math.exp(1 / distanceFromEpicenter);
+        System.out.println(intensity + "  " + distanceFromEpicenter);
+        System.out.println("elevation change: " + elevationChange);
+        tilesAlreadyAffected.add(origin);
+        if(Math.abs(elevationChange) < 100)
+            return tilesAlreadyAffected;
+        origin.setElevation(origin.getElevation() + elevationChange);
+        for(Tile neighbor : origin.nbrs) {
+            if(neighbor.plateId != origin.plateId || tilesAlreadyAffected.contains(neighbor, false))
+                tilesAlreadyAffected = adjustElevation(neighbor, intensity, epicenter, tilesAlreadyAffected);
+        }
+        return tilesAlreadyAffected;
     }
 
     private float getCollisionIntensity(Tile a, Tile b) {
