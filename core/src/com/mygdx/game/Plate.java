@@ -20,7 +20,7 @@ public class Plate {
 
     Vector3 axisOfRotation;
     
-    float speed_cm_yr;
+    float speed_m_Ma;
     float density_gm_cm3;
     float thickness_km;
     float area_km2;
