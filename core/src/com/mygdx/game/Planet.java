@@ -16,6 +16,7 @@ public class Planet {
     public int subdivisions;
     private float radius;
     float max_collision_intensity = 0f;
+    float max_elevation = 0f;
     Vector3 position;
     Vector3 NORTH = new Vector3(0, 1, 0);
 
@@ -137,7 +138,7 @@ public class Planet {
         assignPlateAttributes();
         assignTileAttributes();
         calculatePlateCollisionIntensities();
-        //simulateCollisions();
+        simulateCollisions();
     }
 
     private void assignTileAttributes() {
@@ -424,12 +425,12 @@ public class Planet {
     }
 
     private void simulateCollisions() {
+        int propagationLimit = (int)(Math.ceil(0.0625*Math.exp(0.6931*subdivisions)));
         for (Plate plate : plates.values()) {
             for (Tile bdr : plate.border) {
-                // sum the intensities acting on the tile
-                float totalCollisionIntensity = sumIntensities(bdr);
+                float sumOfIntensitiesActingOnTile = sumIntensities(bdr);
                 Vector3 epicenter = getCentroidOfCollision(bdr);
-                adjustElevation(bdr, totalCollisionIntensity, epicenter, new Array<Tile>());
+                adjustElevation(bdr, sumOfIntensitiesActingOnTile, epicenter, new Array<Tile>(), propagationLimit);
             }
         }
     }
@@ -446,31 +447,32 @@ public class Planet {
     }
 
     private Vector3 getCentroidOfCollision(Tile t) {
-        Long key;
         Array<Vector3> edgePoints = new Array<Vector3>();
         for(int i = 0; i < t.pts.size; i++) {
-            key = getHashKeyFromIndices(t.pts.get(i), t.pts.get(i % t.pts.size));
-            if(tileCollisions.get(key) != null) {
-                edgePoints.addAll(points.get(t.pts.get(i)), points.get(t.pts.get((i + 1) % t.pts.size)));
+            int edgeP1 = t.pts.get(i);
+            int edgeP2 = t.pts.get((i + 1) % t.pts.size);
+            Long edgeKey = getHashKeyFromIndices(edgeP1, edgeP2);
+            if(tileCollisions.get(edgeKey) != null) {
+                edgePoints.addAll(points.get(edgeP1), points.get(edgeP2));
             }
         }
         return VMath.centroid(edgePoints);
     }
 
     private Array<Tile> adjustElevation(Tile origin, float intensity, Vector3 epicenter,
-                                        Array<Tile> tilesAlreadyAffected){
-        // implement distance limit based on subdivision... how...
+                                        Array<Tile> tilesAlreadyAffected, int iterations){
         float distanceFromEpicenter = points.get(origin.centroid).dst(epicenter);
-        float elevationChange = intensity * (float)Math.exp(1 / distanceFromEpicenter);
-        System.out.println(intensity + "  " + distanceFromEpicenter);
-        System.out.println("elevation change: " + elevationChange);
+        float elevationChange = intensity * (1 / distanceFromEpicenter);
+//        System.out.printf("intensity: %.3f dst: %.3f new Elev: %.3f  tilesAffectedSize: %d\n", intensity, distanceFromEpicenter, elevationChange, tilesAlreadyAffected.size);
         tilesAlreadyAffected.add(origin);
-        if(Math.abs(elevationChange) < 100)
+        if(Math.abs(elevationChange) < 100 || subdivisions < 5 || iterations == 0)
             return tilesAlreadyAffected;
         origin.setElevation(origin.getElevation() + elevationChange);
-        for(Tile neighbor : origin.nbrs) {
-            if(neighbor.plateId != origin.plateId || tilesAlreadyAffected.contains(neighbor, false))
-                tilesAlreadyAffected = adjustElevation(neighbor, intensity, epicenter, tilesAlreadyAffected);
+        logMaxElevation(origin.getElevation()); // TODO: find better place to log elevation for this test...
+        for(int i = 0; i < origin.nbrs.size; i++) {
+            Tile neighbor = origin.nbrs.get(i);
+            if(neighbor.plateId != origin.plateId || !tilesAlreadyAffected.contains(neighbor, false))
+                tilesAlreadyAffected = adjustElevation(neighbor, intensity, epicenter, tilesAlreadyAffected, iterations-1);
         }
         return tilesAlreadyAffected;
     }
@@ -493,6 +495,12 @@ public class Planet {
     private void logMaxIntensity(float intensity) {
         if(Math.abs(intensity) > max_collision_intensity) {
             max_collision_intensity = intensity;
+        }
+    }
+
+    private void logMaxElevation(float elevation) {
+        if(Math.abs(elevation) > max_elevation) {
+            max_elevation = elevation;
         }
     }
     

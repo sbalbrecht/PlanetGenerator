@@ -24,7 +24,7 @@ public final class VMath{
             sum.add(points.get(i));
         }
         sum.scl(1f/(float)points.size);
-        return new Vector3();
+        return sum;
     }
     
 }
