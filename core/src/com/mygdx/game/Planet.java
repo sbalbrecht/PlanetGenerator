@@ -439,7 +439,10 @@ public class Planet {
                         if(tileCollisions.get(edgeKey) != null) {
                             intensity = tileCollisions.get(edgeKey);
                         } else {
-                            intensity = getCollisionIntensity(borderTile, neighbor);
+                            Vector3 edge = getVectorFromIndices(edgeP1, edgeP2);
+                            intensity = getCollisionIntensity(borderTile, neighbor, edge);
+                            System.out.println("sheldon: " + getCollisionIntensity(borderTile, neighbor)
+                                                + " steve: " + intensity);
                             logMaxIntensity(intensity);
                             tileCollisions.put(edgeKey, intensity);
                             // TODO: determine type of collision with plateCollision map
@@ -521,6 +524,16 @@ public class Planet {
              + b.getThickness()*b.getArea()*b.getDensity();
 
         return k;
+    }
+
+    private float getCollisionIntensity(Tile a, Tile b, Vector3 edge) {
+        Vector3 a_vel = a.tangentialVelocity;
+        Vector3 b_vel = b.tangentialVelocity;
+        float intensity = a_vel.sub(edge.scl(a_vel.dot(edge))).len()
+                - b_vel.sub(edge.scl(b_vel.dot(edge))).len();
+        intensity *= a.getThickness()*a.getArea()*a.getDensity()
+                + b.getThickness()*b.getArea()*b.getDensity();
+        return intensity;
     }
 
     private void logMaxIntensity(float intensity) {
@@ -672,6 +685,13 @@ public class Planet {
         edge[1] = (int)(key & 0x00000000FFFFFFFF);
         edge[0] = (int)(key >> 32);
         return edge;
+    }
+
+    private Vector3 getVectorFromIndices(int p1, int p2) {
+        boolean firstIsSmaller = p1 < p2;
+        int smallerIndex = firstIsSmaller ? p1 : p2;
+        int greaterIndex = firstIsSmaller ? p2 : p1;
+        return new Vector3(points.get(smallerIndex).sub(points.get(greaterIndex)));
     }
 
     private int getHashKeyFromPlateIDs(int id1, int id2) {
