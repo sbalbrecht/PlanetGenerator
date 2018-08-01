@@ -422,24 +422,27 @@ public class Planet {
 
     private void calculatePlateCollisionIntensities() {
         Plate nbrPlate;
-        Tile bdrNbr;
+        Tile neighbor;
         Long edgeKey;
         int edgeP1, edgeP2;
         float intensity;
 //        max_collision_intensity = 10f * 2.0f *(75.0f * 3.0f * 4.0f * (MathUtils.PI * radius * radius)/(float)tiles.size);
         for (Plate plate : plates.values()) {
-            for (Tile bdr : plate.border) {
-                for(int i = 0; i < bdr.pts.size; i++) {
-                    edgeP1 = bdr.pts.get(i);
-                    edgeP2 = bdr.pts.get((i + 1) % bdr.pts.size);
+            for (Tile borderTile : plate.border) {
+                for(int i = 0; i < borderTile.pts.size; i++) {
+                    edgeP1 = borderTile.pts.get(i);
+                    edgeP2 = borderTile.pts.get((i + 1) % borderTile.pts.size);
                     edgeKey = getHashKeyFromIndices(edgeP1, edgeP2);
-                    bdrNbr = getTileNbr(bdr, edgeP1, edgeP2);
-                    if(bdrNbr.plateId != bdr.plateId) {
-                        nbrPlate = plates.get(bdrNbr.plateId);
+                    neighbor = getTileNbr(borderTile, edgeP1, edgeP2);
+                    if(neighbor.plateId != borderTile.plateId) {
+                        nbrPlate = plates.get(neighbor.plateId);
                         if(tileCollisions.get(edgeKey) != null) {
                             intensity = tileCollisions.get(edgeKey);
                         } else {
-                            intensity = getCollisionIntensity(bdr, bdrNbr);
+                            Vector3 edge = getVectorFromIndices(edgeP1, edgeP2);
+                            intensity = getCollisionIntensity(borderTile, neighbor, edge);
+                            System.out.println("sheldon: " + getCollisionIntensity(borderTile, neighbor)
+                                                + " steve: " + intensity);
                             logMaxIntensity(intensity);
                             tileCollisions.put(edgeKey, intensity);
                             // TODO: determine type of collision with plateCollision map
@@ -492,9 +495,10 @@ public class Planet {
         // TODO: propagation should be determined by combination of intensity and distance?
         float distanceFromEpicenter = points.get(origin.centroid).dst(epicenter);
         float elevationChange = intensity * (1 / distanceFromEpicenter);
+        float propagationLimit = 0.068f;
 //        System.out.printf("intensity: %.3f dst: %.3f new Elev: %.3f  tilesAffectedSize: %d\n", intensity, distanceFromEpicenter, elevationChange, tilesAlreadyAffected.size);
         tilesAlreadyAffected.add(origin);
-        if(distanceFromEpicenter > 0.068 || subdivisions < 4) {
+        if(distanceFromEpicenter > propagationLimit || subdivisions < 4) {
             return tilesAlreadyAffected;
         }
         origin.setElevation(origin.getElevation() + elevationChange);
@@ -520,6 +524,16 @@ public class Planet {
              + b.getThickness()*b.getArea()*b.getDensity();
 
         return k;
+    }
+
+    private float getCollisionIntensity(Tile a, Tile b, Vector3 edge) {
+        Vector3 a_vel = a.tangentialVelocity;
+        Vector3 b_vel = b.tangentialVelocity;
+        float intensity = a_vel.sub(edge.scl(a_vel.dot(edge))).len()
+                - b_vel.sub(edge.scl(b_vel.dot(edge))).len();
+        intensity *= a.getThickness()*a.getArea()*a.getDensity()
+                + b.getThickness()*b.getArea()*b.getDensity();
+        return intensity;
     }
 
     private void logMaxIntensity(float intensity) {
@@ -671,6 +685,13 @@ public class Planet {
         edge[1] = (int)(key & 0x00000000FFFFFFFF);
         edge[0] = (int)(key >> 32);
         return edge;
+    }
+
+    private Vector3 getVectorFromIndices(int p1, int p2) {
+        boolean firstIsSmaller = p1 < p2;
+        int smallerIndex = firstIsSmaller ? p1 : p2;
+        int greaterIndex = firstIsSmaller ? p2 : p1;
+        return new Vector3(points.get(smallerIndex).sub(points.get(greaterIndex)));
     }
 
     private int getHashKeyFromPlateIDs(int id1, int id2) {
