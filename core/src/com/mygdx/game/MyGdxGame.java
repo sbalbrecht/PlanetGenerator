@@ -67,7 +67,7 @@ public class MyGdxGame extends ApplicationAdapter {
         Log log = new Log();
 
         log.start("Generation time");
-        Planet planet = new Planet(new Vector3(0, 0, 0), PLANET_RADIUS, 8);
+        Planet planet = new Planet(new Vector3(0, 0, 0), PLANET_RADIUS, 5);
         
         modelBuilder = new ModelBuilder();
         modelBuilder.begin();
