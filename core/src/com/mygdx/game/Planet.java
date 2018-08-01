@@ -132,19 +132,17 @@ public class Planet {
     }
 
     private void generatePlates() {
-        Log plateLog = new Log();
         placePlateRoots();
         floodFillPlates();
         updatePlateBorders();
         removeLongestPlates(8);
+        eliminateIsolatedPlates();
         updatePlateBorders();
         // TODO: Place minor and micro plates along the borders of the majors
         assignPlateAttributes();
         assignTileAttributes();
         calculatePlateCollisionIntensities();
-        plateLog.start("Simulate Collisions");
         simulateCollisions();
-        plateLog.end();
     }
 
     private void assignTileAttributes() {
@@ -247,9 +245,10 @@ public class Planet {
             Plate longest = getLongestPlate(availPlates);
             Plate biggestNbr = getBiggestNbrPlate(longest);
             // absorb that neighbor if their combined area < 25% global area
-            if(biggestNbr != null && mergePlates(longest, biggestNbr))
+            if(biggestNbr != null && isCombinedPlateAreaUnderThreshold(longest, biggestNbr)) {
+                mergePlates(longest, biggestNbr);
                 availPlates.remove(biggestNbr.id);
-            else
+            } else
                 availPlates.remove(longest.id);
         }
     }
@@ -272,10 +271,49 @@ public class Planet {
     }
 
     private Plate getBiggestNbrPlate(Plate sourcePlate) {
+        Map<Integer, Integer> numOccurrences = getPlateNeighborsLengthAlongBorder(sourcePlate);
+        int plateId = sourcePlate.id;
+        int maxOccurrences = 0;
+        Integer key;
+        Integer value;
+        for (Map.Entry<Integer, Integer> entry : numOccurrences.entrySet()) {
+            key = entry.getKey();
+            value = entry.getValue();
+            if(value > maxOccurrences) {
+                maxOccurrences = value;
+                plateId = key;
+            }
+        }
+        return plates.get(plateId);
+    }
+
+    private void mergePlates(Plate primary, Plate secondary) {
+        for (Tile t : secondary.members) {
+            t.plateId = primary.id;
+        }
+        secondary.root.root = false;
+        plates.remove(secondary.id);
+        primary.members.ensureCapacity(secondary.members.size);
+        primary.members.addAll(secondary.members);
+        primary.border.ensureCapacity(secondary.border.size);
+        primary.border.addAll(secondary.border);
+        primary.calibrateBorder();
+    }
+
+    private boolean isCombinedPlateAreaUnderThreshold(Plate a, Plate b) {
+        if(a == b) return false;
+        float percentArea = (float)(a.members.size + b.members.size)/(float)tiles.size;
+        if(percentArea <= 0.20)
+            return true;
+        else
+            return false;
+    }
+
+    private Map<Integer, Integer> getPlateNeighborsLengthAlongBorder(Plate p) {
         Map<Integer, Integer> numOccurrences = new HashMap<Integer, Integer>();
-        for(Tile bdr : sourcePlate.border) {
+        for(Tile bdr : p.border) {
             for(Tile nbr : bdr.nbrs) {
-                if(nbr.plateId != sourcePlate.id) {
+                if(nbr.plateId != p.id) {
                     if(numOccurrences.get(nbr.plateId) != null) {
                         numOccurrences.put(nbr.plateId, numOccurrences.get(nbr.plateId)+1);
                     } else {
@@ -284,39 +322,21 @@ public class Planet {
                 }
             }
         }
-        int plateId = sourcePlate.id;
-        int bigNbrOccurrences = 0;
-        Integer key;
-        Integer value;
-        for (Map.Entry<Integer, Integer> entry : numOccurrences.entrySet()) {
-            key = entry.getKey();
-            value = entry.getValue();
-            if(value > bigNbrOccurrences) {
-                bigNbrOccurrences = value;
-                plateId = key;
-            }
-        }
-        Plate returnPlate = plates.get(plateId);
-        return returnPlate;
+        return numOccurrences;
     }
 
-    private boolean mergePlates(Plate primary, Plate secondary) {
-        if(primary == secondary) return false;
-        float percentArea = (float)(primary.members.size + secondary.members.size)/(float)tiles.size;
-        if(percentArea <= 0.20) {
-            for (Tile t : secondary.members) {
-                t.plateId = primary.id;
+    private void eliminateIsolatedPlates() {
+        Array<Plate[]> platesToBeMerged = new Array<Plate[]>();
+        for(Plate plate : plates.values()) {
+            Map<Integer, Integer> numOccurrences = getPlateNeighborsLengthAlongBorder(plate);
+            if(numOccurrences.size() == 1) {
+                ArrayList<Integer> keysArray = new ArrayList<Integer>(numOccurrences.keySet());
+                Plate parent = plates.get(keysArray.get(0));
+                platesToBeMerged.add(new Plate[] {plate, parent});
             }
-            secondary.root.root = false;
-            plates.remove(secondary.id);
-            primary.members.ensureCapacity(secondary.members.size);
-            primary.members.addAll(secondary.members);
-            primary.border.ensureCapacity(secondary.border.size);
-            primary.border.addAll(secondary.border);
-            primary.calibrateBorder();
-            return true;
-        } else {
-            return false;
+        }
+        for(Plate[] pair : platesToBeMerged) {
+            mergePlates(pair[0], pair[1]);
         }
     }
 
