@@ -43,6 +43,8 @@ public class Units{
     public static float MIN_TO_S = 60f;
     
     public static float YR_TO_S = YR_TO_DAY * DAY_TO_HR * HR_TO_MIN * MIN_TO_S;
+
+    public static float CM_YR_TO_M_MA = 10000f;
     
     
     /**
