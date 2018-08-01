@@ -132,20 +132,17 @@ public class Planet {
     }
 
     private void generatePlates() {
-        Log plateLog = new Log();
         placePlateRoots();
         floodFillPlates();
         updatePlateBorders();
         removeLongestPlates(8);
-        updatePlateBorders();
         eliminateIsolatedPlates();
+        updatePlateBorders();
         // TODO: Place minor and micro plates along the borders of the majors
         assignPlateAttributes();
         assignTileAttributes();
         calculatePlateCollisionIntensities();
-        plateLog.start("Simulate Collisions");
         simulateCollisions();
-        plateLog.end();
     }
 
     private void assignTileAttributes() {
