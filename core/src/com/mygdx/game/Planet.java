@@ -422,24 +422,24 @@ public class Planet {
 
     private void calculatePlateCollisionIntensities() {
         Plate nbrPlate;
-        Tile bdrNbr;
+        Tile neighbor;
         Long edgeKey;
         int edgeP1, edgeP2;
         float intensity;
 //        max_collision_intensity = 10f * 2.0f *(75.0f * 3.0f * 4.0f * (MathUtils.PI * radius * radius)/(float)tiles.size);
         for (Plate plate : plates.values()) {
-            for (Tile bdr : plate.border) {
-                for(int i = 0; i < bdr.pts.size; i++) {
-                    edgeP1 = bdr.pts.get(i);
-                    edgeP2 = bdr.pts.get((i + 1) % bdr.pts.size);
+            for (Tile borderTile : plate.border) {
+                for(int i = 0; i < borderTile.pts.size; i++) {
+                    edgeP1 = borderTile.pts.get(i);
+                    edgeP2 = borderTile.pts.get((i + 1) % borderTile.pts.size);
                     edgeKey = getHashKeyFromIndices(edgeP1, edgeP2);
-                    bdrNbr = getTileNbr(bdr, edgeP1, edgeP2);
-                    if(bdrNbr.plateId != bdr.plateId) {
-                        nbrPlate = plates.get(bdrNbr.plateId);
+                    neighbor = getTileNbr(borderTile, edgeP1, edgeP2);
+                    if(neighbor.plateId != borderTile.plateId) {
+                        nbrPlate = plates.get(neighbor.plateId);
                         if(tileCollisions.get(edgeKey) != null) {
                             intensity = tileCollisions.get(edgeKey);
                         } else {
-                            intensity = getCollisionIntensity(bdr, bdrNbr);
+                            intensity = getCollisionIntensity(borderTile, neighbor);
                             logMaxIntensity(intensity);
                             tileCollisions.put(edgeKey, intensity);
                             // TODO: determine type of collision with plateCollision map
@@ -492,9 +492,10 @@ public class Planet {
         // TODO: propagation should be determined by combination of intensity and distance?
         float distanceFromEpicenter = points.get(origin.centroid).dst(epicenter);
         float elevationChange = intensity * (1 / distanceFromEpicenter);
+        float propagationLimit = 0.068f;
 //        System.out.printf("intensity: %.3f dst: %.3f new Elev: %.3f  tilesAffectedSize: %d\n", intensity, distanceFromEpicenter, elevationChange, tilesAlreadyAffected.size);
         tilesAlreadyAffected.add(origin);
-        if(distanceFromEpicenter > 0.068 || subdivisions < 4) {
+        if(distanceFromEpicenter > propagationLimit || subdivisions < 4) {
             return tilesAlreadyAffected;
         }
         origin.setElevation(origin.getElevation() + elevationChange);
