@@ -15,6 +15,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.util.Log;
+import com.mygdx.game.util.Units;
 
 import java.util.Map;
 import java.util.Random;
@@ -66,7 +67,7 @@ public class MyGdxGame extends ApplicationAdapter {
         Log log = new Log();
 
         log.start("Generation time");
-        Planet planet = new Planet(new Vector3(0, 0, 0), PLANET_RADIUS, 6);
+        Planet planet = new Planet(new Vector3(0, 0, 0), PLANET_RADIUS, 8);
         
         modelBuilder = new ModelBuilder();
         modelBuilder.begin();
@@ -333,8 +334,9 @@ public class MyGdxGame extends ApplicationAdapter {
     }
 
     private Vector3[] getArrowVertices(Planet planet, Tile t, Vector3 direction) {
-        //TODO: Height scale is dependent on plate speed. Need to link them instead of hardcoding the coefficient
-        final float HEIGHT_SCALE = (float)(1.52885*Math.exp(-0.653*planet.subdivisions));
+        float arrowHeight = (float)
+                ((764428 / (planet.plateCollisisonTimeStepInMillionsOfYears * Units.CM_YR_TO_M_MA))
+                        * Math.exp(-0.653 * planet.subdivisions));
         float baseWidthHalf;
         if(t.pts.size == 6) {
             baseWidthHalf = planet.points.get(t.pts.get(0)).dst(planet.points.get(t.pts.get(3)))*0.1f;
@@ -347,7 +349,7 @@ public class MyGdxGame extends ApplicationAdapter {
         Vector3 tileCentroid = planet.points.get(t.centroid);
         Vector3 base1 = tileCentroid.cpy().add(direction.cpy().crs(tileCentroid).nor().scl(-baseWidthHalf));
         Vector3 base2 = tileCentroid.cpy().add(direction.cpy().crs(tileCentroid).nor().scl( baseWidthHalf));
-        Vector3 height = tileCentroid.cpy().add(direction.cpy().scl(HEIGHT_SCALE));
+        Vector3 height = tileCentroid.cpy().add(direction.cpy().scl(arrowHeight));
         return new Vector3[] {base1, base2, height};
     }
 

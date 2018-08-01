@@ -13,6 +13,7 @@ import static com.mygdx.game.util.Units.KM_TO_CM;
 
 public class Planet {
     public int PLATE_COUNT = 72;
+    public int plateCollisisonTimeStepInMillionsOfYears = 50;
     public int subdivisions;
     private float radius;
     float max_collision_intensity = 0f;
@@ -52,6 +53,8 @@ public class Planet {
 
         log.start("Dual Conversion");
             convertToTruncatedIcosphere();
+
+            System.out.println(points.get(tiles.get(0).centroid).dst(points.get(tiles.get(0).nbrs.get(0).centroid)));
 
         log.start("Plate generation");
             generatePlates();
@@ -129,6 +132,7 @@ public class Planet {
     }
 
     private void generatePlates() {
+        Log plateLog = new Log();
         placePlateRoots();
         floodFillPlates();
         updatePlateBorders();
@@ -138,7 +142,9 @@ public class Planet {
         assignPlateAttributes();
         assignTileAttributes();
         calculatePlateCollisionIntensities();
+        plateLog.start("Simulate Collisions");
         simulateCollisions();
+        plateLog.end();
     }
 
     private void assignTileAttributes() {
@@ -241,7 +247,7 @@ public class Planet {
             Plate longest = getLongestPlate(availPlates);
             Plate biggestNbr = getBiggestNbrPlate(longest);
             // absorb that neighbor if their combined area < 25% global area
-            if(mergePlates(longest, biggestNbr))
+            if(biggestNbr != null && mergePlates(longest, biggestNbr))
                 availPlates.remove(biggestNbr.id);
             else
                 availPlates.remove(longest.id);
@@ -331,6 +337,7 @@ public class Planet {
         return sortedPlates;
     }
 
+    // TODO: Refactor
     private void assignPlateAttributes() {
         // Assign class of plate (oceanic/continental)
         // Assign random axis of rotation and velocity$cm_year to each plate
@@ -376,8 +383,8 @@ public class Planet {
                             * plate.thickness_km
                             * plate.area_km2
                             * massConversionConstant;
-            
-            plate.speed_m_Ma = r.nextFloat()*10f*10000*50; // 10000 = 50,000,000 years / 100 meters
+
+            plate.speed_m_Ma = r.nextFloat()*10f*Units.CM_YR_TO_M_MA*plateCollisisonTimeStepInMillionsOfYears;
             plate.angularSpeed_rad_yr = plate.speed_m_Ma / (radius*KM_TO_CM); //TINY
             
             plate.axisOfRotation = new Vector3().setToRandomDirection();
@@ -430,7 +437,7 @@ public class Planet {
             for (Tile bdr : plate.border) {
                 float sumOfIntensitiesActingOnTile = sumIntensities(bdr);
                 Vector3 epicenter = getCentroidOfCollision(bdr);
-                adjustElevation(bdr, sumOfIntensitiesActingOnTile, epicenter, new Array<Tile>(), propagationLimit);
+                adjustElevation(bdr, sumOfIntensitiesActingOnTile, epicenter, new Array<Tile>());
             }
         }
     }
@@ -460,19 +467,22 @@ public class Planet {
     }
 
     private Array<Tile> adjustElevation(Tile origin, float intensity, Vector3 epicenter,
-                                        Array<Tile> tilesAlreadyAffected, int iterations){
+                                        Array<Tile> tilesAlreadyAffected){
+        // TODO: need to change elevationChange formula to something more grounded in reality
+        // TODO: propagation should be determined by combination of intensity and distance?
         float distanceFromEpicenter = points.get(origin.centroid).dst(epicenter);
         float elevationChange = intensity * (1 / distanceFromEpicenter);
 //        System.out.printf("intensity: %.3f dst: %.3f new Elev: %.3f  tilesAffectedSize: %d\n", intensity, distanceFromEpicenter, elevationChange, tilesAlreadyAffected.size);
         tilesAlreadyAffected.add(origin);
-        if(Math.abs(elevationChange) < 100 || subdivisions < 5 || iterations == 0)
+        if(distanceFromEpicenter > 0.068 || subdivisions < 4) {
             return tilesAlreadyAffected;
+        }
         origin.setElevation(origin.getElevation() + elevationChange);
         logMaxElevation(origin.getElevation()); // TODO: find better place to log elevation for this test...
         for(int i = 0; i < origin.nbrs.size; i++) {
             Tile neighbor = origin.nbrs.get(i);
-            if(neighbor.plateId != origin.plateId || !tilesAlreadyAffected.contains(neighbor, false))
-                tilesAlreadyAffected = adjustElevation(neighbor, intensity, epicenter, tilesAlreadyAffected, iterations-1);
+            if(neighbor.plateId == origin.plateId && !tilesAlreadyAffected.contains(neighbor, false))
+                tilesAlreadyAffected = adjustElevation(neighbor, intensity, epicenter, tilesAlreadyAffected);
         }
         return tilesAlreadyAffected;
     }
