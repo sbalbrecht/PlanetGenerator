@@ -520,19 +520,20 @@ public class Planet {
                         .nor()
         );
 
-        k *= a.getThickness()*a.getArea()*a.getDensity()
-             + b.getThickness()*b.getArea()*b.getDensity();
+//        k *= a.getThickness()*a.getArea()*a.getDensity()
+//             + b.getThickness()*b.getArea()*b.getDensity();
 
         return k;
     }
 
     private float getCollisionIntensity(Tile a, Tile b, Vector3 edge) {
-        Vector3 a_vel = a.tangentialVelocity;
-        Vector3 b_vel = b.tangentialVelocity;
-        float intensity = a_vel.sub(edge.scl(a_vel.dot(edge))).len()
-                - b_vel.sub(edge.scl(b_vel.dot(edge))).len();
-        intensity *= a.getThickness()*a.getArea()*a.getDensity()
-                + b.getThickness()*b.getArea()*b.getDensity();
+        Vector3 a_vel = a.tangentialVelocity.cpy();
+        Vector3 b_vel = b.tangentialVelocity.cpy();
+        Vector3 e_nor = edge.cpy().nor();
+        float intensity = a_vel.sub(edge.cpy().scl(a_vel.cpy().dot(e_nor))).len()
+                - b_vel.sub(edge.cpy().scl(b_vel.cpy().dot(e_nor))).len();
+//        intensity *= a.getThickness()*a.getArea()*a.getDensity()
+//                + b.getThickness()*b.getArea()*b.getDensity();
         return intensity;
     }
 
@@ -691,7 +692,7 @@ public class Planet {
         boolean firstIsSmaller = p1 < p2;
         int smallerIndex = firstIsSmaller ? p1 : p2;
         int greaterIndex = firstIsSmaller ? p2 : p1;
-        return new Vector3(points.get(smallerIndex).sub(points.get(greaterIndex)));
+        return new Vector3(points.get(smallerIndex).cpy().sub(points.get(greaterIndex)));
     }
 
     private int getHashKeyFromPlateIDs(int id1, int id2) {
