@@ -335,7 +335,7 @@ public class MyGdxGame extends ApplicationAdapter {
 
     private Vector3[] getArrowVertices(Planet planet, Tile t, Vector3 direction) {
         float arrowHeight = (float)
-                ((764428 / (planet.plateCollisisonTimeStepInMillionsOfYears * Units.CM_YR_TO_M_MA))
+                ((764428 / (planet.plateCollisionTimeStepInMillionsOfYears * Units.CM_YR_TO_M_MA))
                         * Math.exp(-0.653 * planet.subdivisions));
         float baseWidthHalf;
         if(t.pts.size == 6) {

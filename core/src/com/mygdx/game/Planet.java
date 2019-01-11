@@ -13,7 +13,7 @@ import static com.mygdx.game.util.Units.KM_TO_CM;
 
 public class Planet {
     public int PLATE_COUNT = 72;
-    public int plateCollisisonTimeStepInMillionsOfYears = 50;
+    public int plateCollisionTimeStepInMillionsOfYears = 50;
     public int subdivisions;
     private float radius;
     float max_collision_intensity = 0f;
@@ -303,10 +303,7 @@ public class Planet {
     private boolean isCombinedPlateAreaUnderThreshold(Plate a, Plate b) {
         if(a == b) return false;
         float percentArea = (float)(a.members.size + b.members.size)/(float)tiles.size;
-        if(percentArea <= 0.20)
-            return true;
-        else
-            return false;
+        return (percentArea <= 0.20);
     }
 
     private Map<Integer, Integer> getPlateNeighborsLengthAlongBorder(Plate p) {
@@ -404,7 +401,7 @@ public class Planet {
                             * plate.area_km2
                             * massConversionConstant;
 
-            plate.speed_m_Ma = r.nextFloat()*10f*Units.CM_YR_TO_M_MA*plateCollisisonTimeStepInMillionsOfYears;
+            plate.speed_m_Ma = r.nextFloat()*10f*Units.CM_YR_TO_M_MA* plateCollisionTimeStepInMillionsOfYears;
             plate.angularSpeed_rad_yr = plate.speed_m_Ma / (radius*KM_TO_CM); //TINY
             
             plate.axisOfRotation = new Vector3().setToRandomDirection();
