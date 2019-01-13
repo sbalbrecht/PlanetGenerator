@@ -37,6 +37,8 @@ public class PlanetGenerator extends ApplicationAdapter {
     public TileInfoLayer til;
     
     public Array<Layer> layers;
+    private Array<Model> models = new Array<Model>();
+    private Array<ModelInstance> modelInstances = new Array<ModelInstance>();
 
     private final int TILE_LIMIT = 1000;
     private final float PLANET_RADIUS = 10;
@@ -67,7 +69,7 @@ public class PlanetGenerator extends ApplicationAdapter {
         Log log = new Log();
 
         log.start("Generation time");
-        Planet planet = new Planet(new Vector3(0, 0, 0), PLANET_RADIUS, 3);
+        Planet planet = new Planet(new Vector3(0, 0, 0), PLANET_RADIUS, 4);
         
         modelBuilder = new ModelBuilder();
         modelBuilder.begin();
@@ -77,10 +79,6 @@ public class PlanetGenerator extends ApplicationAdapter {
 
         /* Build model */
         log.start("Build time");
-        partBuilder = modelBuilder.part("tile", GL20.GL_TRIANGLES,
-                VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal |
-                         VertexAttributes.Usage.ColorPacked, new Material());
-
 
 //        buildIcosahedron(planet);         // Triangles
 		buildTruncatedIcosahedron(planet);  // Tiles
@@ -89,11 +87,11 @@ public class PlanetGenerator extends ApplicationAdapter {
 //        buildAxes();
         buildPlateDirectionArrows(planet);
         buildMajorLatLines(planet);
-//        buildPlateCollisions(planet);
+        buildPlateCollisions(planet);
 //        buildLatLongSpikes(planet);
     
         model = modelBuilder.end();
-        instance = new ModelInstance(model, planet.position);
+        modelInstances.add(new ModelInstance(model, planet.position));
         log.end();
 
 		layers.add(new FrameRateLayer());
@@ -117,7 +115,10 @@ public class PlanetGenerator extends ApplicationAdapter {
 		}
 
 		modelBatch.begin(cam);
-		modelBatch.render(instance, environment);
+//		modelBatch.render(instance, environment);
+        for (ModelInstance instance : modelInstances) {
+            modelBatch.render(instance, environment);
+        }
         modelBatch.end();
 	}
 
@@ -182,8 +183,8 @@ public class PlanetGenerator extends ApplicationAdapter {
             }
 
             int plateId = t.plateId;
-            partBuilder.setColor(planet.plates.get(plateId).color);           // color by plate
-//            partBuilder.setColor(getElevationColor(planet, t.getElevation()));  // color by relative elevation
+//            partBuilder.setColor(planet.plates.get(plateId).color);           // color by plate
+            partBuilder.setColor(getElevationColor(planet, t.getElevation()));  // color by relative elevation
 
             int numPts = t.pts.size;
             if (numPts == 6) {
