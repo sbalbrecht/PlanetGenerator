@@ -54,7 +54,7 @@ public class Planet {
         log.start("Dual Conversion");
             convertToTruncatedIcosphere();
 
-            System.out.println(points.get(tiles.get(0).centroid).dst(points.get(tiles.get(0).nbrs.get(0).centroid)));
+//            System.out.println(points.get(tiles.get(0).centroid).dst(points.get(tiles.get(0).nbrs.get(0).centroid)));
 
         log.start("Plate generation");
             generatePlates();
@@ -437,9 +437,9 @@ public class Planet {
                             intensity = tileCollisions.get(edgeKey);
                         } else {
                             Vector3 edge = getVectorFromIndices(edgeP1, edgeP2);
-                            intensity = getCollisionIntensity(borderTile, neighbor);
-                            System.out.println("sheldon: " + getCollisionIntensity(borderTile, neighbor)
-                                                + " steve: " + intensity);
+//                            intensity = getCollisionIntensity(borderTile, neighbor);
+                            intensity = getCollisionIntensity(borderTile.tangentialVelocity, neighbor.tangentialVelocity, edge);
+//                            System.out.println("sheldon: " + getCollisionIntensity(borderTile, neighbor) + " steve: " + intensity);
                             logMaxIntensity(intensity);
                             tileCollisions.put(edgeKey, intensity);
                             // TODO: determine type of collision with plateCollision map
