@@ -67,7 +67,7 @@ public class MyGdxGame extends ApplicationAdapter {
         Log log = new Log();
 
         log.start("Generation time");
-        Planet planet = new Planet(new Vector3(0, 0, 0), PLANET_RADIUS, 5);
+        Planet planet = new Planet(new Vector3(0, 0, 0), PLANET_RADIUS, 3);
         
         modelBuilder = new ModelBuilder();
         modelBuilder.begin();
@@ -89,7 +89,7 @@ public class MyGdxGame extends ApplicationAdapter {
 //        buildAxes();
         buildPlateDirectionArrows(planet);
         buildMajorLatLines(planet);
-        buildPlateCollisions(planet);
+//        buildPlateCollisions(planet);
 //        buildLatLongSpikes(planet);
     
         model = modelBuilder.end();
@@ -182,8 +182,8 @@ public class MyGdxGame extends ApplicationAdapter {
             }
 
             int plateId = t.plateId;
-            //partBuilder.setColor(planet.plates.get(plateId).color);           // color by plate
-            partBuilder.setColor(getElevationColor(planet, t.getElevation()));  // color by relative elevation
+            partBuilder.setColor(planet.plates.get(plateId).color);           // color by plate
+//            partBuilder.setColor(getElevationColor(planet, t.getElevation()));  // color by relative elevation
 
             int numPts = t.pts.size;
             if (numPts == 6) {
@@ -335,7 +335,7 @@ public class MyGdxGame extends ApplicationAdapter {
 
     private Vector3[] getArrowVertices(Planet planet, Tile t, Vector3 direction) {
         float arrowHeight = (float)
-                ((764428 / (planet.plateCollisisonTimeStepInMillionsOfYears * Units.CM_YR_TO_M_MA))
+                ((764428 / (planet.plateCollisionTimeStepInMillionsOfYears * Units.CM_YR_TO_M_MA))
                         * Math.exp(-0.653 * planet.subdivisions));
         float baseWidthHalf;
         if(t.pts.size == 6) {
