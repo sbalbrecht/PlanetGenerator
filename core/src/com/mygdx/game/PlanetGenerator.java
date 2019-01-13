@@ -22,24 +22,24 @@ import java.util.Random;
 
 import static com.mygdx.game.util.ColorUtils.getComplementary;
 
-public class MyGdxGame extends ApplicationAdapter {
-    private PerspectiveCamera cam;
+public class PlanetGenerator extends ApplicationAdapter {
     private CameraInterface cameraInterface;
     private Environment environment;
-    private ModelBuilder modelBuilder;
     private MeshPartBuilder partBuilder;
-    private ModelInstance instance;
-    private ModelBatch modelBatch;
     private Model model;
-    private Viewport viewport;
+    private ModelBatch modelBatch;
+    private ModelBuilder modelBuilder;
+    private ModelInstance instance;
+    private PerspectiveCamera cam;
     private Ray cursor;
-    
+    private Viewport viewport;
+
     public TileInfoLayer til;
     
     public Array<Layer> layers;
 
-    private int TILE_LIMIT = 1000;
-    private float PLANET_RADIUS = 10;
+    private final int TILE_LIMIT = 1000;
+    private final float PLANET_RADIUS = 10;
 
     @Override
 	public void create () {
@@ -103,7 +103,7 @@ public class MyGdxGame extends ApplicationAdapter {
 
 	@Override
 	public void render () {
-    	
+    	// TODO: Create planet update method to integrate in render loop. Handle generation in separate thread.
         cameraInterface.update(Gdx.graphics.getDeltaTime());
 
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -264,7 +264,7 @@ public class MyGdxGame extends ApplicationAdapter {
     private void buildAxes() {
         partBuilder = modelBuilder.part("axes", GL20.GL_LINES, VertexAttributes.Usage.Position, new Material());
         partBuilder.line(0,0,0,15f,0,0);
-        partBuilder.line(0,0,0, 0,20f,0);
+        partBuilder.line(0,0,0,0,20f,0);
         partBuilder.line(0,0,0,0,0,25f);
     }
     
