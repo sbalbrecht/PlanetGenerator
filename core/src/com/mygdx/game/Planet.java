@@ -191,7 +191,7 @@ public class Planet {
             setTileNeighbors(t);
             tiles.add(t);
         }
-        faces = null;
+//        faces = null;
     }
 
     private Tile getTileFromFace(Face initialFace, int tileCentroid) {

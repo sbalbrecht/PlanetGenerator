@@ -60,7 +60,8 @@ public class PlanetGenerator extends ApplicationAdapter {
 	    cam = new PerspectiveCamera(50, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         viewport = new ScreenViewport(cam);
         float camPosMultiplier = 1.6f;
-	    cam.position.set(camPosMultiplier*PLANET_RADIUS,camPosMultiplier*PLANET_RADIUS,camPosMultiplier*PLANET_RADIUS);
+        float camCoordinate = camPosMultiplier * PLANET_RADIUS;
+	    cam.position.set(camCoordinate,camCoordinate,camCoordinate);
 	    cam.lookAt(0f,0f,0f);
 	    cam.near = 0.1f;
 	    cam.far = 50000000.0f;
@@ -70,28 +71,28 @@ public class PlanetGenerator extends ApplicationAdapter {
 
         log.start("Generation time");
         Planet planet = new Planet(new Vector3(0, 0, 0), PLANET_RADIUS, 4);
-        
-        modelBuilder = new ModelBuilder();
-        modelBuilder.begin();
-    
+
         cameraInterface = new CameraInterface(cam);
         cameraInterface.center = planet.position;
 
         /* Build model */
         log.start("Build time");
 
-//        buildIcosahedron(planet);         // Triangles
-		buildTruncatedIcosahedron(planet);  // Tiles
-//        buildSunRays(planet);
-//        buildWireframe(planet);
-//        buildAxes();
-        buildPlateDirectionArrows(planet);
-        buildMajorLatLines(planet);
-        buildPlateCollisions(planet);
-//        buildLatLongSpikes(planet);
-    
-        model = modelBuilder.end();
-        modelInstances.add(new ModelInstance(model, planet.position));
+        modelBuilder = new ModelBuilder();
+
+//        models.add(buildIcosahedron(planet));         // Triangles
+		models.add(buildTruncatedIcosahedron(planet));  // Tiles
+//        models.add(buildSunRays(planet));
+//        models.add(buildWireframe(planet));
+//        models.add(buildAxes());
+        models.add(buildPlateDirectionArrows(planet));
+//        models.add(buildMajorLatLines(planet));
+        models.add(buildPlateCollisions(planet));
+//        models.add(buildLatLongSpikes(planet));
+
+        for (Model model : models) {
+            modelInstances.add(new ModelInstance(model, planet.position));
+        }
         log.end();
 
 		layers.add(new FrameRateLayer());
@@ -115,7 +116,6 @@ public class PlanetGenerator extends ApplicationAdapter {
 		}
 
 		modelBatch.begin(cam);
-//		modelBatch.render(instance, environment);
         for (ModelInstance instance : modelInstances) {
             modelBatch.render(instance, environment);
         }
@@ -128,7 +128,9 @@ public class PlanetGenerator extends ApplicationAdapter {
 			layers.get(i).dispose();
 		}
         modelBatch.dispose();
-        model.dispose();
+        for(Model model : models) {
+		    model.dispose();
+        }
 	}
 
     @Override
@@ -148,7 +150,8 @@ public class PlanetGenerator extends ApplicationAdapter {
     }
 
 
-    private void buildIcosahedron(Planet planet) {
+    private Model buildIcosahedron(Planet planet) {
+        modelBuilder.begin();
         Random r = new Random();
         Face f;
         for(int i = 0; i < planet.faces.size; i++) {
@@ -168,9 +171,11 @@ public class PlanetGenerator extends ApplicationAdapter {
                     planet.points.get(f.pts[1]),
                     planet.points.get(f.pts[2]));
         }
+        return modelBuilder.end();
     }
 
-    private void buildTruncatedIcosahedron(Planet planet) {
+    private Model buildTruncatedIcosahedron(Planet planet) {
+        modelBuilder.begin();
         Tile t;
         for(int i = 0; i < planet.tiles.size; i++) {
 
@@ -224,9 +229,11 @@ public class PlanetGenerator extends ApplicationAdapter {
                 }
             }
         }
+        return modelBuilder.end();
     }
 
-    private void buildSunRays(Planet planet) {
+    private Model buildSunRays(Planet planet) {
+        modelBuilder.begin();
         Material lineColor = new Material(ColorAttribute.createDiffuse(Color.valueOf("ffffff")));
 		Vector3 p1;
 		partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
@@ -237,9 +244,11 @@ public class PlanetGenerator extends ApplicationAdapter {
                 p1 = planet.points.get(planet.tiles.get(i).centroid);
 				partBuilder.line(p1.scl(1.0f), p1.cpy().scl(1.0f + 0.00000000000000125f*planet.tiles.get(i).getPower()));
         }
+        return modelBuilder.end();
     }
 
-    private void buildWireframe(Planet planet) {
+    private Model buildWireframe(Planet planet) {
+        modelBuilder.begin();
         Material lineColor = new Material(ColorAttribute.createDiffuse(Color.valueOf("101010")));
         partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
         Vector3 p1;
@@ -260,16 +269,20 @@ public class PlanetGenerator extends ApplicationAdapter {
             }
             planet.tiles.get(i).drawn = true;
         }
+        return modelBuilder.end();
     }
 
-    private void buildAxes() {
+    private Model buildAxes() {
+        modelBuilder.begin();
         partBuilder = modelBuilder.part("axes", GL20.GL_LINES, VertexAttributes.Usage.Position, new Material());
         partBuilder.line(0,0,0,15f,0,0);
         partBuilder.line(0,0,0,0,20f,0);
         partBuilder.line(0,0,0,0,0,25f);
+        return modelBuilder.end();
     }
     
-    private void buildMajorLatLines(Planet planet) {
+    private Model buildMajorLatLines(Planet planet) {
+        modelBuilder.begin();
         Material lineColor;
         double tropicLatitude_rad = 23.5*Math.PI/180;
         float tropicHeight = (float)Math.sin(tropicLatitude_rad)*PLANET_RADIUS;
@@ -291,9 +304,11 @@ public class PlanetGenerator extends ApplicationAdapter {
         partBuilder = modelBuilder.part("polarCircles", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
         EllipseShapeBuilder.build(partBuilder, arcticRadius*1.000010f, 480, new Vector3(0f, arcticHeight,0f),new Vector3(0f,1f,0f));
         EllipseShapeBuilder.build(partBuilder, arcticRadius*1.000010f, 480, new Vector3(0f, -arcticHeight, 0f),new Vector3(0f,1f,0f));
+        return modelBuilder.end();
     }
 
-    private void buildLatLongSpikes(Planet planet) {
+    private Model buildLatLongSpikes(Planet planet) {
+        modelBuilder.begin();
         Material lineColor = new Material(ColorAttribute.createDiffuse(Color.valueOf("ffffff")));
         partBuilder = modelBuilder.part("tile", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
 
@@ -308,9 +323,12 @@ public class PlanetGenerator extends ApplicationAdapter {
                 partBuilder.line(p1, p2);
             }
 
-        }l2.end();
+        }
+        l2.end();
+        return modelBuilder.end();
     }
-    private void buildPlateDirectionArrows(Planet planet) {
+    private Model buildPlateDirectionArrows(Planet planet) {
+        modelBuilder.begin();
         int i = 0;
         for(Plate plate : planet.plates.values()) {
             partBuilder = modelBuilder.part("arrow" + i, GL20.GL_TRIANGLES,
@@ -332,6 +350,7 @@ public class PlanetGenerator extends ApplicationAdapter {
                 i++;
             }
         }
+        return modelBuilder.end();
     }
 
     private Vector3[] getArrowVertices(Planet planet, Tile t, Vector3 direction) {
@@ -354,9 +373,11 @@ public class PlanetGenerator extends ApplicationAdapter {
         return new Vector3[] {base1, base2, height};
     }
 
-    private void buildPlateCollisions(Planet planet) {
+    private Model buildPlateCollisions(Planet planet) {
+        modelBuilder.begin();
         buildPlateCollisionGradient(planet);
         buildPlateCollisionLines(planet);
+        return modelBuilder.end();
     }
 
     private void buildPlateCollisionGradient(Planet planet) {
