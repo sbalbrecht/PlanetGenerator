@@ -157,9 +157,9 @@ public class Planet {
         int p1 = face.pts[1];
         int p2 = face.pts[2];
 
-        int m0 = getMidpointFromIndices(p0, p1);
-        int m1 = getMidpointFromIndices(p1, p2);
-        int m2 = getMidpointFromIndices(p2, p0);
+        int m0 = getMidpointFromIndicesAndStore(p0, p1);
+        int m1 = getMidpointFromIndicesAndStore(p1, p2);
+        int m2 = getMidpointFromIndicesAndStore(p2, p0);
 
         return new Face[] {
             new Face(p0, m0, m2, getCentroidFromIndices(p0, m0, m2)),
@@ -191,7 +191,7 @@ public class Planet {
             setTileNeighbors(t);
             tiles.add(t);
         }
-        faces = null;
+//        faces = null;
     }
 
     private Tile getTileFromFace(Face initialFace, int tileCentroid) {
@@ -429,16 +429,15 @@ public class Planet {
                 for(int i = 0; i < borderTile.pts.size; i++) {
                     edgeP1 = borderTile.pts.get(i);
                     edgeP2 = borderTile.pts.get((i + 1) % borderTile.pts.size);
-                    edgeKey = getHashKeyFromIndices(edgeP1, edgeP2);
                     neighbor = getTileNbr(borderTile, edgeP1, edgeP2);
                     if(neighbor.plateId != borderTile.plateId) {
                         nbrPlate = plates.get(neighbor.plateId);
+                        edgeKey = getHashKeyFromIndices(edgeP1, edgeP2);
                         if(tileCollisions.get(edgeKey) != null) {
                             intensity = tileCollisions.get(edgeKey);
                         } else {
-                            Vector3 edge = getVectorFromIndices(edgeP1, edgeP2);
 //                            intensity = getCollisionIntensity(borderTile, neighbor);
-                            intensity = getCollisionIntensity(borderTile.tangentialVelocity, neighbor.tangentialVelocity, edge);
+                            intensity = getCollisionIntensity(borderTile, neighbor, edgeP1, edgeP2);
 //                            System.out.println("sheldon: " + getCollisionIntensity(borderTile, neighbor) + " steve: " + intensity);
                             logMaxIntensity(intensity);
                             tileCollisions.put(edgeKey, intensity);
@@ -508,38 +507,38 @@ public class Planet {
         return tilesAlreadyAffected;
     }
 
-    private float getCollisionIntensity(Tile a, Tile b) {
-//        Vector3 v2dir = new Vector3(b.tangentialVelocity).nor();
-//        float k = v2dir.dot(a.tangentialVelocity);
-//        k *= -1.0f * a.tangentialVelocity.dot(
-//                new Vector3(points.get(b.centroid))
-//                        .sub(points.get(a.centroid))
-//                        .nor()
-//        );
-        Vector3 ab = new Vector3(points.get(b.centroid)).sub(points.get(a.centroid));
-        Vector3 aVel = new Vector3(a.tangentialVelocity);
-        Vector3 bVel = new Vector3(b.tangentialVelocity);
-        Vector3 proj_aVel_onto_ab = ab.cpy().scl(aVel.dot(ab)/ab.dot(ab));
-        Vector3 proj_bVel_onto_ab = ab.cpy().scl(bVel.dot(ab)/ab.dot(ab));
-        return proj_aVel_onto_ab.len() - proj_bVel_onto_ab.len();
+    private float getCollisionIntensity(Tile a, Tile b, int edgeP1, int edgeP2) {
+        Vector3 edge = getVectorFromIndices(edgeP1, edgeP2);
+        Vector3 edge_mid = getMidpointFromIndices(edgeP1, edgeP2);
+        Vector3 a_vel = new Vector3(a.tangentialVelocity);
+        Vector3 b_vel = new Vector3(b.tangentialVelocity);
+        Vector3 proj_a_onto_e = edge.cpy().scl(a_vel.dot(edge)/edge.dot(edge));
+        Vector3 proj_b_onto_e = edge.cpy().scl(b_vel.dot(edge)/edge.dot(edge));
+        Vector3 rej_a = a_vel.sub(proj_a_onto_e);
+        Vector3 rej_b = b_vel.sub(proj_b_onto_e);
 
-//        k *= a.getThickness()*a.getArea()*a.getDensity()
-//             + b.getThickness()*b.getArea()*b.getDensity();
+        float cos_between_rejections = (rej_a.dot(rej_b))/(rej_a.len()*rej_b.len());
+        float rej_a_dot_e = rej_a.dot(edge_mid.sub(points.get(a.centroid)));
 
-        //return k;
-    }
+        if (cos_between_rejections > 0) {
+            if (rej_a_dot_e < 0) {
+                return (rej_a.len() > rej_b.len())
+                        ? -(rej_a.len() - rej_b.len())
+                        :  (rej_b.len() - rej_a.len());
+            } else {
+                return (rej_b.len() > rej_a.len())
+                        ? -(rej_b.len() - rej_a.len())
+                        :  (rej_a.len() - rej_b.len());
+            }
+        } else {
+            return (rej_a_dot_e < 0)
+                    ? -(rej_a.len() + rej_b.len())
+                    :  (rej_a.len() + rej_b.len());
+        }
 
-    private float getCollisionIntensity(Vector3 a, Vector3 b, Vector3 edge) {
-        a = new Vector3(a);
-        b = new Vector3(b);
-        Vector3 proj_a_onto_e = edge.cpy().scl(a.dot(edge)/edge.dot(edge));
-        Vector3 proj_b_onto_e = edge.cpy().scl(b.dot(edge)/edge.dot(edge));
-        Vector3 rej_a_onto_e = a.sub(proj_a_onto_e);
-        Vector3 rej_b_onto_e = b.sub(proj_b_onto_e);
-        float intensity = rej_a_onto_e.len() - rej_b_onto_e.len();
 //        intensity *= a.getThickness()*a.getArea()*a.getDensity()
 //                + b.getThickness()*b.getArea()*b.getDensity();
-        return intensity;
+//        return intensity;
     }
 
     private void logMaxIntensity(float intensity) {
@@ -618,7 +617,7 @@ public class Planet {
         return points.size - 1;
     }
 
-    private int getMidpointFromIndices(int p1, int p2) {
+    private int getMidpointFromIndicesAndStore(int p1, int p2) {
         Long key = getHashKeyFromIndices(p1, p2);
         int i;
         if(midpointCache.get(key) != null) {
@@ -632,6 +631,12 @@ public class Planet {
             midpointCache.put(key, i);
         }
         return i;
+    }
+
+    private Vector3 getMidpointFromIndices(int p1, int p2) {
+        Vector3 u = points.get(p1);
+        Vector3 v = points.get(p2);
+        return u.cpy().add(v).scl(0.5f);
     }
 
     private void addFaceEdgeToNbrCache(Face f, int p1, int p2) {
