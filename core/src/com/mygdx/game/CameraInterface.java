@@ -3,26 +3,22 @@ package com.mygdx.game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
-import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
-import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 
-import static java.lang.Math.log;
-
-public class CameraInterface implements InputProcessor{
+public class CameraInterface implements InputProcessor {
 
 	private PerspectiveCamera cam;
-	float u, v;
+	private float u, v;
 	private Vector2 lastTouch = new Vector2();
 	
 	Vector3 center;
 	
-	private boolean up, down, left, right, leftClicked;
+	private boolean up, down, left, right, leftMouseClicked, leftMouseHeld;
 	
 	float radius;
-	float orbitSpeed = 40.0f; // should be faster farther away
+	private float orbitSpeed = 40.0f; // should be faster farther away
 	
 	public CameraInterface(PerspectiveCamera cam) {
 		this.cam = cam;
@@ -30,13 +26,17 @@ public class CameraInterface implements InputProcessor{
 	}
 	
 	public void update(float dt){
-		// TODO: Touch drag continues moving when the cursor hasn't moved since last update.
+	    // TODO: Impose vertical limits on camera to avoid erratic spinning
 		this.cam.rotateAround(center, cam.up, u*dt);
 		this.cam.rotateAround(center, cam.up.cpy().crs(cam.direction), v*dt);
 		cam.up.set(Vector3.Y);
 		cam.lookAt(center);
 		cam.update();
-		
+        if(leftMouseHeld) {
+            u = 0;
+            v = 0;
+            leftMouseHeld = false;
+        }
 	}
 	
 	@Override
@@ -91,8 +91,8 @@ public class CameraInterface implements InputProcessor{
 	
 	@Override
 	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-		leftClicked = (button == Input.Buttons.LEFT);
-		if(!leftClicked) return false;
+		leftMouseClicked = (button == Input.Buttons.LEFT);
+		if(!leftMouseClicked) return false;
 
 		lastTouch.set(screenX, screenY);
 		return true;
@@ -126,7 +126,9 @@ public class CameraInterface implements InputProcessor{
 
 	@Override
 	public boolean touchDragged(int screenX, int screenY, int pointer) {
-		if(!leftClicked) return false;
+		if(!leftMouseClicked) {
+		    return false;
+        }
 
 		Vector2 newTouch = new Vector2(screenX, screenY);
 		Vector2 delta = newTouch.cpy().sub(lastTouch);
@@ -135,6 +137,7 @@ public class CameraInterface implements InputProcessor{
 		v = delta.y * orbitSpeed/2;
 
 		lastTouch = newTouch;
+		leftMouseHeld = true;
 		return true;
 	}
 	

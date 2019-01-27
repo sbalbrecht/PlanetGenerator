@@ -17,61 +17,61 @@ public class Tile {
     private float density;
     private float latitude;
     private float longitude;
-    
+    private float thickness;
+
     public float getTemperature(){
         return temperature;
     }
-    
+
     public float getElevation(){
         return elevation;
     }
-    
+
     public float getArea(){
         return area;
     }
-    
+
     public float getPower(){
         return power;
     }
-    
+
     public void setPower(float power){
         this.power = power;
     }
-    
+
     public float getDensity(){
         return density;
     }
-    
+
     public void setDensity(float density){
         this.density = density;
     }
-    
+
     public float getLatitude(){
         return latitude;
     }
-    
+
     public void setLatitude(float latitude){
         this.latitude = latitude;
     }
-    
+
     public float getLongitude(){
         return longitude;
     }
-    
+
     public void setLongitude(float longitude){
         this.longitude = longitude;
     }
-    
+
     public float getThickness(){
         return thickness;
     }
-    
+
     public void setThickness(float thickness){
         this.thickness = thickness;
     }
-    
-    public float thickness;
-    
+
+
     public Vector3 tangentialVelocity;
 
     public boolean drawn = false;
