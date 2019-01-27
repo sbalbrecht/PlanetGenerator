@@ -70,7 +70,7 @@ public class PlanetGenerator extends ApplicationAdapter {
         Log log = new Log();
 
         log.start("Generation time");
-        Planet planet = new Planet(new Vector3(0, 0, 0), PLANET_RADIUS, 4);
+        Planet planet = new Planet(new Vector3(0, 0, 0), PLANET_RADIUS, 6);
 
         cameraInterface = new CameraInterface(cam);
         cameraInterface.center = planet.position;
