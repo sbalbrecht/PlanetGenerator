@@ -385,7 +385,7 @@ public class Planet {
             }
             else{
                 plate.density_gm_cm3 = 2.0f + r.nextFloat()/2.0f;
-                plate.thickness_km = 5.0f + r.nextFloat()*70.0f;
+                plate.thickness_km = 30.0f + r.nextFloat()*5.0f;
             }
             for (Tile t: plate.members){
                 t.setThickness(plate.thickness_km);
@@ -436,9 +436,7 @@ public class Planet {
                         if(tileCollisions.get(edgeKey) != null) {
                             intensity = tileCollisions.get(edgeKey);
                         } else {
-//                            intensity = getCollisionIntensity(borderTile, neighbor);
                             intensity = getCollisionIntensity(borderTile, neighbor, edgeP1, edgeP2);
-//                            System.out.println("sheldon: " + getCollisionIntensity(borderTile, neighbor) + " steve: " + intensity);
                             logMaxIntensity(intensity);
                             tileCollisions.put(edgeKey, intensity);
                             // TODO: determine type of collision with plateCollision map
@@ -553,7 +551,7 @@ public class Planet {
         }
     }
     
-    private void addBaseTileAttributes(){
+    private void addBaseTileAttributes() {
         Plate parent;
         for (Tile t : tiles){
             parent = plates.get(t.plateId);
@@ -565,11 +563,16 @@ public class Planet {
         }
     }
     
-    private void randomizeTileElevations(){
+    private void randomizeTileElevations() {
         for (Tile t : tiles){
-            t.setElevation((0.5f - (float)Math.random())*100.0f);
+            if (plates.get(t.plateId).oceanic) {
+                t.setElevation(-t.getThickness()/2);
+            } else {
+                t.setElevation(t.getThickness()/2);
+            }
         }
     }
+
     private void randomizeTileTemperatures(){
         for (Tile t : tiles){
             t.setTemperature((float)Math.random()*300.0f);
@@ -611,8 +614,6 @@ public class Planet {
     }
 
     private int addVertex(Vector3 p) {
-//        float length = (float)Math.sqrt(p.x * p.x + p.y * p.y + p.z * p.z);
-//        points.add(new Vector3(p.x/length, p.y/length, p.z/length));
         points.add(new Vector3(p));
         return points.size - 1;
     }

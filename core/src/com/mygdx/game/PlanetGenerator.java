@@ -70,7 +70,7 @@ public class PlanetGenerator extends ApplicationAdapter {
         Log log = new Log();
 
         log.start("Generation time");
-        Planet planet = new Planet(new Vector3(0, 0, 0), PLANET_RADIUS, 6);
+        Planet planet = new Planet(new Vector3(0, 0, 0), PLANET_RADIUS, 4);
 
         cameraInterface = new CameraInterface(cam);
         cameraInterface.center = planet.position;
@@ -86,7 +86,7 @@ public class PlanetGenerator extends ApplicationAdapter {
 //        models.add(buildWireframe(planet));
 //        models.add(buildAxes());
         models.add(buildPlateDirectionArrows(planet));
-//        models.add(buildMajorLatLines(planet));
+        models.add(buildMajorLatLines(planet));
         models.add(buildPlateCollisions(planet));
 //        models.add(buildLatLongSpikes(planet));
 
@@ -96,6 +96,7 @@ public class PlanetGenerator extends ApplicationAdapter {
         log.end();
 
 		layers.add(new FrameRateLayer());
+		layers.add(new TileInfoLayer());
 		//layers.add(til);
 
 	}
@@ -108,6 +109,7 @@ public class PlanetGenerator extends ApplicationAdapter {
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
+        updateTileInfoLayer();
 		for (int i = 0; i < layers.size; i++){
 			if(layers.get(i).getOn()) layers.get(i).update();
 		}
@@ -149,6 +151,9 @@ public class PlanetGenerator extends ApplicationAdapter {
     public void pause () {
     }
 
+    private void updateTileInfoLayer() {
+
+    }
 
     private Model buildIcosahedron(Planet planet) {
         modelBuilder.begin();
@@ -300,7 +305,7 @@ public class PlanetGenerator extends ApplicationAdapter {
         EllipseShapeBuilder.build(partBuilder, tropicRadius*1.000010f, 480, new Vector3(0f,tropicHeight, 0f),new Vector3(0f,1f,0f));
         EllipseShapeBuilder.build(partBuilder, tropicRadius*1.000010f, 480, new Vector3(0f,-tropicHeight, 0f),new Vector3(0f,1f,0f));
 
-        lineColor = new Material(ColorAttribute.createDiffuse(Color.CYAN));
+        lineColor = new Material(ColorAttribute.createDiffuse(Color.BLUE));
         partBuilder = modelBuilder.part("polarCircles", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
         EllipseShapeBuilder.build(partBuilder, arcticRadius*1.000010f, 480, new Vector3(0f, arcticHeight,0f),new Vector3(0f,1f,0f));
         EllipseShapeBuilder.build(partBuilder, arcticRadius*1.000010f, 480, new Vector3(0f, -arcticHeight, 0f),new Vector3(0f,1f,0f));
@@ -327,6 +332,7 @@ public class PlanetGenerator extends ApplicationAdapter {
         l2.end();
         return modelBuilder.end();
     }
+
     private Model buildPlateDirectionArrows(Planet planet) {
         modelBuilder.begin();
         int i = 0;

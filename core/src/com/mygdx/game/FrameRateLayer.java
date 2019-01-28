@@ -8,7 +8,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
-public class FrameRateLayer extends Layer implements Disposable{
+public class FrameRateLayer extends Layer implements Disposable {
 
     protected Stage stage;
     protected Label label;
