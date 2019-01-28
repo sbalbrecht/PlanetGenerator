@@ -565,7 +565,11 @@ public class Planet {
     
     private void randomizeTileElevations() {
         for (Tile t : tiles){
-            t.setElevation((0.5f - (float)Math.random())*100.0f);
+            if (plates.get(t.plateId).oceanic) {
+                t.setElevation(-t.getThickness()/2);
+            } else {
+                t.setElevation(t.getThickness()/2);
+            }
         }
     }
 

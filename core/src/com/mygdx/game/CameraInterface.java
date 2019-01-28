@@ -19,8 +19,10 @@ public class CameraInterface implements InputProcessor {
 	
 	float radius;
 	private float orbitSpeed = 40.0f; // should be faster farther away
-	
-	public CameraInterface(PerspectiveCamera cam) {
+    private final int touchSpeedReductionFactor = 3;
+
+
+    public CameraInterface(PerspectiveCamera cam) {
 		this.cam = cam;
 		Gdx.input.setInputProcessor(this);
 	}
@@ -102,20 +104,19 @@ public class CameraInterface implements InputProcessor {
 	public boolean touchUp(int screenX, int screenY, int pointer, int button) {
 		Vector2 newTouch = new Vector2(screenX, screenY);
 		Vector2 delta = newTouch.cpy().sub(lastTouch);
-
 		if(delta.x < 0) {
-			u = right ? delta.x * orbitSpeed/2 : 0.0f;
+			u = right ? delta.x * orbitSpeed/touchSpeedReductionFactor : 0.0f;
 			left = false;
 		} else {
-			u = left ? -delta.x * orbitSpeed/2 : 0.0f;
+			u = left ? -delta.x * orbitSpeed/touchSpeedReductionFactor : 0.0f;
 			right = false;
 		}
 
 		if(delta.y < 0) {
-			v = down ? delta.y * orbitSpeed/2 : 0.0f;
+			v = down ? delta.y * orbitSpeed/touchSpeedReductionFactor : 0.0f;
 			up = false;
 		} else {
-			v = up ? -delta.y * orbitSpeed/2 : 0.0f;
+			v = up ? -delta.y * orbitSpeed/touchSpeedReductionFactor : 0.0f;
 			down = false;
 		}
 
@@ -133,8 +134,8 @@ public class CameraInterface implements InputProcessor {
 		Vector2 newTouch = new Vector2(screenX, screenY);
 		Vector2 delta = newTouch.cpy().sub(lastTouch);
 
-		u = -delta.x * orbitSpeed/2;
-		v = delta.y * orbitSpeed/2;
+		u = -delta.x * orbitSpeed/touchSpeedReductionFactor;
+		v = delta.y * orbitSpeed/touchSpeedReductionFactor;
 
 		lastTouch = newTouch;
 		leftMouseHeld = true;
