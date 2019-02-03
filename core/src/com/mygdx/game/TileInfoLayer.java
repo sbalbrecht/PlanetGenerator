@@ -17,6 +17,7 @@ public class TileInfoLayer extends Layer implements Disposable {
 	private String information;
 	private Stage stage;
 	private Tile tile;
+	private Plate plate;
 	
 	public TileInfoLayer() {
 		stage = new Stage();
@@ -34,30 +35,36 @@ public class TileInfoLayer extends Layer implements Disposable {
 	}
 
 	@Override
-	public void update() {
-
-	}
+	public void update() {}
 
 	@Override
 	public void render(){
-        label.setPosition(0,stage.getViewport().getScreenHeight()-20);
+        label.setPosition(0,stage.getViewport().getScreenHeight()-90);
 		stringBuilder.setLength(0);
-		if (tile == null) {
-		    stringBuilder.append("");
-        } else {
-		    stringBuilder.append(" Elevation: ").append(tile.getElevation());
-
+		if (tile != null) {
+		    displayTileInfo();
+            label.setText(stringBuilder);
+            stage.draw();
         }
-		label.setText(stringBuilder);
-		stage.draw();
 	}
 	
 	public void setTile(Tile t){
 		tile = t;
 	}
-	
+
+	public void setPlate(Plate p) { plate = p; }
+
 	@Override
 	public void dispose(){
 	    font.dispose();
 	}
+
+	private void displayTileInfo() {
+	    stringBuilder.append(" Index: ").append(tile.centroid)
+                .append("\n Lat:   ").append(tile.getLatitude())
+                .append("\n Long: ").append(tile.getLongitude())
+                .append("\n Elevation: ").append(tile.getElevation())
+                .append("\n PlateID: ").append(tile.plateId)
+                .append("\n Oceanic: ").append(plate.oceanic);
+    }
 }

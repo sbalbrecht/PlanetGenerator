@@ -26,7 +26,7 @@ public class CameraInterface implements InputProcessor {
 		this.cam = cam;
 		Gdx.input.setInputProcessor(this);
 	}
-	
+
 	public void update(float dt){
 	    // TODO: Impose vertical limits on camera to avoid erratic spinning
 		this.cam.rotateAround(center, cam.up, u*dt);
@@ -154,7 +154,7 @@ public class CameraInterface implements InputProcessor {
                                           (center.y - cam.position.y)*scaledAmount,
                                           (center.z - cam.position.z)*scaledAmount);
         float newDistanceFromCenter = cam.position.cpy().add(translation).dst(center);
-        if(newDistanceFromCenter < 10.1f || newDistanceFromCenter > 36f)
+        if(newDistanceFromCenter < 11f || newDistanceFromCenter > 36f)
             translation = new Vector3(0,0,0);
 		cam.position.add(translation);
 		

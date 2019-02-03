@@ -1,19 +1,18 @@
 package com.mygdx.game;
 
-import com.badlogic.gdx.ApplicationAdapter;
-import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.*;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.EllipseShapeBuilder;
+import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.util.Log;
 import com.mygdx.game.util.Units;
 
@@ -22,22 +21,21 @@ import java.util.Random;
 
 import static com.mygdx.game.util.ColorUtils.getComplementary;
 
-public class PlanetGenerator extends ApplicationAdapter {
-    private CameraInterface cameraInterface;
-    private Environment environment;
-    private MeshPartBuilder partBuilder;
-    private Model model;
-    private ModelBatch modelBatch;
-    private ModelBuilder modelBuilder;
-    private ModelInstance instance;
-    private PerspectiveCamera cam;
-    private Ray cursor;
-    private Viewport viewport;
+public class PlanetGenerator extends InputAdapter implements ApplicationListener {
+    private CameraInterface      cameraInterface;
+    private Environment          environment;
+    private MeshPartBuilder      partBuilder;
+    private Model                model;
+    private ModelBatch           modelBatch;
+    private ModelBuilder         modelBuilder;
+    private ModelInstance        instance;
+    private PerspectiveCamera    cam;
+    private Planet               planet;
 
-    public TileInfoLayer til;
+    public  TileInfoLayer        til;
     
-    public Array<Layer> layers;
-    private Array<Model> models = new Array<Model>();
+    public  Array<Layer>         layers;
+    private Array<Model>         models = new Array<Model>();
     private Array<ModelInstance> modelInstances = new Array<ModelInstance>();
 
     private final int TILE_LIMIT = 1000;
@@ -45,8 +43,6 @@ public class PlanetGenerator extends ApplicationAdapter {
 
     @Override
 	public void create () {
-        super.create();
-        cursor = new Ray();
         layers = new Array<Layer>();
         modelBatch = new ModelBatch();
 		
@@ -58,22 +54,22 @@ public class PlanetGenerator extends ApplicationAdapter {
 
         // Camera
 	    cam = new PerspectiveCamera(50, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        viewport = new ScreenViewport(cam);
         float camPosMultiplier = 1.6f;
         float camCoordinate = camPosMultiplier * PLANET_RADIUS;
 	    cam.position.set(camCoordinate,camCoordinate,camCoordinate);
 	    cam.lookAt(0f,0f,0f);
-	    cam.near = 0.1f;
-	    cam.far = 50000000.0f;
+	    cam.near = 1f;
+	    cam.far = 50000.0f;
 	    cam.update();
 
         Log log = new Log();
 
         log.start("Generation time");
-        Planet planet = new Planet(new Vector3(0, 0, 0), PLANET_RADIUS, 4);
+        planet = new Planet(new Vector3(0, 0, 0), PLANET_RADIUS, 4);
 
         cameraInterface = new CameraInterface(cam);
         cameraInterface.center = planet.position;
+	    Gdx.input.setInputProcessor(new InputMultiplexer(this, cameraInterface));
 
         /* Build model */
         log.start("Build time");
@@ -95,10 +91,9 @@ public class PlanetGenerator extends ApplicationAdapter {
         }
         log.end();
 
+		til = new TileInfoLayer();
+		layers.add(til);
 		layers.add(new FrameRateLayer());
-		layers.add(new TileInfoLayer());
-		//layers.add(til);
-
 	}
 
 	@Override
@@ -109,7 +104,6 @@ public class PlanetGenerator extends ApplicationAdapter {
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
-        updateTileInfoLayer();
 		for (int i = 0; i < layers.size; i++){
 			if(layers.get(i).getOn()) layers.get(i).update();
 		}
@@ -130,6 +124,7 @@ public class PlanetGenerator extends ApplicationAdapter {
 			layers.get(i).dispose();
 		}
         modelBatch.dispose();
+		modelInstances.clear();
         for(Model model : models) {
 		    model.dispose();
         }
@@ -141,7 +136,6 @@ public class PlanetGenerator extends ApplicationAdapter {
 
     @Override
     public void resize (int width, int height) {
-        viewport.update(width, height);
         for (int i = 0; i < layers.size; i++){
             if(layers.get(i).getOn()) layers.get(i).resize(width, height);
         }
@@ -151,8 +145,31 @@ public class PlanetGenerator extends ApplicationAdapter {
     public void pause () {
     }
 
-    private void updateTileInfoLayer() {
+    public boolean mouseMoved (int screenX, int screenY) {
+        Vector3 intersection = getMouseIntersection(screenX, screenY);
+        if (intersection.x != 0) {
+            float longitude = MathUtils.atan2(intersection.z, intersection.x);
+            float latitude = MathUtils.atan2(
+                    (float)Math.sqrt(intersection.x*intersection.x + intersection.z*intersection.z), intersection.y);
+            Tile t = planet.getNearestLatLong(latitude, longitude);
+//            System.out.printf("Lat: %5.3f Lon: %5.3f\n", latitude, longitude);
+            til.setTile(t);
+            til.setPlate(planet.plates.get(t.plateId));
+        } else {
+            til.setTile(null);
+            til.setPlate(null);
+        }
+        return false;
+    }
 
+    private Vector3 getMouseIntersection(int screenX, int screenY) {
+        Vector3 position = new Vector3(0,0,0);
+        Vector3 intersection = new Vector3();
+
+        Ray ray = cam.getPickRay(screenX, screenY);
+
+        return (Intersector.intersectRaySphere(ray, position, PLANET_RADIUS, intersection))
+                ? intersection : position;
     }
 
     private Model buildIcosahedron(Planet planet) {
