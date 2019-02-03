@@ -122,5 +122,4 @@ public class Tile {
         this.area = a;
     }
     
-    
 }

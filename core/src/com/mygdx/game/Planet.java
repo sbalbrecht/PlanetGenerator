@@ -63,7 +63,7 @@ public class Planet {
         scalePoints(points, radius);
     
         log.start("Assemble tileMap");
-            tileMap = new TileMap(tiles);
+            tileMap = new TileMap(tiles, radius);
         log.end();
     
 //        System.out.println("Faces:  " + faces.size);
@@ -604,7 +604,7 @@ public class Planet {
     }
 
     public Tile getNearestLatLong(float latitude, float longitude){
-        return this.tileMap.getNearest(latitude, longitude, points);
+        return this.tileMap.getNearest(latitude, longitude);
     }
 
     private void scalePoints(Array<Vector3> points, float scale) {
