@@ -31,15 +31,15 @@ public class TileInfoLayer extends Layer implements Disposable {
 
 	@Override
 	public void resize(int screenWidth, int screenHeight) {
-		stage.getViewport().update(screenWidth, screenHeight, true);
+	    stage.getViewport().update(screenWidth, screenHeight, true);
 	}
 
 	@Override
 	public void update() {}
 
 	@Override
-	public void render(){
-        label.setPosition(0,stage.getViewport().getScreenHeight()-90);
+	public void render() {
+        label.setPosition(0,stage.getViewport().getScreenHeight() - 118); // TODO: magic number
 		stringBuilder.setLength(0);
 		if (tile != null) {
 		    displayTileInfo();
@@ -61,10 +61,15 @@ public class TileInfoLayer extends Layer implements Disposable {
 
 	private void displayTileInfo() {
 	    stringBuilder.append(" Index: ").append(tile.centroid)
-                .append("\n Lat:   ").append(tile.getLatitude())
+                .append("\n Lat: ").append(tile.getLatitude())
                 .append("\n Long: ").append(tile.getLongitude())
                 .append("\n Elevation: ").append(tile.getElevation())
-                .append("\n PlateID: ").append(tile.plateId)
-                .append("\n Oceanic: ").append(plate.oceanic);
+                .append("\n\n PlateID: ").append(tile.plateId)
+                .append("\n Oceanic: ").append(plate.oceanic)
+                .append("\n Angular speed: ").append(plate.angularSpeed_rad_yr).append(" rad/yr")
+                .append("\n Density: ").append(plate.density_gm_cm3).append(" gm/cm^3")
+                .append("\n Thickness: ").append(plate.thickness_km).append(" km")
+                .append("\n Plate members: ").append(plate.members.size)
+                .append("\n Plate border: ").append(plate.border.size);
     }
 }
