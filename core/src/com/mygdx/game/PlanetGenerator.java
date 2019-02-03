@@ -10,9 +10,10 @@ import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.EllipseShapeBuilder;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.util.Log;
 import com.mygdx.game.util.Units;
 
@@ -22,20 +23,21 @@ import java.util.Random;
 import static com.mygdx.game.util.ColorUtils.getComplementary;
 
 public class PlanetGenerator extends InputAdapter implements ApplicationListener {
-    private CameraInterface      cameraInterface;
-    private Environment          environment;
-    private MeshPartBuilder      partBuilder;
-    private Model                model;
-    private ModelBatch           modelBatch;
-    private ModelBuilder         modelBuilder;
-    private ModelInstance        instance;
+    private CameraInterface      cameraInterface;   // For custom movement controls
+    private Environment          environment;       // For lighting
+    private MeshPartBuilder      partBuilder;       // For building models
+    private Model                model;             // For building models
+    private ModelBatch           modelBatch;        // For rendering models
+    private ModelBuilder         modelBuilder;      // For building models
+    private ModelInstance        instance;          // For rendering models
     private PerspectiveCamera    cam;
     private Planet               planet;
+    private Viewport             viewport;          // For proper screen resizing
 
-    public  TileInfoLayer        til;
+    public  TileInfoLayer        til;               // For displaying tile / plate info
     
     public  Array<Layer>         layers;
-    private Array<Model>         models = new Array<Model>();
+    private Array<Model>         models         = new Array<Model>();
     private Array<ModelInstance> modelInstances = new Array<ModelInstance>();
 
     private final int TILE_LIMIT = 1000;
@@ -46,13 +48,13 @@ public class PlanetGenerator extends InputAdapter implements ApplicationListener
         layers = new Array<Layer>();
         modelBatch = new ModelBatch();
 		
-        // Lighting
+        /* Set lighting */
         environment = new Environment();
         environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 1f, 1f, 1f, 1f));
 //        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.2f, 0.2f, 0.2f, 0.2f));
 //        environment.add(new DirectionalLight().set(0.95f, 0.95f, 0.95f, -1, 0, 0));
 
-        // Camera
+        /* Set camera */
 	    cam = new PerspectiveCamera(50, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         float camPosMultiplier = 1.6f;
         float camCoordinate = camPosMultiplier * PLANET_RADIUS;
@@ -61,11 +63,13 @@ public class PlanetGenerator extends InputAdapter implements ApplicationListener
 	    cam.near = 1f;
 	    cam.far = 50000.0f;
 	    cam.update();
+	    viewport = new ScreenViewport(cam);
 
         Log log = new Log();
 
+        /* Generate planet */
         log.start("Generation time");
-        planet = new Planet(new Vector3(0, 0, 0), PLANET_RADIUS, 4);
+        planet = new Planet(new Vector3(0, 0, 0), PLANET_RADIUS, 5);
 
         cameraInterface = new CameraInterface(cam);
         cameraInterface.center = planet.position;
@@ -91,31 +95,34 @@ public class PlanetGenerator extends InputAdapter implements ApplicationListener
         }
         log.end();
 
+        /* Set up additional layers */
 		til = new TileInfoLayer();
+
 		layers.add(til);
 		layers.add(new FrameRateLayer());
 	}
 
 	@Override
 	public void render () {
-    	// TODO: Create planet update method to integrate in render loop. Handle generation in separate thread.
+    	// TODO: Create planet buildTileMap method to integrate in render loop. Handle generation in separate thread.
         cameraInterface.update(Gdx.graphics.getDeltaTime());
 
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-
-		for (int i = 0; i < layers.size; i++){
-			if(layers.get(i).getOn()) layers.get(i).update();
-		}
-		for (int i = 0; i < layers.size; i++){
-			if(layers.get(i).getOn()) layers.get(i).render();
-		}
 
 		modelBatch.begin(cam);
         for (ModelInstance instance : modelInstances) {
             modelBatch.render(instance, environment);
         }
         modelBatch.end();
+
+        for (int i = 0; i < layers.size; i++){
+            Layer layer = layers.get(i);
+			if(layer.isActive()) {
+                layer.update();
+                layer.render();
+            }
+		}
 	}
 
 	@Override
@@ -136,8 +143,9 @@ public class PlanetGenerator extends InputAdapter implements ApplicationListener
 
     @Override
     public void resize (int width, int height) {
+        viewport.update(width, height);
         for (int i = 0; i < layers.size; i++){
-            if(layers.get(i).getOn()) layers.get(i).resize(width, height);
+            if(layers.get(i).isActive()) layers.get(i).resize(width, height);
         }
     }
 
@@ -146,20 +154,22 @@ public class PlanetGenerator extends InputAdapter implements ApplicationListener
     }
 
     public boolean mouseMoved (int screenX, int screenY) {
-        Vector3 intersection = getMouseIntersection(screenX, screenY);
-        if (intersection.x != 0) {
-            float longitude = MathUtils.atan2(intersection.z, intersection.x);
-            float latitude = MathUtils.atan2(
-                    (float)Math.sqrt(intersection.x*intersection.x + intersection.z*intersection.z), intersection.y);
-            Tile t = planet.getNearestLatLong(latitude, longitude);
-//            System.out.printf("Lat: %5.3f Lon: %5.3f\n", latitude, longitude);
+        updateTileInfoLayer(screenX, screenY);
+        return false;
+    }
+
+    private void updateTileInfoLayer(int screenX, int screenY) {
+        Vector3 intxn = getMouseIntersection(screenX, screenY);
+        if (intxn != null) {
+            float longitude = MathUtils.atan2(intxn.z, intxn.x);
+            float latitude = MathUtils.atan2((float)Math.sqrt(intxn.x*intxn.x + intxn.z*intxn.z), intxn.y);
+            Tile t = planet.getNearestTile(latitude, longitude);
             til.setTile(t);
             til.setPlate(planet.plates.get(t.plateId));
         } else {
             til.setTile(null);
             til.setPlate(null);
         }
-        return false;
     }
 
     private Vector3 getMouseIntersection(int screenX, int screenY) {
@@ -169,7 +179,7 @@ public class PlanetGenerator extends InputAdapter implements ApplicationListener
         Ray ray = cam.getPickRay(screenX, screenY);
 
         return (Intersector.intersectRaySphere(ray, position, PLANET_RADIUS, intersection))
-                ? intersection : position;
+                ? intersection : null;
     }
 
     private Model buildIcosahedron(Planet planet) {
@@ -340,7 +350,7 @@ public class PlanetGenerator extends InputAdapter implements ApplicationListener
         l2.start("Generate pickCircles");
         for (int i = 0; i < 32; i++){
             for (int j = 0; j < 4; j++){
-                p1 = planet.points.get(planet.getNearestLatLong((i*(pi/16.0f))-pi, j*pi/4.0f).centroid);
+                p1 = planet.points.get(planet.getNearestTile((i*(pi/16.0f))-pi, j*pi/4.0f).centroid);
                 p2 = p1.cpy().scl(1.5f);
                 partBuilder.line(p1, p2);
             }
@@ -379,7 +389,7 @@ public class PlanetGenerator extends InputAdapter implements ApplicationListener
     private Vector3[] getArrowVertices(Planet planet, Tile t, Vector3 direction) {
         float arrowHeight = (float)
                 ((764428 / (planet.plateCollisionTimeStepInMillionsOfYears * Units.CM_YR_TO_M_MA))
-                        * Math.exp(-0.653 * planet.subdivisions));
+                        * Math.exp(-0.653 * planet.numSubdivisions));
         float baseWidthHalf;
         if(t.pts.size == 6) {
             baseWidthHalf = planet.points.get(t.pts.get(0)).dst(planet.points.get(t.pts.get(3)))*0.1f;
@@ -457,7 +467,7 @@ public class PlanetGenerator extends InputAdapter implements ApplicationListener
     private Vector3[] getCollisionRectangleVertices(Planet planet, int[] edge) {
         Vector3[] vertices = new Vector3[5];
         Vector3 p1 = planet.points.get(edge[0]), p2 = planet.points.get(edge[1]);
-        int subdivisions = planet.subdivisions;
+        int subdivisions = planet.numSubdivisions;
         // polynomial eqn sets width of edge based on level of subdivision
         float baseWidthHalf = (float)(0.0027*Math.pow(subdivisions, 2.0)-0.0416*subdivisions+0.161);
         if(subdivisions > 6) baseWidthHalf *= 2;

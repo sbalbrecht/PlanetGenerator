@@ -14,7 +14,7 @@ import static com.mygdx.game.util.Units.KM_TO_CM;
 public class Planet {
     public int PLATE_COUNT = 72;
     public int plateCollisionTimeStepInMillionsOfYears = 50;
-    public int subdivisions;
+    public int numSubdivisions;
     private float radius;
     float max_collision_intensity = 0f;
     float max_elevation = 0f;
@@ -39,21 +39,21 @@ public class Planet {
     Planet(Vector3 position, float radius, int subdivisions) {
         this.radius = radius;
         this.position = position;
-        this.subdivisions = subdivisions;
-        generateIcosphere(subdivisions);
+        this.numSubdivisions = subdivisions;
+        generateIcosphere();
     }
 
-	private void generateIcosphere(int subdivisions){
+	private void generateIcosphere(){
         Log log = new Log();
 
         generateIcosahedron();
 		
 		log.start("Subdivision");
-		    subdivide(subdivisions);
+		    subdivideFaces(numSubdivisions);
 
         log.start("Dual Conversion");
             convertToTruncatedIcosphere();
-
+//            faces = null;     // array no longer needed if rendering truncated icosphere
 //            System.out.println(points.get(tiles.get(0).centroid).dst(points.get(tiles.get(0).nbrs.get(0).centroid)));
 
         log.start("Plate generation");
@@ -114,12 +114,12 @@ public class Planet {
     }
 
     /* subdivides faces n times */
-    private void subdivide(int degree) {
-        for(int i = 0; i < degree; i++) {
+    private void subdivideFaces(int numSubdivisions) {
+        for(int i = 0; i < numSubdivisions; i++) {
             Array<Face> newFaces = new Array<Face>();
             for(Face face : faces) {
                 Face[] subdividedFaces = subdivideFace(face);
-                if(i == degree - 1) {
+                if(i == numSubdivisions - 1) {
                     setFaceNeighbors(subdividedFaces);
                 }
  				newFaces.addAll(subdividedFaces);
@@ -191,7 +191,6 @@ public class Planet {
             setTileNeighbors(t);
             tiles.add(t);
         }
-//        faces = null;
     }
 
     private Tile getTileFromFace(Face initialFace, int tileCentroid) {
@@ -449,7 +448,7 @@ public class Planet {
     }
 
     private void simulateCollisions() {
-        int propagationLimit = (int)(Math.ceil(0.0625*Math.exp(0.6931*subdivisions)));
+        int propagationLimit = (int)(Math.ceil(0.0625*Math.exp(0.6931* numSubdivisions)));
         for (Plate plate : plates.values()) {
             for (Tile bdr : plate.border) {
                 float sumOfIntensitiesActingOnTile = sumIntensities(bdr);
@@ -492,7 +491,7 @@ public class Planet {
         float propagationLimit = 0.068f;
 //        System.out.printf("intensity: %.3f dst: %.3f new Elev: %.3f  tilesAffectedSize: %d\n", intensity, distanceFromEpicenter, elevationChange, tilesAlreadyAffected.size);
         tilesAlreadyAffected.add(origin);
-        if(distanceFromEpicenter > propagationLimit || subdivisions < 4) {
+        if(distanceFromEpicenter > propagationLimit || numSubdivisions < 4) {
             return tilesAlreadyAffected;
         }
         origin.setElevation(origin.getElevation() + elevationChange);
@@ -603,8 +602,8 @@ public class Planet {
         }
     }
 
-    public Tile getNearestLatLong(float latitude, float longitude){
-        return this.tileMap.getNearest(latitude, longitude);
+    public Tile getNearestTile(float latitude, float longitude){
+        return tileMap.getNearest(latitude, longitude);
     }
 
     private void scalePoints(Array<Vector3> points, float scale) {

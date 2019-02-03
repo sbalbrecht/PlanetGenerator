@@ -1,64 +1,52 @@
 package com.mygdx.game;
 
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
-import com.mygdx.game.util.Log;
-
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Map;
 
 public class TileMap{
-	Array<Tile> tiles;
-	Array<Tile> tiles_long;
-	Array<Tile> tiles_lat;
-	float planetRadius2;
-	float range;
-	//float[] u, v; // u is Longitude, v is latitude. Values from -pi to pi.
+	private Array<Tile> tiles;
+	private Array<Tile> tiles_long;
+	private Array<Tile> tiles_lat;
+	private float planetRadius2;
+	private float range;
 
+	// Latitude ranges from 0 (north) to pi (south)
+    // Longitude ranges from -pi to pi
 	public TileMap(Array<Tile> tiles, float planetRadius){
-	    this.planetRadius2 = planetRadius*planetRadius;
 		this.tiles = tiles;
+	    this.planetRadius2 = planetRadius*planetRadius;
+
+	    // Calculate range of indices to look at when searching for nearest tiles
         range = (float)(5.158*Math.pow(tiles.size, -0.51));
-        System.out.println(range);
-        tiles_lat = new Array<Tile>();
-		tiles_long = new Array<Tile>();
-		tiles_long.ensureCapacity(tiles.size);
-		tiles_lat.ensureCapacity(tiles.size);
-		update();
+		buildTileMap();
 	}
 
-	public void update(){
-		tiles_lat.clear();
-		tiles_long.clear();
-		//1: sort copy of array by longitudes
-		//2: sort copy of array by latitudes
-		Tile[] temp = new Tile[tiles.size];
-		for (int i = 0; i < temp.length; i++){
-			temp[i] = tiles.get(i);
+	public void buildTileMap() {
+        tiles_lat = new Array<Tile>();
+		tiles_long = new Array<Tile>();
+		tiles_lat.ensureCapacity(tiles.size);
+		tiles_long.ensureCapacity(tiles.size);
+
+		Tile[] sortedTiles = new Tile[tiles.size];
+		for (int i = 0; i < sortedTiles.length; i++){
+			sortedTiles[i] = tiles.get(i);
 		}
 
-		Arrays.sort(temp, new Comparator<Tile>(){
+		Arrays.sort(sortedTiles, new Comparator<Tile>(){
 			@Override public int compare(Tile a, Tile b){
-				if(a.getLongitude() < b.getLongitude()) return -1;
-				if(a.getLongitude() > b.getLongitude()) return 1;
-				else return 0;
+				return Float.compare(a.getLatitude(), b.getLatitude());
 			}
 		});
-		tiles_long.addAll(temp);
+		tiles_lat.addAll(sortedTiles);
 
-		for (int i = 0; i < temp.length; i++){
-			temp[i] = tiles.get(i);
-		}
-		Arrays.sort(temp, new Comparator<Tile>(){
+		Arrays.sort(sortedTiles, new Comparator<Tile>(){
 			@Override public int compare(Tile a, Tile b){
-				if(a.getLatitude() < b.getLatitude()) return -1;
-				if(a.getLatitude() > b.getLatitude()) return 1;
-				else return 0;
-			}
+                return Float.compare(a.getLongitude(), b.getLongitude());
+            }
 		});
-		tiles_lat.addAll(temp);
+		tiles_long.addAll(sortedTiles);
 	}
 
 	public Tile getNearest(float latitude, float longitude) {
