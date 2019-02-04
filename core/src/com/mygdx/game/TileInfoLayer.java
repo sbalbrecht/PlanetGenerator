@@ -39,7 +39,7 @@ public class TileInfoLayer extends Layer implements Disposable {
 
 	@Override
 	public void render() {
-        label.setPosition(0,stage.getViewport().getScreenHeight() - 118); // TODO: magic number
+        label.setPosition(0,stage.getViewport().getScreenHeight() - 122); // TODO: magic number
 		stringBuilder.setLength(0);
 		if (tile != null) {
 		    displayTileInfo();
@@ -63,7 +63,7 @@ public class TileInfoLayer extends Layer implements Disposable {
 	    stringBuilder.append(" Index: ").append(tile.centroid)
                 .append("\n Lat: ").append(tile.getLatitude())
                 .append("\n Long: ").append(tile.getLongitude())
-                .append("\n Elevation: ").append(tile.getElevation())
+                .append("\n Elevation: ").append(tile.getElevation_masl()).append(" masl")
                 .append("\n\n PlateID: ").append(tile.plateId)
                 .append("\n Oceanic: ").append(plate.oceanic)
                 .append("\n Angular speed: ").append(plate.angularSpeed_rad_yr).append(" rad/yr")

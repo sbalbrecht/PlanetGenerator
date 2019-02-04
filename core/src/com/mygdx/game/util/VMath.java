@@ -1,5 +1,6 @@
 package com.mygdx.game.util;
 
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 
@@ -26,5 +27,24 @@ public final class VMath{
         sum.scl(1f/(float)points.size);
         return sum;
     }
-    
+
+    /**
+     * Calculates latitude of input v in radians. Assumes the input is a point on a sphere.
+     * Range is 0 (North) to PI (South)
+     * @param v The vector to convert
+     * @return The latitude of v
+     */
+    public static float cartesianToLatitude(Vector3 v) {
+        return MathUtils.atan2((float)Math.sqrt(v.x*v.x + v.z*v.z), v.y);
+    }
+
+    /**
+     * Calculates longitude of input v in radians. Assumes the input is a point on a sphere.
+     * Range is -PI to PI
+     * @param v The vector to convert
+     * @return The longitude of v
+     */
+    public static float cartesianToLongitude(Vector3 v) {
+        return MathUtils.atan2(v.z, v.x);
+    }
 }

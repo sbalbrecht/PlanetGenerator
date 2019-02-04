@@ -1,8 +1,8 @@
 package com.mygdx.game;
 
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
+import com.mygdx.game.util.VMath;
 
 public class Tile {
     public int centroid;
@@ -10,8 +10,8 @@ public class Tile {
     public Array<Tile> nbrs;
     
     public Array<TileAttribute> attributes;
+    private float elevation_masl;
     private float temperature;
-    private float elevation;
     private float area;
     private float power;
     private float density;
@@ -23,8 +23,8 @@ public class Tile {
         return temperature;
     }
 
-    public float getElevation(){
-        return elevation;
+    public float getElevation_masl(){
+        return elevation_masl;
     }
 
     public float getArea(){
@@ -74,8 +74,8 @@ public class Tile {
 
     public Vector3 tangentialVelocity;
 
-    public boolean drawn = false;
-    public boolean root = false;
+    public boolean isDrawn = false;
+    public boolean isRoot = false;
     public int plateId = -1;
 
     Tile(int centroid, Array<Integer> tilePts, Array<Vector3> allPoints) {
@@ -89,8 +89,8 @@ public class Tile {
         }
 
         Vector3 temp = new Vector3(allPoints.get(this.centroid));
-        longitude = MathUtils.atan2(temp.z, temp.x);
-        latitude = MathUtils.atan2((float)Math.sqrt(temp.x*temp.x + temp.z*temp.z), temp.y);
+        longitude = VMath.cartesianToLongitude(temp);
+        latitude = VMath.cartesianToLatitude(temp);
         
     }
 
@@ -114,8 +114,8 @@ public class Tile {
        this.temperature = t;
     }
     
-    public void setElevation(float e){
-        this.elevation = e;
+    public void setElevation_masl(float e){
+        this.elevation_masl = e;
     }
     
     public void setArea(float a){
