@@ -12,6 +12,18 @@ public class TileMap{
 	private float planetRadius2;
 	private float range;
 
+	private Comparator<Tile> compareLongitudes = new Comparator<Tile>() {
+        @Override public int compare(Tile a, Tile b){
+            return Float.compare(a.getLongitude(), b.getLongitude());
+        }
+    };
+
+    private Comparator<Tile> compareLatitudes = new Comparator<Tile>() {
+        @Override public int compare(Tile a, Tile b){
+            return Float.compare(a.getLatitude(), b.getLatitude());
+        }
+    };
+
 	// Latitude ranges from 0 (north) to pi (south)
     // Longitude ranges from -pi to pi
 	public TileMap(Array<Tile> tiles, float planetRadius){
@@ -19,7 +31,7 @@ public class TileMap{
 	    this.planetRadius2 = planetRadius*planetRadius;
 
 	    // Calculate range of indices to look at when searching for nearest tiles
-        range = (float)(5.158*Math.pow(tiles.size, -0.51));
+        range = (float)(5.158*Math.pow(tiles.size, -0.51)) + 0.01f; // Power formula derived from graph
 		buildTileMap();
 	}
 
@@ -34,18 +46,10 @@ public class TileMap{
 			sortedTiles[i] = tiles.get(i);
 		}
 
-		Arrays.sort(sortedTiles, new Comparator<Tile>(){
-			@Override public int compare(Tile a, Tile b){
-				return Float.compare(a.getLatitude(), b.getLatitude());
-			}
-		});
+		Arrays.sort(sortedTiles, compareLatitudes);
 		tiles_lat.addAll(sortedTiles);
 
-		Arrays.sort(sortedTiles, new Comparator<Tile>(){
-			@Override public int compare(Tile a, Tile b){
-                return Float.compare(a.getLongitude(), b.getLongitude());
-            }
-		});
+		Arrays.sort(sortedTiles, compareLongitudes);
 		tiles_long.addAll(sortedTiles);
 	}
 

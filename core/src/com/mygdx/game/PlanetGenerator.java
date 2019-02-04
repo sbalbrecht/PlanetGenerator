@@ -16,6 +16,7 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.util.Log;
 import com.mygdx.game.util.Units;
+import com.mygdx.game.util.VMath;
 
 import java.util.Map;
 import java.util.Random;
@@ -159,11 +160,13 @@ public class PlanetGenerator extends InputAdapter implements ApplicationListener
     }
 
     private void updateTileInfoLayer(int screenX, int screenY) {
-        Vector3 intxn = getMouseIntersection(screenX, screenY);
-        if (intxn != null) {
-            float longitude = MathUtils.atan2(intxn.z, intxn.x);
-            float latitude = MathUtils.atan2((float)Math.sqrt(intxn.x*intxn.x + intxn.z*intxn.z), intxn.y);
+        Vector3 intersection = getMouseIntersection(screenX, screenY);
+        if (intersection != null) {
+            float longitude = VMath.cartesianToLongitude(intersection);
+            float latitude = VMath.cartesianToLatitude(intersection);
+
             Tile t = planet.getNearestTile(latitude, longitude);
+
             til.setTile(t);
             til.setPlate(planet.plates.get(t.plateId));
         } else {
@@ -219,9 +222,10 @@ public class PlanetGenerator extends InputAdapter implements ApplicationListener
                                 VertexAttributes.Usage.ColorPacked, new Material());
             }
 
-            int plateId = t.plateId;
-//            partBuilder.setColor(planet.plates.get(plateId).color);           // color by plate
-            partBuilder.setColor(getElevationColor(planet, t.getElevation()));  // color by relative elevation
+//            int plateId = t.plateId;
+//            partBuilder.setColor(planet.plates.get(plateId).color);                  // color by plate
+            partBuilder.setColor(getElevationColor(planet, t.getElevation_masl()));  // color by relative elevation
+//            if (t.isRoot) partBuilder.setColor(Color.BLUE);                          // color plate roots blue
 
             int numPts = t.pts.size;
             if (numPts == 6) {
@@ -296,10 +300,10 @@ public class PlanetGenerator extends InputAdapter implements ApplicationListener
                 int k = (j + 1) % numPts;
                 p1 = planet.points.get(t.pts.get(j)).cpy();
                 p2 = planet.points.get(t.pts.get(k)).cpy();
-                if(!t.getNbr(t.pts.get(j), t.pts.get(k)).drawn)
+                if(!t.getNbr(t.pts.get(j), t.pts.get(k)).isDrawn)
                     partBuilder.line(p1.scl(1.000008f), p2.scl(1.000008f));
             }
-            planet.tiles.get(i).drawn = true;
+            planet.tiles.get(i).isDrawn = true;
         }
         return modelBuilder.end();
     }

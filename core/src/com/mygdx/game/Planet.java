@@ -25,7 +25,7 @@ public class Planet {
     public Array<Face> faces = new Array<Face>();
     public Array<Tile> tiles = new Array<Tile>();
     public Array<Tile> tiles_latitude = new Array<Tile>();  //tiles by latitude
-    public Array<Tile> tiles_longitude = new Array<Tile>(); //tiles by longitude
+    public Array<Tile> tiles_longitude = new Array<Tile>(); //tiles by cartesianToLongitude
 
     private Map<Long, Integer> midpointCache = new HashMap<Long, Integer>();
     private Map<Long, Face[]> faceNbrs = new HashMap<Long, Face[]>();
@@ -290,7 +290,7 @@ public class Planet {
         for (Tile t : secondary.members) {
             t.plateId = primary.id;
         }
-        secondary.root.root = false;
+        secondary.root.isRoot = false;
         plates.remove(secondary.id);
         primary.members.ensureCapacity(secondary.members.size);
         primary.members.addAll(secondary.members);
@@ -345,9 +345,7 @@ public class Planet {
         }
         Arrays.sort(sortedPlates, new Comparator<Plate>(){
             @Override public int compare(Plate a, Plate b){
-                if(a.members.size < b.members.size) return -1;
-                if(a.members.size > b.members.size) return 1;
-                else return 0;
+                return Integer.compare(a.members.size, b.members.size);
             }
         });
         return sortedPlates;
@@ -418,11 +416,10 @@ public class Planet {
 
     private void calculatePlateCollisionIntensities() {
         Plate nbrPlate;
-        Tile neighbor;
-        Long edgeKey;
-        int edgeP1, edgeP2;
+        Tile  neighbor;
+        Long  edgeKey;
+        int   edgeP1, edgeP2;
         float intensity;
-//        max_collision_intensity = 10f * 2.0f *(75.0f * 3.0f * 4.0f * (MathUtils.PI * radius * radius)/(float)tiles.size);
         for (Plate plate : plates.values()) {
             for (Tile borderTile : plate.border) {
                 for(int i = 0; i < borderTile.pts.size; i++) {
@@ -438,15 +435,14 @@ public class Planet {
                             intensity = getCollisionIntensity(borderTile, neighbor, edgeP1, edgeP2);
                             logMaxIntensity(intensity);
                             tileCollisions.put(edgeKey, intensity);
-                            // TODO: determine type of collision with plateCollision map
-//                            plateCollisions.put(edgeKey, getHashKeyFromPlateIDs(plate.id, nbrPlate.id));
+                            plateCollisions.put(edgeKey, getHashKeyFromPlateIDs(plate.id, nbrPlate.id));
                         }
                     }
                 }
             }
         }
     }
-
+    int test = 0;
     private void simulateCollisions() {
         int propagationLimit = (int)(Math.ceil(0.0625*Math.exp(0.6931* numSubdivisions)));
         for (Plate plate : plates.values()) {
@@ -456,7 +452,23 @@ public class Planet {
                 adjustElevation(bdr, sumOfIntensitiesActingOnTile, epicenter, new Array<Tile>());
             }
         }
+
+//        for (Long key : plateCollisions.keySet()) {
+//            float intensity = tileCollisions.get(key);
+//            int[] neighborIDs = getPlateIDsFromHashKey(plateCollisions.get(key));
+//            Plate plateA = plates.get(neighborIDs[0]);
+//            Plate plateB = plates.get(neighborIDs[0]);
+//            CC+ createMountains();
+//            CC- createRiftValley();
+//            CO+ createContinentalSubductionZone();
+//            CO- createContinentalSlope();
+//            OO+ createOceanicSubductionZone();
+//            OO- createOceanRidge(); }
+
     }
+
+
+
 
     private float sumIntensities(Tile t) {
         float sum = 0;
@@ -483,19 +495,19 @@ public class Planet {
     }
 
     private Array<Tile> adjustElevation(Tile origin, float intensity, Vector3 epicenter,
-                                        Array<Tile> tilesAlreadyAffected){
+                                        Array<Tile> tilesAlreadyAffected) {
         // TODO: need to change elevationChange formula to something more grounded in reality
         // TODO: propagation should be determined by combination of intensity and distance?
         float distanceFromEpicenter = points.get(origin.centroid).dst(epicenter);
         float elevationChange = intensity * (1 / distanceFromEpicenter);
-        float propagationLimit = 0.068f;
+        float propagationLimit = 0.068f;    // TODO: magic number; replace with value taking radius into account
 //        System.out.printf("intensity: %.3f dst: %.3f new Elev: %.3f  tilesAffectedSize: %d\n", intensity, distanceFromEpicenter, elevationChange, tilesAlreadyAffected.size);
         tilesAlreadyAffected.add(origin);
         if(distanceFromEpicenter > propagationLimit || numSubdivisions < 4) {
             return tilesAlreadyAffected;
         }
-        origin.setElevation(origin.getElevation() + elevationChange);
-        logMaxElevation(origin.getElevation()); // TODO: find better place to log elevation for this test...
+        origin.setElevation_masl(origin.getElevation_masl() + elevationChange);
+        logMaxElevation(origin.getElevation_masl()); // TODO: find better place to log elevation for this test...
         for(int i = 0; i < origin.nbrs.size; i++) {
             Tile neighbor = origin.nbrs.get(i);
             if(neighbor.plateId == origin.plateId && !tilesAlreadyAffected.contains(neighbor, false))
@@ -555,7 +567,7 @@ public class Planet {
         for (Tile t : tiles){
             parent = plates.get(t.plateId);
             t.setArea((MathUtils.PI*4.0f*(radius*radius)/tiles.size));
-            t.setElevation(0.0f);   //0m above sea level
+            t.setElevation_masl(0.0f);   //0m above sea level
             t.setTemperature(0.0f); //0K
             t.setDensity(parent.density_gm_cm3);
             t.setThickness(parent.thickness_km);
@@ -563,11 +575,12 @@ public class Planet {
     }
     
     private void randomizeTileElevations() {
+        // TODO: Add actual randomization / Refactor to add this into plates
         for (Tile t : tiles){
             if (plates.get(t.plateId).oceanic) {
-                t.setElevation(-t.getThickness()/2);
+                t.setElevation_masl(-t.getThickness()/2);
             } else {
-                t.setElevation(t.getThickness()/2);
+                t.setElevation_masl(t.getThickness()/2);
             }
         }
     }

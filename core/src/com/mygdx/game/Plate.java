@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Random;
 
 public class Plate {
-    Tile root;          // root plate
+    Tile root;          // isRoot plate
     int id;
     Color color;
     Random r = new Random();
@@ -18,8 +18,6 @@ public class Plate {
     Array<Tile> members = new Array<Tile>();
     private Array<Tile> front = new Array<Tile>();
 
-    Vector3 axisOfRotation;
-    
     float speed_m_Ma;
     float density_gm_cm3;
     float thickness_km;
@@ -27,7 +25,8 @@ public class Plate {
     float mass_Mg;              //Megagrams == Metric_tons
     float angularSpeed_rad_yr;
     float momentum_cmMg_yr;
-    
+
+    Vector3 axisOfRotation;
     Vector3 angularVelocity;
     Vector3 tangentialVelocity;
     Vector3 centerOfMass;
@@ -36,7 +35,7 @@ public class Plate {
 
     Plate(Tile seed, int id) {
         this.root = seed;
-        seed.root = true;
+        seed.isRoot = true;
         seed.plateId = id;
         this.id = id;
         color = new Color(r.nextFloat(), r.nextFloat(), r.nextFloat(), 1.0f);
@@ -50,7 +49,7 @@ public class Plate {
 
     Plate(Tile seed, int id, Map<Integer, Plate> newPlates) {
         this.root = seed;
-        seed.root = true;
+        seed.isRoot = true;
         seed.plateId = id;
         this.id = id;
         color = new Color(r.nextFloat(), r.nextFloat(), r.nextFloat(), 1.0f);
