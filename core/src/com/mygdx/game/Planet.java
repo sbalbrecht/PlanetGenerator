@@ -24,8 +24,6 @@ public class Planet {
     public Array<Vector3> points = new Array<Vector3>();
     public Array<Face> faces = new Array<Face>();
     public Array<Tile> tiles = new Array<Tile>();
-    public Array<Tile> tiles_latitude = new Array<Tile>();  //tiles by latitude
-    public Array<Tile> tiles_longitude = new Array<Tile>(); //tiles by cartesianToLongitude
 
     private Map<Long, Integer> midpointCache = new HashMap<Long, Integer>();
     private Map<Long, Face[]> faceNbrs = new HashMap<Long, Face[]>();
@@ -53,7 +51,7 @@ public class Planet {
 
         log.start("Dual Conversion");
             convertToTruncatedIcosphere();
-//            faces = null;     // array no longer needed if rendering truncated icosphere
+            faces = null;     // array no longer needed if rendering truncated icosphere
 //            System.out.println(points.get(tiles.get(0).centroid).dst(points.get(tiles.get(0).nbrs.get(0).centroid)));
 
         log.start("Plate generation");
@@ -62,7 +60,7 @@ public class Planet {
 
         scalePoints(points, radius);
     
-        log.start("Assemble tileMap");
+        log.start("Log Tile Lat/Longs");
             tileMap = new TileMap(tiles, radius);
         log.end();
     
@@ -76,18 +74,18 @@ public class Planet {
         float u = 1.0f/(float)Math.sqrt(phi*phi + 1.0f);
         float v = phi*u;
 
-        addVertex(new Vector3(0.0f,   +v,   +u));
-        addVertex(new Vector3(0.0f,   +v,   -u));
-        addVertex(new Vector3(0.0f,   -v,   +u));
-        addVertex(new Vector3(0.0f,   -v,   -u));
-        addVertex(new Vector3(+u,   0.0f,   +v));
-        addVertex(new Vector3(-u,   0.0f,   +v));
-        addVertex(new Vector3(+u,   0.0f,   -v));
-        addVertex(new Vector3(-u,   0.0f,   -v));
-        addVertex(new Vector3(+v,     +u, 0.0f));
-        addVertex(new Vector3(+v,     -u, 0.0f));
-        addVertex(new Vector3(-v,     +u, 0.0f));
-        addVertex(new Vector3(-v,     -u, 0.0f));
+        addVertex(new Vector3(0f,   +v,   +u));
+        addVertex(new Vector3(0f,   +v,   -u));
+        addVertex(new Vector3(0f,   -v,   +u));
+        addVertex(new Vector3(0f,   -v,   -u));
+        addVertex(new Vector3(+u,   0f,   +v));
+        addVertex(new Vector3(-u,   0f,   +v));
+        addVertex(new Vector3(+u,   0f,   -v));
+        addVertex(new Vector3(-u,   0f,   -v));
+        addVertex(new Vector3(+v,     +u, 0f));
+        addVertex(new Vector3(+v,     -u, 0f));
+        addVertex(new Vector3(-v,     +u, 0f));
+        addVertex(new Vector3(-v,     -u, 0f));
 
         faces.addAll(
             new Face(0,  8,  1, getCentroidFromIndices(0,  8,  1)),
@@ -181,11 +179,12 @@ public class Planet {
         Map<Integer, Boolean> ptsUsedAsTileCentroid = new HashMap<Integer, Boolean>();
         for(Face face : faces) {
             int tileCentroid = face.pts[0];
-            if(ptsUsedAsTileCentroid.get(tileCentroid) != null)
+            if(ptsUsedAsTileCentroid.get(tileCentroid) != null) {
                 tileCentroid = face.pts[1];
-            if(ptsUsedAsTileCentroid.get(tileCentroid) != null)
+            }
+            if(ptsUsedAsTileCentroid.get(tileCentroid) != null) {
                 continue;
-
+            }
             Tile t = getTileFromFace(face, tileCentroid);
             ptsUsedAsTileCentroid.put(tileCentroid, true);
             setTileNeighbors(t);
@@ -345,7 +344,7 @@ public class Planet {
         }
         Arrays.sort(sortedPlates, new Comparator<Plate>(){
             @Override public int compare(Plate a, Plate b){
-                return Integer.compare(a.members.size, b.members.size);
+            return Integer.valueOf(a.members.size).compareTo(b.members.size);
             }
         });
         return sortedPlates;
@@ -442,7 +441,7 @@ public class Planet {
             }
         }
     }
-    int test = 0;
+
     private void simulateCollisions() {
         int propagationLimit = (int)(Math.ceil(0.0625*Math.exp(0.6931* numSubdivisions)));
         for (Plate plate : plates.values()) {
@@ -495,25 +494,25 @@ public class Planet {
     }
 
     private Array<Tile> adjustElevation(Tile origin, float intensity, Vector3 epicenter,
-                                        Array<Tile> tilesAlreadyAffected) {
+                                        Array<Tile> alreadyAffected) {
         // TODO: need to change elevationChange formula to something more grounded in reality
         // TODO: propagation should be determined by combination of intensity and distance?
         float distanceFromEpicenter = points.get(origin.centroid).dst(epicenter);
         float elevationChange = intensity * (1 / distanceFromEpicenter);
         float propagationLimit = 0.068f;    // TODO: magic number; replace with value taking radius into account
 //        System.out.printf("intensity: %.3f dst: %.3f new Elev: %.3f  tilesAffectedSize: %d\n", intensity, distanceFromEpicenter, elevationChange, tilesAlreadyAffected.size);
-        tilesAlreadyAffected.add(origin);
+        alreadyAffected.add(origin);
         if(distanceFromEpicenter > propagationLimit || numSubdivisions < 4) {
-            return tilesAlreadyAffected;
+            return alreadyAffected;
         }
         origin.setElevation_masl(origin.getElevation_masl() + elevationChange);
         logMaxElevation(origin.getElevation_masl()); // TODO: find better place to log elevation for this test...
         for(int i = 0; i < origin.nbrs.size; i++) {
             Tile neighbor = origin.nbrs.get(i);
-            if(neighbor.plateId == origin.plateId && !tilesAlreadyAffected.contains(neighbor, false))
-                tilesAlreadyAffected = adjustElevation(neighbor, intensity, epicenter, tilesAlreadyAffected);
+            if(neighbor.plateId == origin.plateId && !alreadyAffected.contains(neighbor, false))
+                alreadyAffected = adjustElevation(neighbor, intensity, epicenter, alreadyAffected);
         }
-        return tilesAlreadyAffected;
+        return alreadyAffected;
     }
 
     private float getCollisionIntensity(Tile a, Tile b, int edgeP1, int edgeP2) {
@@ -667,18 +666,12 @@ public class Planet {
 
     private Face getFaceNbr(Face f, int p1, int p2) {
         Face[] nbrs = faceNbrs.get(getHashKeyFromIndices(p1, p2));
-        if(f == nbrs[0])
-            return nbrs[1];
-        else
-            return nbrs[0];
+        return (f == nbrs[0]) ? nbrs[1] : nbrs[0];
     }
 
     private Tile getTileNbr(Tile t, int p1, int p2) {
         Tile[] pair = tileNbrs.get(getHashKeyFromIndices(p1, p2));
-        if(pair[0].equals(t))
-            return pair[1];
-        else
-            return pair[0];
+        return (pair[0].equals(t)) ? pair[1] : pair[0];
     }
 
     private void addTileEdgeToNbrCache(Tile t, int p1, int p2) {
