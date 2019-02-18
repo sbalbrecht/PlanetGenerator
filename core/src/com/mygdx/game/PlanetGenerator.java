@@ -42,6 +42,7 @@ public class PlanetGenerator extends InputAdapter implements ApplicationListener
     private Array<ModelInstance> modelInstances = new Array<ModelInstance>();
 
     private final int TILE_LIMIT = 1000;
+    private final int SUBDIVSIONS = 5;
     private final float PLANET_RADIUS = 10;
 
     @Override
@@ -70,7 +71,7 @@ public class PlanetGenerator extends InputAdapter implements ApplicationListener
 
         /* Generate planet */
         log.start("Generation time");
-        planet = new Planet(new Vector3(0, 0, 0), PLANET_RADIUS, 5);
+        planet = new Planet(new Vector3(0, 0, 0), PLANET_RADIUS, SUBDIVSIONS);
 
         cameraInterface = new CameraInterface(cam);
         cameraInterface.center = planet.position;
@@ -90,6 +91,7 @@ public class PlanetGenerator extends InputAdapter implements ApplicationListener
         models.add(buildMajorLatLines(planet));
         models.add(buildPlateCollisions(planet));
 //        models.add(buildLatLongSpikes(planet));
+        models.add(buildWindLines(planet));
 
         for (Model model : models) {
             modelInstances.add(new ModelInstance(model, planet.position));
@@ -361,6 +363,25 @@ public class PlanetGenerator extends InputAdapter implements ApplicationListener
 
         }
         l2.end();
+        return modelBuilder.end();
+    }
+
+    private Model buildWindLines(Planet planet) {
+        // TODO: Create 1 line model and create transformed instances
+
+        Log l = new Log();
+        l.start("Build wind lines");
+        modelBuilder.begin();
+        Material lineColor = new Material(ColorAttribute.createDiffuse(Color.CYAN));
+        partBuilder = modelBuilder.part("wind", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
+
+        Vector3 p1 = new Vector3(0,0,0);
+        for (int i = 0; i < planet.wind.size; i++) {
+            partBuilder.line(p1, planet.wind.get(i).getPosition().cpy().scl(1.2f));
+        }
+
+        l.end();
+
         return modelBuilder.end();
     }
 
