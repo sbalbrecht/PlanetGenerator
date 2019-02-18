@@ -6,6 +6,7 @@ import com.badlogic.gdx.utils.Array;
 import com.mygdx.game.util.Log;
 import com.mygdx.game.util.Units;
 import com.mygdx.game.util.VMath;
+import sun.misc.VM;
 
 import java.util.*;
 
@@ -28,9 +29,14 @@ public class Planet {
     private Map<Long, Integer> midpointCache = new HashMap<Long, Integer>();
     private Map<Long, Face[]> faceNbrs = new HashMap<Long, Face[]>();
     private Map<Long, Tile[]> tileNbrs = new HashMap<Long, Tile[]>();
+
     public Map<Integer, Plate> plates = new HashMap<Integer, Plate>();
     public Map<Long, Float> tileCollisions = new HashMap<Long, Float>();
-    public Map<Long, Integer> plateCollisions = new HashMap<Long, Integer>();
+    private Map<Long, Integer> plateCollisions = new HashMap<Long, Integer>();
+
+    public Array<WindParticle> wind = new Array<WindParticle>();
+    public Set<Integer> lowerAtmosphere = new HashSet<>();
+    public Set<Integer> upperAtmosphere = new HashSet<>();
 
     public TileMap tileMap;
 
@@ -62,8 +68,11 @@ public class Planet {
     
         log.start("Log Tile Lat/Longs");
             tileMap = new TileMap(tiles, radius);
+
+        log.start("Generate wind points");
+            generateWind();
         log.end();
-    
+
 //        System.out.println("Faces:  " + faces.size);
         System.out.println("Tiles:  " + tiles.size);
         System.out.println("Plates: " + plates.size());
@@ -584,9 +593,25 @@ public class Planet {
         }
     }
 
-    private void randomizeTileTemperatures(){
+    private void randomizeTileTemperatures() {
         for (Tile t : tiles){
             t.setTemperature((float)Math.random()*300.0f);
+        }
+    }
+
+    private void generateWind() {
+        // Generate 1000 random wind points
+        final int numPoints = 3000;
+        wind.ensureCapacity(numPoints);
+        for (int i = 0; i < numPoints; i++) {
+            WindParticle w = new WindParticle(radius);
+            wind.add(w);
+            int index = wind.size - 1;
+            if (w.isInUpperAtmosphere) {
+                upperAtmosphere.add(index);
+            } else {
+                lowerAtmosphere.add(index);
+            }
         }
     }
     
