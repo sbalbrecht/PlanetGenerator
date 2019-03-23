@@ -6,7 +6,6 @@ import com.badlogic.gdx.utils.Array;
 import com.mygdx.game.util.Log;
 import com.mygdx.game.util.Units;
 import com.mygdx.game.util.VMath;
-import sun.misc.VM;
 
 import java.util.*;
 
@@ -34,7 +33,7 @@ public class Planet {
     public Map<Long, Float> tileCollisions = new HashMap<Long, Float>();
     private Map<Long, Integer> plateCollisions = new HashMap<Long, Integer>();
 
-    public Array<WindParticle> wind = new Array<WindParticle>();
+    public Array<AirParticle> wind = new Array<AirParticle>();
     public Set<Integer> lowerAtmosphere = new HashSet<>();
     public Set<Integer> upperAtmosphere = new HashSet<>();
 
@@ -601,10 +600,10 @@ public class Planet {
 
     private void generateWind() {
         // Generate 1000 random wind points
-        final int numPoints = 3000;
+        final int numPoints = 7500;
         wind.ensureCapacity(numPoints);
         for (int i = 0; i < numPoints; i++) {
-            WindParticle w = new WindParticle(radius);
+            AirParticle w = new AirParticle(radius);
             wind.add(w);
             int index = wind.size - 1;
             if (w.isInUpperAtmosphere) {
