@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.EllipseShapeBuilder;
+import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.SphereShapeBuilder;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
@@ -40,6 +41,7 @@ public class PlanetGenerator extends InputAdapter implements ApplicationListener
     public  Array<Layer>         layers;
     private Array<Model>         models         = new Array<Model>();
     private Array<ModelInstance> modelInstances = new Array<ModelInstance>();
+    private Array<ModelInstance> airInstances   = new Array<ModelInstance>();
 
     private final int TILE_LIMIT = 1000;
     private final int SUBDIVSIONS = 5;
@@ -77,21 +79,33 @@ public class PlanetGenerator extends InputAdapter implements ApplicationListener
         cameraInterface.center = planet.position;
 	    Gdx.input.setInputProcessor(new InputMultiplexer(this, cameraInterface));
 
-        /* Build model */
+        /* Build models */
         log.start("Build time");
 
         modelBuilder = new ModelBuilder();
 
 //        models.add(buildIcosahedron(planet));         // Triangles
-		models.add(buildTruncatedIcosahedron(planet));  // Tiles
+//		models.add(buildTruncatedIcosahedron(planet));  // Tiles
 //        models.add(buildSunRays(planet));
-//        models.add(buildWireframe(planet));
+        models.add(buildWireframe(planet));
 //        models.add(buildAxes());
-        models.add(buildPlateDirectionArrows(planet));
-        models.add(buildMajorLatLines(planet));
+//        models.add(buildPlateDirectionArrows(planet));
+//        models.add(buildMajorLatLines(planet));
         models.add(buildPlateCollisions(planet));
 //        models.add(buildLatLongSpikes(planet));
-        models.add(buildWindLines(planet));
+
+        final float partRadius = 0.05f;
+        final int partDivs = 10;
+        Model airParticle = modelBuilder.createSphere(partRadius, partRadius, partRadius, partDivs, partDivs,
+                new Material(ColorAttribute.createDiffuse(Color.WHITE)),
+                VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+
+        for (AirParticle particle : planet.wind) {
+            Vector3 v = particle.getPosition().cpy().scl(1.001f);
+            ModelInstance airInstance = new ModelInstance(airParticle);
+            airInstance.transform.setToTranslation(v);
+            airInstances.add(airInstance);
+        }
 
         for (Model model : models) {
             modelInstances.add(new ModelInstance(model, planet.position));
@@ -107,14 +121,18 @@ public class PlanetGenerator extends InputAdapter implements ApplicationListener
 
 	@Override
 	public void render () {
-    	// TODO: Create planet buildTileMap method to integrate in render loop. Handle generation in separate thread.
         cameraInterface.update(Gdx.graphics.getDeltaTime());
 
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
+        updateAirParticles();
+
 		modelBatch.begin(cam);
         for (ModelInstance instance : modelInstances) {
+            modelBatch.render(instance, environment);
+        }
+        for (ModelInstance instance : airInstances) {
             modelBatch.render(instance, environment);
         }
         modelBatch.end();
@@ -165,7 +183,7 @@ public class PlanetGenerator extends InputAdapter implements ApplicationListener
         Vector3 intersection = getMouseIntersection(screenX, screenY);
         if (intersection != null) {
             float longitude = VMath.cartesianToLongitude(intersection);
-            float latitude = VMath.cartesianToLatitude(intersection);
+            float latitude = VMath.cartesianToLatitude(intersection, PLANET_RADIUS);
 
             Tile t = planet.getNearestTile(latitude, longitude);
 
@@ -224,9 +242,9 @@ public class PlanetGenerator extends InputAdapter implements ApplicationListener
                                 VertexAttributes.Usage.ColorPacked, new Material());
             }
 
-//            int plateId = t.plateId;
-//            partBuilder.setColor(planet.plates.get(plateId).color);                  // color by plate
-            partBuilder.setColor(getElevationColor(planet, t.getElevation_masl()));  // color by relative elevation
+            int plateId = t.plateId;
+            partBuilder.setColor(planet.plates.get(plateId).color);                  // color by plate
+//            partBuilder.setColor(getElevationColor(planet, t.getElevation_masl()));  // color by relative elevation
 //            if (t.isRoot) partBuilder.setColor(Color.BLUE);                          // color plate roots blue
 
             int numPts = t.pts.size;
@@ -372,17 +390,26 @@ public class PlanetGenerator extends InputAdapter implements ApplicationListener
         Log l = new Log();
         l.start("Build wind lines");
         modelBuilder.begin();
-        Material lineColor = new Material(ColorAttribute.createDiffuse(Color.CYAN));
+        Material lineColor = new Material(ColorAttribute.createDiffuse(Color.VIOLET));
         partBuilder = modelBuilder.part("wind", GL20.GL_LINES, VertexAttributes.Usage.Position, lineColor);
 
-        Vector3 p1 = new Vector3(0,0,0);
-        for (int i = 0; i < planet.wind.size; i++) {
-            partBuilder.line(p1, planet.wind.get(i).getPosition().cpy().scl(1.2f));
-        }
+        SphereShapeBuilder.build(partBuilder, 0.5f, 0.5f, 0.5f, 60, 60);
+//
+//        Vector3 p1 = new Vector3(0,0,0);
+//        for (int i = 0; i < planet.wind.size; i++) {
+//            partBuilder.line(p1, planet.wind.get(i).getPosition().cpy().scl(1.001f));
+//        }
 
         l.end();
 
         return modelBuilder.end();
+    }
+
+    private void updateAirParticles() {
+        for (int i = 0; i < planet.wind.size; i++) {
+            planet.wind.get(i).update();
+            airInstances.get(i).transform.setToTranslation(planet.wind.get(i).getPosition());
+        }
     }
 
     private Model buildPlateDirectionArrows(Planet planet) {

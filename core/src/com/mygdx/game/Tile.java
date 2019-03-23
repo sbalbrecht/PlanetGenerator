@@ -90,8 +90,9 @@ public class Tile {
 
         Vector3 temp = new Vector3(allPoints.get(this.centroid));
         longitude = VMath.cartesianToLongitude(temp);
-        latitude = VMath.cartesianToLatitude(temp);
-        
+//        latitude = VMath.cartesianToLatitude(temp);
+        latitude = VMath.cartesianToLatitude(temp, 10f);
+
     }
 
     public Tile getNbr(int p1, int p2) {

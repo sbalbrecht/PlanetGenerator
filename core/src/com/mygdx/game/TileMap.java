@@ -93,7 +93,7 @@ public class TileMap{
 
         // Find minimum distance of the subset
         if (subset.size == 0) {
-            System.out.println("No matches found");
+//            System.out.println("No matches found");
         }
         Tile closestTile = tiles.get(0);
         float minDist = getDistanceLatLong(latitude, longitude, closestTile.getLatitude(), closestTile.getLongitude());

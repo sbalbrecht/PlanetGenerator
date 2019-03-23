@@ -4,7 +4,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 
-public final class VMath{
+public final class VMath {
 
     public static Vector3 centroid(Vector3 [] points){
         //Average position of all the points provided
@@ -34,8 +34,9 @@ public final class VMath{
      * @param v The vector to convert
      * @return The latitude of v
      */
-    public static float cartesianToLatitude(Vector3 v) {
-        return MathUtils.atan2((float)Math.sqrt(v.x*v.x + v.z*v.z), v.y);
+    public static float cartesianToLatitude(Vector3 v, float radius) {
+//        return MathUtils.atan2((float)Math.sqrt(v.x*v.x + v.z*v.z), v.y);
+        return (float)(Math.asin(v.y / radius));
     }
 
     /**
@@ -45,6 +46,14 @@ public final class VMath{
      * @return The longitude of v
      */
     public static float cartesianToLongitude(Vector3 v) {
-        return MathUtils.atan2(v.z, v.x);
+        return (float)Math.atan2(v.z, v.x);
+    }
+
+    public static Vector3 latitudeToCartesian(float latitude, float longitude, float radius) {
+        return new Vector3(
+                (float)(radius * Math.cos(latitude) * Math.cos(longitude)),
+                (float)(radius * Math.sin(latitude)),
+                (float)(radius * Math.cos(latitude) * Math.sin(longitude))
+        );
     }
 }
