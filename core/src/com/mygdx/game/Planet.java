@@ -72,6 +72,18 @@ public class Planet {
             generateWind();
         log.end();
 
+        float minLat = tiles.get(0).getLatitude();
+        float maxLat = tiles.get(0).getLatitude();
+        for (Tile t : tiles) {
+            float lat = t.getLatitude();
+            if (lat < minLat)
+                minLat = lat;
+            else if (lat > maxLat)
+                maxLat = lat;
+        }
+        System.out.println("MinLat: " + minLat);
+        System.out.println("MaxLat: " + maxLat);
+
 //        System.out.println("Faces:  " + faces.size);
         System.out.println("Tiles:  " + tiles.size);
         System.out.println("Plates: " + plates.size());

@@ -85,10 +85,10 @@ public class PlanetGenerator extends InputAdapter implements ApplicationListener
         modelBuilder = new ModelBuilder();
 
 //        models.add(buildIcosahedron(planet));         // Triangles
-//		models.add(buildTruncatedIcosahedron(planet));  // Tiles
+		models.add(buildTruncatedIcosahedron(planet));  // Tiles
 //        models.add(buildSunRays(planet));
-        models.add(buildWireframe(planet));
-//        models.add(buildAxes());
+//        models.add(buildWireframe(planet));
+        models.add(buildAxes());
 //        models.add(buildPlateDirectionArrows(planet));
 //        models.add(buildMajorLatLines(planet));
         models.add(buildPlateCollisions(planet));
@@ -330,10 +330,12 @@ public class PlanetGenerator extends InputAdapter implements ApplicationListener
 
     private Model buildAxes() {
         modelBuilder.begin();
-        partBuilder = modelBuilder.part("axes", GL20.GL_LINES, VertexAttributes.Usage.Position, new Material());
+        partBuilder = modelBuilder.part("axes", GL20.GL_LINES, VertexAttributes.Usage.Position, new Material(ColorAttribute.createDiffuse(Color.RED)));
         partBuilder.line(0,0,0,15f,0,0);
-        partBuilder.line(0,0,0,0,20f,0);
-        partBuilder.line(0,0,0,0,0,25f);
+        partBuilder = modelBuilder.part("axes", GL20.GL_LINES, VertexAttributes.Usage.Position, new Material(ColorAttribute.createDiffuse(Color.BLUE)));
+        partBuilder.line(0,0,0,0,15f,0);
+        partBuilder = modelBuilder.part("axes", GL20.GL_LINES, VertexAttributes.Usage.Position, new Material(ColorAttribute.createDiffuse(Color.GREEN)));
+        partBuilder.line(0,0,0,0,0,15f);
         return modelBuilder.end();
     }
     
