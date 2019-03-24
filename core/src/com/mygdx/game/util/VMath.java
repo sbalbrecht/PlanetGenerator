@@ -36,7 +36,7 @@ public final class VMath {
 
     /**
      * Calculates latitude of input v in radians. Assumes the input is a point on a sphere.
-     * Range is -PI/2 (South) to PI/2 (North)
+     * Range is 0 (North) to PI (South)
      * @param v The vector to convert
      * @return The latitude of v
      */

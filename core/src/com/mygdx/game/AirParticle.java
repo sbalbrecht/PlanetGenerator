@@ -1,5 +1,6 @@
 package com.mygdx.game;
 
+import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.EllipseShapeBuilder;
 import com.badlogic.gdx.math.Vector3;
 import com.mygdx.game.util.VMath;
 
@@ -109,61 +110,104 @@ public class AirParticle {
         float lon = VMath.cartesianToLongitude(Position);
 
         float percentToBoundary;
-        float delta = .005f;
+        float lonDelta = .005f;
+        float latDelta = .001f;
 
         // Change position based on layer, belt, coriolis force
         if (lat < PI_6)
         {
             percentToBoundary = lat / PI_6;
-//            lon += getLonDelta(lon, delta * percentToBoundary);
             lon += (isInUpperAtmosphere)
-                    ? getLonDelta(lon, -delta * (1 - percentToBoundary))
-                    : getLonDelta(lon, delta * percentToBoundary);
+                    ?
+                    getLonDelta(lon, lonDelta * percentToBoundary)
+                    :
+                    getLonDelta(lon, -lonDelta * (1 - percentToBoundary))
+            ;
+
+            lat += (isInUpperAtmosphere)
+                    ? getLatDelta(lat, latDelta)
+                    : getLatDelta(lat, -latDelta);
         }
         else if (lat < PI_3)
         {
             percentToBoundary = (lat - PI_6) / (PI_3 - PI_6);
-//            lon += getLonDelta(lon, -delta * (1 - percentToBoundary));
             lon += (isInUpperAtmosphere)
-                    ? getLonDelta(lon, delta * percentToBoundary)
-                    : getLonDelta(lon, -delta * (1 - percentToBoundary));
+                    ?
+                    getLonDelta(lon, -lonDelta * (1 - percentToBoundary))
+                    :
+                    getLonDelta(lon, lonDelta * percentToBoundary)
+            ;
+
+            lat += (isInUpperAtmosphere)
+                    ? getLatDelta(lat, -latDelta)
+                    : getLatDelta(lat, latDelta);
         }
         else if (lat < PI_2)
         {
             percentToBoundary = (lat - PI_3) / (PI_2 - PI_3);
-//            lon += getLonDelta(lon, delta * percentToBoundary);
             lon += (isInUpperAtmosphere)
-                    ? getLonDelta(lon, -delta * (1 - percentToBoundary))
-                    : getLonDelta(lon, delta * percentToBoundary);
+                    ?
+                    getLonDelta(lon, lonDelta * percentToBoundary)
+                    :
+                    getLonDelta(lon, -lonDelta * (1 - percentToBoundary))
+            ;
+
+            lat += (isInUpperAtmosphere)
+                    ? getLatDelta(lat, latDelta)
+                    : getLatDelta(lat, -latDelta);
         }
         else if (lat < _2PI_3)
         {
             percentToBoundary = (lat - PI_2) / (_2PI_3 - PI_2);
-//            lon += getLonDelta(lon, delta * (1 - percentToBoundary));
             lon += (isInUpperAtmosphere)
-                    ? getLonDelta(lon, -delta * (1 - percentToBoundary))
-                    : getLonDelta(lon, delta * percentToBoundary);
+                    ?
+                    getLonDelta(lon, lonDelta * (1 - percentToBoundary))
+                    :
+                    getLonDelta(lon, -lonDelta * percentToBoundary)
+            ;
+
+            lat += (isInUpperAtmosphere)
+                    ? getLatDelta(lat, -latDelta)
+                    : getLatDelta(lat, latDelta);
         }
         else if (lat < _5PI_6)
         {
             percentToBoundary = (lat - _2PI_3) / (_5PI_6 - _2PI_3);
-//            lon += getLonDelta(lon, -delta * percentToBoundary);
             lon += (isInUpperAtmosphere)
-                    ? getLonDelta(lon, delta * (1 - percentToBoundary))
-                    : getLonDelta(lon, -delta * percentToBoundary);
+                    ?
+                    getLonDelta(lon, -lonDelta * percentToBoundary)
+                    :
+                    getLonDelta(lon, lonDelta * (1 - percentToBoundary))
+            ;
+
+            lat += (isInUpperAtmosphere)
+                    ? getLatDelta(lat, latDelta)
+                    : getLatDelta(lat, -latDelta);
         }
         else
         {
             percentToBoundary = (lat - _5PI_6) / (float)(Math.PI - _5PI_6);
-//            lon += getLonDelta(lon, delta * (1 - percentToBoundary));
             lon += (isInUpperAtmosphere)
-                    ? getLonDelta(lon, -delta * percentToBoundary)
-                    : getLonDelta(lon, delta * (1 - percentToBoundary));
+                    ?
+                    getLonDelta(lon, lonDelta * (1 - percentToBoundary))
+                    :
+                    getLonDelta(lon, -lonDelta * percentToBoundary)
+            ;
+
+            lat += (isInUpperAtmosphere)
+                    ? getLatDelta(lat, -latDelta)
+                    : getLatDelta(lat, latDelta);
         }
 
         // Change temperature accordingly
+        Temperature_C += (isInUpperAtmosphere) ? -1 : 1;
+
         // Change elevation based on temp
+        Elevation_masl += (Temperature_C + 50) * 0.2;
+
         // Change layer if elevation passes threshold
+        isInUpperAtmosphere = (Elevation_masl >= 7000);
+
         Position = VMath.sphericalToCartesian(lat, lon, PlanetRadius);
     }
 
@@ -172,6 +216,15 @@ public class AirParticle {
             delta -= 2*Math.PI;
         } else if (lon < -Math.PI) {
             delta += 2*Math.PI;
+        }
+        return delta;
+    }
+
+    private float getLatDelta(float lat, float delta) {
+        if (lat + delta > Math.PI) {
+            return 0;
+        } else if (lat + delta < 0) {
+            return 0;
         }
         return delta;
     }

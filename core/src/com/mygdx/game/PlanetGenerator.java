@@ -85,9 +85,9 @@ public class PlanetGenerator extends InputAdapter implements ApplicationListener
         modelBuilder = new ModelBuilder();
 
 //        models.add(buildIcosahedron(planet));         // Triangles
-//		models.add(buildTruncatedIcosahedron(planet));  // Tiles
+		models.add(buildTruncatedIcosahedron(planet));  // Tiles
 //        models.add(buildSunRays(planet));
-        models.add(buildWireframe(planet));
+//        models.add(buildWireframe(planet));
         models.add(buildAxes());
 //        models.add(buildPlateDirectionArrows(planet));
 //        models.add(buildMajorLatLines(planet));
