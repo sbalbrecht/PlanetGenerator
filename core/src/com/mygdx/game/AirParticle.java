@@ -1,10 +1,11 @@
 package com.mygdx.game;
 
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.mygdx.game.util.VMath;
 
 import java.util.Random;
+
+import static com.mygdx.game.util.VMath.*;
 
 public class AirParticle {
     private Vector3 Position;
@@ -46,35 +47,54 @@ public class AirParticle {
 
     private float calculateTemperature() {
         Random r = new Random();
-        float lat = VMath.cartesianToLatitude(Position, PlanetRadius);
+        float lat = VMath.cartesianToLatitude(Position, PlanetRadius) + (float)(Math.PI/2);
         if (lat > Math.PI / 2) {
             // reducing range to 0 - PI/2
             lat = (float)(Math.PI - lat);
         }
 
-        final float pi_3 = (float)(Math.PI/3);
-        final float _2pi_3 = (float)(2*Math.PI/3);
-
         float percentToBoundary;
         float temperature;
 
-        if (lat < pi_3)
+//        if (lat < PI_3)
+//        {
+//            percentToBoundary = lat / PI_3;
+//            temperature = (isInUpperAtmosphere)
+//                    ? -20 - percentToBoundary * 35  // -55 to -20
+//                    : -20 + percentToBoundary * 20; // -20 to 0
+//        }
+//        else if (lat < _2PI_3)
+//        {
+//            percentToBoundary = (lat - PI_3) / PI_3;
+//            temperature = (isInUpperAtmosphere)
+//                    ? -10 - percentToBoundary * 20  // -10 to -30
+//                    : 15 - percentToBoundary * 25;  // 15 to -10
+//        }
+//        else
+//        {
+//            percentToBoundary = (lat - _2PI_3) / PI_3;
+//            temperature = (isInUpperAtmosphere)
+//                    ? -20 - percentToBoundary * 20  // -40 to -20
+//                    : 10 + percentToBoundary * 20;  // 10 to 30
+//        }
+
+        if (lat < PI_6)
         {
-            percentToBoundary = lat / pi_3;
+            percentToBoundary = lat / PI_6;
             temperature = (isInUpperAtmosphere)
                     ? -20 - percentToBoundary * 35  // -55 to -20
                     : -20 + percentToBoundary * 20; // -20 to 0
         }
-        else if (lat < _2pi_3)
+        else if (lat < PI_3)
         {
-            percentToBoundary = (lat - pi_3) / pi_3;
+            percentToBoundary = (lat - PI_6) / (PI_3 - PI_6);
             temperature = (isInUpperAtmosphere)
                     ? -10 - percentToBoundary * 20  // -10 to -30
                     : 15 - percentToBoundary * 25;  // 15 to -10
         }
         else
         {
-            percentToBoundary = (lat - _2pi_3) / pi_3;
+            percentToBoundary = (lat - PI_3) / (PI_2 - PI_3);
             temperature = (isInUpperAtmosphere)
                     ? -20 - percentToBoundary * 20  // -40 to -20
                     : 10 + percentToBoundary * 20;  // 10 to 30
@@ -88,23 +108,71 @@ public class AirParticle {
         float lat = VMath.cartesianToLatitude(Position, PlanetRadius);
         float lon = VMath.cartesianToLongitude(Position);
 
-        final float pi_3 = (float)(Math.PI/3);
-        final float _2pi_3 = (float)(2*Math.PI/3);
-
         float percentToBoundary;
-
-        lat += (isInUpperAtmosphere) ? .01 : -.01;
-        lon += 0.01;
-        if (lon > MathUtils.PI) {
-            lon -= 2*MathUtils.PI;
-        }
-
-        Position = VMath.latitudeToCartesian(lat, lon, PlanetRadius);
-
+        float delta = .005f;
 
         // Change position based on layer, belt, coriolis force
+        if (lat < PI_6)
+        {
+            percentToBoundary = lat / PI_6;
+//            lon += getLonDelta(lon, delta * percentToBoundary);
+            lon += (isInUpperAtmosphere)
+                    ? getLonDelta(lon, -delta * (1 - percentToBoundary))
+                    : getLonDelta(lon, delta * percentToBoundary);
+        }
+        else if (lat < PI_3)
+        {
+            percentToBoundary = (lat - PI_6) / (PI_3 - PI_6);
+//            lon += getLonDelta(lon, -delta * (1 - percentToBoundary));
+            lon += (isInUpperAtmosphere)
+                    ? getLonDelta(lon, delta * percentToBoundary)
+                    : getLonDelta(lon, -delta * (1 - percentToBoundary));
+        }
+        else if (lat < PI_2)
+        {
+            percentToBoundary = (lat - PI_3) / (PI_2 - PI_3);
+//            lon += getLonDelta(lon, delta * percentToBoundary);
+            lon += (isInUpperAtmosphere)
+                    ? getLonDelta(lon, -delta * (1 - percentToBoundary))
+                    : getLonDelta(lon, delta * percentToBoundary);
+        }
+        else if (lat < _2PI_3)
+        {
+            percentToBoundary = (lat - PI_2) / (_2PI_3 - PI_2);
+//            lon += getLonDelta(lon, delta * (1 - percentToBoundary));
+            lon += (isInUpperAtmosphere)
+                    ? getLonDelta(lon, -delta * (1 - percentToBoundary))
+                    : getLonDelta(lon, delta * percentToBoundary);
+        }
+        else if (lat < _5PI_6)
+        {
+            percentToBoundary = (lat - _2PI_3) / (_5PI_6 - _2PI_3);
+//            lon += getLonDelta(lon, -delta * percentToBoundary);
+            lon += (isInUpperAtmosphere)
+                    ? getLonDelta(lon, delta * (1 - percentToBoundary))
+                    : getLonDelta(lon, -delta * percentToBoundary);
+        }
+        else
+        {
+            percentToBoundary = (lat - _5PI_6) / (float)(Math.PI - _5PI_6);
+//            lon += getLonDelta(lon, delta * (1 - percentToBoundary));
+            lon += (isInUpperAtmosphere)
+                    ? getLonDelta(lon, -delta * percentToBoundary)
+                    : getLonDelta(lon, delta * (1 - percentToBoundary));
+        }
+
         // Change temperature accordingly
         // Change elevation based on temp
         // Change layer if elevation passes threshold
+        Position = VMath.sphericalToCartesian(lat, lon, PlanetRadius);
+    }
+
+    private float getLonDelta(float lon, float delta) {
+        if (lon + delta > Math.PI) {
+            delta -= 2*Math.PI;
+        } else if (lon < -Math.PI) {
+            delta += 2*Math.PI;
+        }
+        return delta;
     }
 }
