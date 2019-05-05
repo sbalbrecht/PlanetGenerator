@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.EllipseShapeBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.SphereShapeBuilder;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
@@ -18,7 +19,16 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.util.Log;
 import com.mygdx.game.util.Units;
 import com.mygdx.game.util.VMath;
+import static com.mygdx.game.util.VMath.*;
 
+import static org.jocl.CL.*;
+import org.jocl.*;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.*;
+import java.sql.SQLClientInfoException;
 import java.util.Map;
 import java.util.Random;
 
@@ -43,8 +53,35 @@ public class PlanetGenerator extends InputAdapter implements ApplicationListener
     private Array<ModelInstance> modelInstances = new Array<ModelInstance>();
     private Array<ModelInstance> airInstances   = new Array<ModelInstance>();
 
-    private final int TILE_LIMIT = 1000;
-    private final int SUBDIVSIONS = 5;
+
+    private cl_program cpParticle;
+    private cl_kernel kernel;
+    private Pointer pwx;
+    private Pointer pwy;
+    private Pointer pwz;
+    private Pointer pwt;
+    private Pointer pwe;
+    private Pointer pua;
+    private Pointer pf;
+
+    private cl_context context;
+    private cl_command_queue commandQueue;
+    private cl_mem memObjects[];
+
+    private long global_work_size[];
+    private long local_work_size[];
+
+    private float[] wx;
+    private float[] wy;
+    private float[] wz;
+    private float[] wt;
+    private float[] we;
+    private int[]   ua;
+    private int[] frame = {0};
+
+    private final int   AIR_PARTICLES = 7500;
+    private final int   TILE_LIMIT = 1000;
+    private final int   SUBDIVSIONS = 5;
     private final float PLANET_RADIUS = 10;
 
     @Override
@@ -90,7 +127,7 @@ public class PlanetGenerator extends InputAdapter implements ApplicationListener
 //        models.add(buildWireframe(planet));
         models.add(buildAxes());
 //        models.add(buildPlateDirectionArrows(planet));
-//        models.add(buildMajorLatLines(planet));
+        models.add(buildMajorLatLines(planet));
         models.add(buildPlateCollisions(planet));
 //        models.add(buildLatLongSpikes(planet));
 
@@ -100,12 +137,24 @@ public class PlanetGenerator extends InputAdapter implements ApplicationListener
                 new Material(ColorAttribute.createDiffuse(Color.WHITE)),
                 VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 
-        for (AirParticle particle : planet.wind) {
-            Vector3 v = particle.getPosition().cpy().scl(1.001f);
+
+//        for (AirParticle particle : planet.wind) {
+//            Vector3 v = particle.getPosition().cpy().scl(1.001f);
+//            ModelInstance airInstance = new ModelInstance(airParticle);
+//            airInstance.transform.setToTranslation(v);
+//            airInstances.add(airInstance);
+//        }
+        initAirParticles();
+
+        for (int i = 0; i < AIR_PARTICLES; i++) {
+//            Vector3 v = new Vector3(wx[i], wy[i], wz[i]).scl(1.001f);
+            Vector3 v = new Vector3(wx[i], wy[i], wz[i]);
             ModelInstance airInstance = new ModelInstance(airParticle);
             airInstance.transform.setToTranslation(v);
             airInstances.add(airInstance);
         }
+
+        initGPU();
 
         for (Model model : models) {
             modelInstances.add(new ModelInstance(model, planet.position));
@@ -126,7 +175,12 @@ public class PlanetGenerator extends InputAdapter implements ApplicationListener
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
-        updateAirParticles();
+//        if (frame == 0) {
+            updateAirParticles();
+//        }
+
+        frame[0]++;
+        if (frame[0] == 3600) frame[0] = 0;
 
 		modelBatch.begin(cam);
         for (ModelInstance instance : modelInstances) {
@@ -156,6 +210,15 @@ public class PlanetGenerator extends InputAdapter implements ApplicationListener
         for(Model model : models) {
 		    model.dispose();
         }
+
+        // Release kernel, program, and memory objects
+        for (cl_mem memObject : memObjects) {
+            clReleaseMemObject(memObject);
+        }
+        clReleaseKernel(kernel);
+        clReleaseProgram(cpParticle);
+        clReleaseCommandQueue(commandQueue);
+        clReleaseContext(context);
 	}
 
     @Override
@@ -407,10 +470,51 @@ public class PlanetGenerator extends InputAdapter implements ApplicationListener
         return modelBuilder.end();
     }
 
+
+//    int CPUtotal = 0;
+//    int GPUtotal = 0;
     private void updateAirParticles() {
-        for (int i = 0; i < planet.wind.size; i++) {
-            planet.wind.get(i).update();
-            airInstances.get(i).transform.setToTranslation(planet.wind.get(i).getPosition());
+//        long CPUdt = System.currentTimeMillis();
+//        for (int i = 0; i < AIR_PARTICLES; i++) {
+//            planet.wind[i].update();
+//        }
+//        CPUtotal += System.currentTimeMillis() - CPUdt;
+//
+//        long GPUdt = System.currentTimeMillis();
+
+        clSetKernelArg(kernel, 6, Sizeof.cl_int, Pointer.to(new int[]{ frame[0] }));
+
+        // Execute the kernel
+        clEnqueueNDRangeKernel(commandQueue, kernel, 1, null,
+                global_work_size, local_work_size, 0, null, null);
+
+        // Read back results
+        clEnqueueReadBuffer(commandQueue, memObjects[0], CL_TRUE, 0,
+                AIR_PARTICLES * Sizeof.cl_float, pwx, 0, null, null);
+        clEnqueueReadBuffer(commandQueue, memObjects[1], CL_TRUE, 0,
+                AIR_PARTICLES * Sizeof.cl_float, pwy, 0, null, null);
+        clEnqueueReadBuffer(commandQueue, memObjects[2], CL_TRUE, 0,
+                AIR_PARTICLES * Sizeof.cl_float, pwz, 0, null, null);
+        clEnqueueReadBuffer(commandQueue, memObjects[3], CL_TRUE, 0,
+                AIR_PARTICLES * Sizeof.cl_float, pwt, 0, null, null);
+        clEnqueueReadBuffer(commandQueue, memObjects[4], CL_TRUE, 0,
+                AIR_PARTICLES * Sizeof.cl_float, pwe, 0, null, null);
+        clEnqueueReadBuffer(commandQueue, memObjects[5], CL_TRUE, 0,
+                AIR_PARTICLES * Sizeof.cl_int, pua, 0, null, null);
+
+        System.out.println("After:  " + frame[0]);
+
+//        GPUtotal += System.currentTimeMillis() - GPUdt;
+//
+//        if (frame == 599) {
+//            System.out.printf("Avg CPU time: %.2f\n", CPUtotal / 600f);
+//            System.out.printf("Avg GPU time: %.2f\n", GPUtotal / 600f);
+//            CPUtotal = 0;
+//            GPUtotal = 0;
+//        }
+
+        for (int i = 0; i < AIR_PARTICLES; i++) {
+            airInstances.get(i).transform.setToTranslation(wx[i], wy[i], wz[i]);
         }
     }
 
@@ -549,6 +653,186 @@ public class PlanetGenerator extends InputAdapter implements ApplicationListener
             return new Color(1, 1-relativeElevation, 1-relativeElevation, 1);
         } else {
             return new Color(1-relativeElevation, 1, 1-relativeElevation, 1);
+        }
+    }
+
+    private void initAirParticles() {
+        Random r = new Random();
+
+        wx = new float[AIR_PARTICLES];
+        wy = new float[AIR_PARTICLES];
+        wz = new float[AIR_PARTICLES];
+        wt = new float[AIR_PARTICLES];
+        we = new float[AIR_PARTICLES];
+        ua = new int[AIR_PARTICLES];
+
+        for (int i = 0; i < AIR_PARTICLES; i++) {
+            wx[i] = r.nextFloat()-0.5f;
+            wy[i] = r.nextFloat()-0.5f;
+            wz[i] = r.nextFloat()-0.5f;
+
+            // normalize, scale coords to radius
+            float mag = (float)Math.sqrt(wx[i]*wx[i]+wy[i]*wy[i]+wz[i]*wz[i]);
+            if (mag > 0) {
+                wx[i] /= mag;
+                wy[i] /= mag;
+                wz[i] /= mag;
+
+                wx[i] *= PLANET_RADIUS;
+                wy[i] *= PLANET_RADIUS;
+                wz[i] *= PLANET_RADIUS;
+            }
+
+            we[i] = r.nextFloat() * 14000;
+            ua[i] = (we[i] >= 7000) ? 1 : 0;
+            wt[i] = calculateAirTemp(wx[i], wy[i], wz[i], ua[i]);
+        }
+    }
+
+    private void initGPU() {
+        pwx = Pointer.to(wx);
+        pwy = Pointer.to(wy);
+        pwz = Pointer.to(wz);
+        pwt = Pointer.to(wt);
+        pwe = Pointer.to(we);
+        pua = Pointer.to(ua);
+
+        final int platformIndex = 0;
+        final long deviceType = CL_DEVICE_TYPE_ALL;
+        final int deviceIndex = 0;
+
+        // Enable exceptions and subsequently omit error checks in this sample
+        CL.setExceptionsEnabled(true);
+
+        // Obtain the number of platforms
+        int numPlatformsArray[] = new int[1];
+        clGetPlatformIDs(0, null, numPlatformsArray);
+        int numPlatforms = numPlatformsArray[0];
+
+        // Obtain a platform ID
+        cl_platform_id platforms[] = new cl_platform_id[numPlatforms];
+        clGetPlatformIDs(platforms.length, platforms, null);
+        cl_platform_id platform = platforms[platformIndex];
+
+        // Initialize the context properties
+        cl_context_properties contextProperties = new cl_context_properties();
+        contextProperties.addProperty(CL_CONTEXT_PLATFORM, platform);
+
+        // Obtain the number of devices for the platform
+        int numDevicesArray[] = new int[1];
+        clGetDeviceIDs(platform, deviceType, 0, null, numDevicesArray);
+        int numDevices = numDevicesArray[0];
+
+        // Obtain a device ID
+        cl_device_id devices[] = new cl_device_id[numDevices];
+        clGetDeviceIDs(platform, deviceType, numDevices, devices, null);
+        cl_device_id device = devices[deviceIndex];
+
+        // Create a context for the selected device
+        context = clCreateContext(
+                contextProperties, 1, new cl_device_id[]{device},
+                null, null, null);
+
+        // Create a command-queue for the selected device
+        commandQueue = clCreateCommandQueueWithProperties(context, device, null, null);
+
+        // Allocate the memory objects for the data
+        memObjects = new cl_mem[6];
+        int size = Sizeof.cl_float * AIR_PARTICLES;
+        long flags = CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR;
+        memObjects[0] = clCreateBuffer(context, flags, size, pwx, null);
+        memObjects[1] = clCreateBuffer(context, flags, size, pwy, null);
+        memObjects[2] = clCreateBuffer(context, flags, size, pwz, null);
+        memObjects[3] = clCreateBuffer(context, flags, size, pwt, null);
+        memObjects[4] = clCreateBuffer(context, flags, size, pwe, null);
+        memObjects[5] = clCreateBuffer(context, flags,
+                Sizeof.cl_int * AIR_PARTICLES, pua, null);
+
+        // Read in the program
+        System.out.println("...loading Particle.cl");
+        String cParticle = readFile("kernels/Particle.cl");
+
+        // Create the program from the source code
+        System.out.println("...creating particle program");
+        cpParticle = clCreateProgramWithSource(context, 1, new String[]{ cParticle },
+                new long[]{cParticle.length()}, null);
+
+        // Build the program
+        clBuildProgram(cpParticle, 0, null, null, null, null);
+
+        // Create the kernel
+        kernel = clCreateKernel(cpParticle, "update", null);
+
+        // Set the arguments for the kernel
+        for (int i = 0; i < memObjects.length; i++) {
+            clSetKernelArg(kernel, i, Sizeof.cl_mem, Pointer.to(memObjects[i]));
+        }
+
+        // Set the work-item dimensions
+        global_work_size = new long[]{AIR_PARTICLES};
+        local_work_size = new long[]{1};
+
+    }
+
+    private float calculateAirTemp(float x, float y, float z, int ua) {
+        Random r = new Random();
+        float lat = VMath.cartesianToLatitude(x, y, z, PLANET_RADIUS) + (float)(Math.PI/2);
+        if (lat > Math.PI / 2) {
+            // reducing range to 0 - PI/2
+            lat = (float)(Math.PI - lat);
+        }
+
+        float percentToBoundary;
+        float temperature;
+
+        if (lat < PI_6)
+        {
+            percentToBoundary = lat / PI_6;
+            temperature = (ua == 1)
+                    ? -20 - percentToBoundary * 35  // -55 to -20
+                    : -20 + percentToBoundary * 20; // -20 to 0
+        }
+        else if (lat < PI_3)
+        {
+            percentToBoundary = (lat - PI_6) / (PI_3 - PI_6);
+            temperature = (ua == 1)
+                    ? -10 - percentToBoundary * 20  // -10 to -30
+                    : 15 - percentToBoundary * 25;  // 15 to -10
+        }
+        else
+        {
+            percentToBoundary = (lat - PI_3) / (PI_2 - PI_3);
+            temperature = (ua == 1)
+                    ? -20 - percentToBoundary * 20  // -40 to -20
+                    : 10 + percentToBoundary * 20;  // 10 to 30
+        }
+
+        float randomOffset = ((r.nextFloat() - 0.5f)*4);
+        return temperature + randomOffset;
+    }
+
+    private static String readFile(String fileName)
+    {
+        try
+        {
+            BufferedReader br = new BufferedReader(new FileReader(fileName));
+            StringBuilder sb = new StringBuilder();
+            String line = null;
+            while (true)
+            {
+                line = br.readLine();
+                if (line == null)
+                {
+                    break;
+                }
+                sb.append(line+"\n");
+            }
+            return sb.toString();
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+            return "";
         }
     }
 }

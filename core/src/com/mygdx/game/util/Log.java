@@ -2,7 +2,7 @@ package com.mygdx.game.util;
 
 public class Log{
 
-	long dt;
+	public long dt;
 	String label;
 	boolean logging;
 	int indent;

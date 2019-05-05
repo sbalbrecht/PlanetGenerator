@@ -33,9 +33,10 @@ public class Planet {
     public Map<Long, Float> tileCollisions = new HashMap<Long, Float>();
     private Map<Long, Integer> plateCollisions = new HashMap<Long, Integer>();
 
-    public Array<AirParticle> wind = new Array<AirParticle>();
-    public Set<Integer> lowerAtmosphere = new HashSet<>();
-    public Set<Integer> upperAtmosphere = new HashSet<>();
+    public AirParticle[] wind;
+//    public Array<AirParticle> wind = new Array<AirParticle>();
+//    public Set<Integer> lowerAtmosphere = new HashSet<Integer>();
+//    public Set<Integer> upperAtmosphere = new HashSet<Integer>();
 
     public TileMap tileMap;
 
@@ -611,18 +612,12 @@ public class Planet {
     }
 
     private void generateWind() {
-        // Generate 1000 random wind points
-        final int numPoints = 7500;
-        wind.ensureCapacity(numPoints);
+
+        final int numPoints = 200000;
+
+        wind = new AirParticle[numPoints];
         for (int i = 0; i < numPoints; i++) {
-            AirParticle w = new AirParticle(radius);
-            wind.add(w);
-            int index = wind.size - 1;
-            if (w.isInUpperAtmosphere) {
-                upperAtmosphere.add(index);
-            } else {
-                lowerAtmosphere.add(index);
-            }
+            wind[i] = new AirParticle(radius);
         }
     }
     

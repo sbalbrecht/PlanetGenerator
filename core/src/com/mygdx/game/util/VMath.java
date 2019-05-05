@@ -46,6 +46,19 @@ public final class VMath {
     }
 
     /**
+     * Calculates latitude of input v in radians. Assumes the input is a point on a sphere.
+     * Range is 0 (North) to PI (South)
+     * @param x The x coordinate of the vector to convert
+     * @param y The y coordinate of the vector to convert
+     * @param z The z coordinate of the vector to convert
+     * @return The latitude of v
+     */
+    public static float cartesianToLatitude(float x, float y, float z, float radius) {
+//        return (float)(Math.atan(Math.sqrt(v.x*v.x + v.z*v.z) / v.y));
+        return (float)(Math.acos(y / Math.sqrt(x*x + y*y + z*z)));
+    }
+
+    /**
      * Calculates longitude of input v in radians. Assumes the input is a point on a sphere.
      * Range is -PI to PI
      * @param v The vector to convert
@@ -53,6 +66,17 @@ public final class VMath {
      */
     public static float cartesianToLongitude(Vector3 v) {
         return (float)Math.atan2(v.z, v.x);
+    }
+
+    /**
+     * Calculates longitude of input v in radians. Assumes the input is a point on a sphere.
+     * Range is -PI to PI
+     * @param x The x coordinate of the vector to convert
+     * @param z The z coordinate of the vector to convert
+     * @return The longitude of v
+     */
+    public static float cartesianToLongitude(float x, float z) {
+        return (float)Math.atan2(z, x);
     }
 
     public static Vector3 sphericalToCartesian(float latitude, float longitude, float radius) {
