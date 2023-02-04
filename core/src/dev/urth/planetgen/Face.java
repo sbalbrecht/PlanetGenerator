@@ -1,11 +1,8 @@
-package com.mygdx.game;
+package dev.urth.planetgen;
 
-import com.badlogic.gdx.utils.Array;
-
-public class Face{
-    
-    public int[] pts = new int[3];
-    public int centroid;
+public class Face {
+    private final int[] pts = new int[3];
+    private final int centroid;
 
     Face(int p0, int p1, int p2, int centroid) {
         pts[0] = p0;
@@ -17,16 +14,25 @@ public class Face{
     public int getClockwisePt(int point) {
         // Find the index of the point
         int index = 0;
-        for(int i = 0; i < pts.length; i++) {
-            if(pts[i] == point) {
+        for (int i = 0; i < pts.length; i++) {
+            if (pts[i] == point) {
                 index = i;
                 break;
             }
         }
         // Find the index of the point CW from the given point
-        if(index + 2 >= pts.length)
+        if (index + 2 >= pts.length) {
             return pts[index - 1];
-        else
+        } else {
             return pts[index + 2];
+        }
+    }
+
+    public int[] getPts() {
+        return pts;
+    }
+
+    public int getCentroid() {
+        return centroid;
     }
 }

@@ -1,4 +1,4 @@
-package com.mygdx.game;
+package dev.urth.planetgen.layer;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
@@ -10,35 +10,34 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 public class FrameRateLayer extends Layer implements Disposable {
 
-    protected Stage stage;
-    protected Label label;
-    protected BitmapFont font;
-    protected StringBuilder stringBuilder;
-    
+    protected final Stage stage;
+    protected final Label label;
+    protected final BitmapFont font;
+
     public FrameRateLayer() {
-        //super(name, on);
+        super("Frame Rate", true);
         stage = new Stage();
         stage.setViewport(new ScreenViewport());
         font = new BitmapFont();
         label = new Label(" ", new Label.LabelStyle(font, Color.WHITE));
         stage.addActor(label);
-        stringBuilder = new StringBuilder();
     }
 
+    @Override
     public void resize(int screenWidth, int screenHeight) {
         stage.getViewport().update(screenWidth, screenHeight, true);
     }
 
-    public void update() {
-    }
+    @Override
+    public void update() {}
 
+    @Override
     public void render() {
-        stringBuilder.setLength(0);
-        stringBuilder.append(" FPS: ").append(Gdx.graphics.getFramesPerSecond());
-        label.setText(stringBuilder);
+        label.setText("FPS: " + Gdx.graphics.getFramesPerSecond());
         stage.draw();
     }
 
+    @Override
     public void dispose() {
         font.dispose();
     }

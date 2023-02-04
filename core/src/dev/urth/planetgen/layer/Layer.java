@@ -1,32 +1,40 @@
-package com.mygdx.game;
+package dev.urth.planetgen.layer;
 
 import com.badlogic.gdx.utils.Disposable;
 
 public abstract class Layer implements Disposable {
     private boolean active;
     private String name;
-    
-    public Layer() {
+
+    protected Layer() {
         active = true;
         name = "New Layer";
     }
 
-    public Layer(String name, boolean active) {
+    protected Layer(String name, boolean active) {
         this.active = active;
         this.name = name;
     }
-    
+
     public abstract void resize(int screenWidth, int screenHeight);
+
     public abstract void update();
+
     public abstract void render();
-    public abstract void dispose();
-    public void setActive(boolean active){
+
+    public void setActive(boolean active) {
         this.active = active;
     }
-    public void setName(String name){
+
+    public void setName(String name) {
         this.name = name;
     }
-    public boolean isActive() { return active; }
-    public String getName() { return name; }
-    
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public String getName() {
+        return name;
+    }
 }
